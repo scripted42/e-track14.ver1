@@ -293,10 +293,19 @@
                                                             @case('admin')
                                                                 <i class="fas fa-user-shield text-danger" style="font-size: 2rem;"></i>
                                                                 @break
-                                                            @case('teacher')
+                                                            @case('kepala sekolah')
+                                                                <i class="fas fa-crown text-warning" style="font-size: 2rem;"></i>
+                                                                @break
+                                                            @case('waka kurikulum')
+                                                                <i class="fas fa-user-tie text-info" style="font-size: 2rem;"></i>
+                                                                @break
+                                                            @case('guru')
                                                                 <i class="fas fa-chalkboard-teacher text-success" style="font-size: 2rem;"></i>
                                                                 @break
-                                                            @case('student')
+                                                            @case('pegawai')
+                                                                <i class="fas fa-user-cog text-secondary" style="font-size: 2rem;"></i>
+                                                                @break
+                                                            @case('siswa')
                                                                 <i class="fas fa-graduation-cap text-primary" style="font-size: 2rem;"></i>
                                                                 @break
                                                             @default
@@ -309,11 +318,20 @@
                                                             @case('admin')
                                                                 Akses penuh sistem
                                                                 @break
-                                                            @case('teacher')
-                                                                Pengelola kelas
+                                                            @case('kepala sekolah')
+                                                                Pimpinan sekolah
                                                                 @break
-                                                            @case('student')
-                                                                Pengguna siswa
+                                                            @case('waka kurikulum')
+                                                                Wakil kepala kurikulum
+                                                                @break
+                                                            @case('guru')
+                                                                Tenaga pengajar
+                                                                @break
+                                                            @case('pegawai')
+                                                                Staff administrasi
+                                                                @break
+                                                            @case('siswa')
+                                                                Peserta didik
                                                                 @break
                                                             @default
                                                                 Pengguna umum

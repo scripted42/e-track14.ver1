@@ -79,12 +79,27 @@
     color: #991b1b;
 }
 
-.role-teacher {
+.role-kepala_sekolah {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+}
+
+.role-waka_kurikulum {
+    background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+    color: #0369a1;
+}
+
+.role-guru {
     background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
     color: #166534;
 }
 
-.role-student {
+.role-pegawai {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #374151;
+}
+
+.role-siswa {
     background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
     color: #1e40af;
 }
@@ -212,7 +227,7 @@
                     <p class="mb-3 opacity-75">{{ $user->email }}</p>
                     
                     @php
-                        $roleClass = 'role-' . strtolower($user->role->role_name ?? 'user');
+                        $roleClass = 'role-' . strtolower(str_replace(' ', '_', $user->role->role_name ?? 'user'));
                     @endphp
                     <div class="role-badge {{ $roleClass }}">
                         @switch($user->role->role_name ?? '')
@@ -220,11 +235,23 @@
                                 <i class="fas fa-user-shield"></i>
                                 Administrator
                                 @break
-                            @case('teacher')
+                            @case('kepala sekolah')
+                                <i class="fas fa-crown"></i>
+                                Kepala Sekolah
+                                @break
+                            @case('waka kurikulum')
+                                <i class="fas fa-user-tie"></i>
+                                Waka Kurikulum
+                                @break
+                            @case('guru')
                                 <i class="fas fa-chalkboard-teacher"></i>
                                 Guru
                                 @break
-                            @case('student')
+                            @case('pegawai')
+                                <i class="fas fa-user-cog"></i>
+                                Pegawai
+                                @break
+                            @case('siswa')
                                 <i class="fas fa-graduation-cap"></i>
                                 Siswa
                                 @break
@@ -385,7 +412,25 @@
                                             ['name' => 'Kelola Izin/Cuti', 'icon' => 'fas fa-calendar-times', 'status' => true],
                                         ];
                                         break;
-                                    case 'teacher':
+                                    case 'kepala sekolah':
+                                        $permissions = [
+                                            ['name' => 'Lihat Semua Laporan', 'icon' => 'fas fa-chart-line', 'status' => true],
+                                            ['name' => 'Approve Izin/Cuti', 'icon' => 'fas fa-calendar-times', 'status' => true],
+                                            ['name' => 'Kelola Pengaturan Sekolah', 'icon' => 'fas fa-school', 'status' => true],
+                                            ['name' => 'Monitor Kehadiran', 'icon' => 'fas fa-calendar-check', 'status' => true],
+                                            ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => false],
+                                        ];
+                                        break;
+                                    case 'waka kurikulum':
+                                        $permissions = [
+                                            ['name' => 'Lihat Laporan Akademik', 'icon' => 'fas fa-chart-line', 'status' => true],
+                                            ['name' => 'Kelola Kurikulum', 'icon' => 'fas fa-book', 'status' => true],
+                                            ['name' => 'Monitor Kehadiran Siswa', 'icon' => 'fas fa-calendar-check', 'status' => true],
+                                            ['name' => 'Approve Izin Guru', 'icon' => 'fas fa-calendar-times', 'status' => true],
+                                            ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => false],
+                                        ];
+                                        break;
+                                    case 'guru':
                                         $permissions = [
                                             ['name' => 'Lihat Laporan', 'icon' => 'fas fa-chart-line', 'status' => true],
                                             ['name' => 'Kelola Kehadiran Siswa', 'icon' => 'fas fa-calendar-check', 'status' => true],
@@ -394,7 +439,16 @@
                                             ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => false],
                                         ];
                                         break;
-                                    case 'student':
+                                    case 'pegawai':
+                                        $permissions = [
+                                            ['name' => 'Lihat Kehadiran Sendiri', 'icon' => 'fas fa-calendar-check', 'status' => true],
+                                            ['name' => 'Ajukan Izin/Cuti', 'icon' => 'fas fa-calendar-times', 'status' => true],
+                                            ['name' => 'Lihat Profil', 'icon' => 'fas fa-user', 'status' => true],
+                                            ['name' => 'Kelola Laporan', 'icon' => 'fas fa-chart-line', 'status' => false],
+                                            ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => false],
+                                        ];
+                                        break;
+                                    case 'siswa':
                                         $permissions = [
                                             ['name' => 'Lihat Kehadiran Sendiri', 'icon' => 'fas fa-calendar-check', 'status' => true],
                                             ['name' => 'Ajukan Izin', 'icon' => 'fas fa-calendar-times', 'status' => true],

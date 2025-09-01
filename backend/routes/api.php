@@ -36,13 +36,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [LeaveController::class, 'store']);
         Route::get('/{leave}', [LeaveController::class, 'show']);
         Route::post('/{leave}/approve', [LeaveController::class, 'approve'])
-            ->middleware('role:Admin,Waka Kurikulum');
+            ->middleware('role:Admin,Kepala Sekolah,Waka Kurikulum');
         Route::post('/{leave}/reject', [LeaveController::class, 'reject'])
-            ->middleware('role:Admin,Waka Kurikulum');
+            ->middleware('role:Admin,Kepala Sekolah,Waka Kurikulum');
     });
 
-    // Student Attendance (Teachers only)
-    Route::prefix('student-attendance')->middleware('role:Guru,Admin')->group(function () {
+    // Student Attendance (Teachers, Kepala Sekolah and Admin)
+    Route::prefix('student-attendance')->middleware('role:Guru,Kepala Sekolah,Admin')->group(function () {
         Route::get('/', [StudentAttendanceController::class, 'index']);
         Route::post('/scan', [StudentAttendanceController::class, 'scanStudent']);
         Route::get('/students', [StudentAttendanceController::class, 'getStudents']);
@@ -57,8 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
             ->middleware('role:Admin');
     });
 
-    // Reports (Admin and Waka Kurikulum)
-    Route::prefix('reports')->middleware('role:Admin,Waka Kurikulum')->group(function () {
+    // Reports (Admin, Kepala Sekolah and Waka Kurikulum)
+    Route::prefix('reports')->middleware('role:Admin,Kepala Sekolah,Waka Kurikulum')->group(function () {
         Route::get('/attendance', [ReportController::class, 'attendanceReport']);
         Route::get('/student-attendance', [ReportController::class, 'studentAttendanceReport']);
         Route::get('/leaves', [ReportController::class, 'leaveReport']);

@@ -13,10 +13,11 @@ class DatabaseSeeder extends Seeder
         // Insert roles
         DB::table('roles')->insert([
             ['id' => 1, 'role_name' => 'Admin', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 2, 'role_name' => 'Guru', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 3, 'role_name' => 'Pegawai', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 4, 'role_name' => 'Siswa', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 5, 'role_name' => 'Waka Kurikulum', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 2, 'role_name' => 'Kepala Sekolah', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 3, 'role_name' => 'Waka Kurikulum', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 4, 'role_name' => 'Guru', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 5, 'role_name' => 'Pegawai', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 6, 'role_name' => 'Siswa', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         // Insert default users
@@ -31,10 +32,19 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'name' => 'Kepala Sekolah',
+                'email' => 'kepsek@smpn14.sch.id',
+                'password' => Hash::make('kepsek123'),
+                'role_id' => 2,
+                'email_verified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'name' => 'Guru Matematika',
                 'email' => 'guru@smpn14.sch.id',
                 'password' => Hash::make('guru123'),
-                'role_id' => 2,
+                'role_id' => 4,
                 'email_verified_at' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
