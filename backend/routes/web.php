@@ -1,0 +1,89 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Web\AdminController;
+use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\AttendanceController;
+use App\Http\Controllers\Web\LeaveController;
+use App\Http\Controllers\Web\StudentController;
+use App\Http\Controllers\Web\UserController;
+use App\Http\Controllers\Web\SettingController;
+use App\Http\Controllers\Web\ReportController;
+
+Route::get('/', function () {
+    return redirect('/admin');
+});
+
+// Admin routes
+Route::prefix('admin')->group(function () {
+    // Guest routes
+    Route::middleware('guest')->group(function () {
+        Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
+        Route::post('/login', [AuthController::class, 'login']);
+    });
+
+    // Authenticated routes
+    Route::middleware('auth')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
+        
+        // Dashboard
+        Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index']);
+        
+        // User Management
+        Route::resource('users', UserController::class)->names([
+            'index' => 'admin.users.index',
+            'create' => 'admin.users.create',
+            'store' => 'admin.users.store',
+            'show' => 'admin.users.show',
+            'edit' => 'admin.users.edit',
+            'update' => 'admin.users.update',
+            'destroy' => 'admin.users.destroy',
+        ]);
+        
+        // Attendance Management
+        Route::prefix('attendance')->name('admin.attendance.')->group(function () {
+            Route::get('/', [AttendanceController::class, 'index'])->name('index');
+            Route::get('/qr', [AttendanceController::class, 'qr'])->name('qr');
+            Route::post('/qr/generate', [AttendanceController::class, 'generateQr'])->name('qr.generate');
+            Route::get('/export', [AttendanceController::class, 'export'])->name('export');
+        });
+        
+        // Leave Management
+        Route::prefix('leaves')->name('admin.leaves.')->group(function () {
+            Route::get('/', [LeaveController::class, 'index'])->name('index');
+            Route::get('/{leave}', [LeaveController::class, 'show'])->name('show');
+            Route::post('/{leave}/approve', [LeaveController::class, 'approve'])->name('approve');
+            Route::post('/{leave}/reject', [LeaveController::class, 'reject'])->name('reject');
+        });
+        
+        // Student Management
+        Route::prefix('students')->name('admin.students.')->group(function () {
+            Route::get('/', [StudentController::class, 'index'])->name('index');
+            Route::get('/create', [StudentController::class, 'create'])->name('create');
+            Route::post('/', [StudentController::class, 'store'])->name('store');
+            Route::get('/{student}/edit', [StudentController::class, 'edit'])->name('edit');
+            Route::put('/{student}', [StudentController::class, 'update'])->name('update');
+            Route::delete('/{student}', [StudentController::class, 'destroy'])->name('destroy');
+            Route::get('/attendance', [StudentController::class, 'attendance'])->name('attendance');
+            Route::get('/import', [StudentController::class, 'showImport'])->name('import');
+            Route::post('/import', [StudentController::class, 'import'])->name('import.process');
+        });
+        
+        // Reports
+        Route::prefix('reports')->name('admin.reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
+            Route::get('/leaves', [ReportController::class, 'leaves'])->name('leaves');
+            Route::get('/students', [ReportController::class, 'students'])->name('students');
+            Route::get('/export/{type}', [ReportController::class, 'export'])->name('export');
+        });
+        
+        // Settings
+        Route::prefix('settings')->name('admin.settings.')->group(function () {
+            Route::get('/', [SettingController::class, 'index'])->name('index');
+            Route::put('/', [SettingController::class, 'update'])->name('update');
+        });
+    });
+});

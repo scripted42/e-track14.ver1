@@ -1,0 +1,76 @@
+name: etrack14
+description: "Aplikasi presensi SMPN 14 Surabaya"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # HTTP & API
+  http: ^1.1.0
+  dio: ^5.3.2
+  
+  # Storage & Cache
+  shared_preferences: ^2.2.2
+  
+  # Navigation
+  go_router: ^12.1.1
+  
+  # State Management
+  provider: ^6.0.5
+  
+  # Location & GPS
+  geolocator: ^10.1.0
+  permission_handler: ^11.0.1
+  
+  # Camera & Image
+  camera: ^0.10.5+5
+  image_picker: ^1.0.4
+  image: ^4.1.3
+  
+  # QR Code
+  qr_code_scanner: ^1.0.1
+  qr_flutter: ^4.1.0
+  
+  # File handling
+  file_picker: ^6.1.1
+  path_provider: ^2.1.1
+  
+  # UI Components
+  cupertino_icons: ^1.0.2
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.9
+  
+  # Date & Time
+  intl: ^0.18.1
+  
+  # Utils
+  logger: ^2.0.2+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+  
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700

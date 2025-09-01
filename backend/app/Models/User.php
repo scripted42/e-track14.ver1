@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role_id',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
+    // Relationships
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function attendance()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function leaves()
+    {
+        return $this->hasMany(Leave::class);
+    }
+
+    public function approvedLeaves()
+    {
+        return $this->hasMany(Leave::class, 'approved_by');
+    }
+
+    public function studentAttendance()
+    {
+        return $this->hasMany(StudentAttendance::class, 'teacher_id');
+    }
+
+    public function auditLogs()
+    {
+        return $this->hasMany(AuditLog::class);
+    }
+
+    // Helper methods
+    public function hasRole($roleName)
+    {
+        return $this->role && $this->role->role_name === $roleName;
+    }
+
+    public function isAdmin()
+    {
+        return $this->hasRole('Admin');
+    }
+
+    public function isTeacher()
+    {
+        return $this->hasRole('Guru');
+    }
+
+    public function isEmployee()
+    {
+        return $this->hasRole('Pegawai');
+    }
+
+    public function isStudent()
+    {
+        return $this->hasRole('Siswa');
+    }
+
+    public function isVicePrincipal()
+    {
+        return $this->hasRole('Waka Kurikulum');
+    }
+
+    public function canApproveLeaves()
+    {
+        return $this->isAdmin() || $this->isVicePrincipal();
+    }
+}

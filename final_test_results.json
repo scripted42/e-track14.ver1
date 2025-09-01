@@ -1,0 +1,31 @@
+{"test_results": [
+    {"endpoint": "GET /profile", "user_type": "admin", "category": "Authentication", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /settings/current", "user_type": "admin", "category": "Settings", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /settings", "user_type": "admin", "category": "Settings", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /qr/today", "user_type": "admin", "category": "QR_Code", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /attendance", "user_type": "admin", "category": "Attendance", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /attendance/today", "user_type": "admin", "category": "Attendance", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /attendance/history", "user_type": "admin", "category": "Attendance", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /leaves", "user_type": "admin", "category": "Leave_Management", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /student-attendance", "user_type": "teacher", "category": "Student_Attendance", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /student-attendance/classes", "user_type": "teacher", "category": "Student_Attendance", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /student-attendance/students", "user_type": "teacher", "category": "Student_Attendance", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /reports/summary", "user_type": "admin", "category": "Reporting", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /reports/attendance", "user_type": "admin", "category": "Reporting", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /reports/leaves", "user_type": "admin", "category": "Reporting", "expected": 200, "actual": 200, "result": "PASSED"}
+,
+    {"endpoint": "GET /reports/student-attendance", "user_type": "admin", "category": "Reporting", "expected": 200, "actual": 200, "result": "PASSED"}
+]}
