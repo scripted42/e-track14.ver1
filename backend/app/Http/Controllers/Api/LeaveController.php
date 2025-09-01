@@ -8,11 +8,14 @@ use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 class LeaveController extends Controller
 {
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
         
         $validator = Validator::make($request->all(), [
@@ -67,6 +70,7 @@ class LeaveController extends Controller
 
     public function store(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
@@ -139,9 +143,10 @@ class LeaveController extends Controller
         ]);
     }
 
-    public function show(Leave $leave)
+    public function show(Request $request, Leave $leave)
     {
-        $user = auth()->user();
+        /** @var \App\Models\User $user */
+        $user = $request->user();
 
         // Check permissions
         if (!$user->canApproveLeaves() && $leave->user_id !== $user->id) {
@@ -159,6 +164,7 @@ class LeaveController extends Controller
 
     public function approve(Request $request, Leave $leave)
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
 
         if ($leave->status !== 'menunggu') {
@@ -207,6 +213,7 @@ class LeaveController extends Controller
 
     public function reject(Request $request, Leave $leave)
     {
+        /** @var \App\Models\User $user */
         $user = $request->user();
 
         if ($leave->status !== 'menunggu') {

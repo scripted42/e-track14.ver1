@@ -110,8 +110,13 @@ class User extends Authenticatable
         return $this->hasRole('Waka Kurikulum');
     }
 
+    public function isKepalaSekolah()
+    {
+        return $this->hasRole('Kepala Sekolah');
+    }
+
     public function canApproveLeaves()
     {
-        return $this->isAdmin() || $this->isVicePrincipal();
+        return $this->isAdmin() || $this->isVicePrincipal() || $this->isKepalaSekolah();
     }
 }

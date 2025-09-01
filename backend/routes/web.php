@@ -15,12 +15,23 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
+// Default login route (Laravel expects this)
+Route::get('/login', function () {
+    return redirect('/admin/login');
+})->name('login');
+
 // Admin routes
 Route::prefix('admin')->group(function () {
     // Guest routes
     Route::middleware('guest')->group(function () {
         Route::get('/login', [AuthController::class, 'showLoginForm'])->name('admin.login');
         Route::post('/login', [AuthController::class, 'login']);
+    });
+
+    // Public QR routes for monitor displays (no auth required)
+    Route::prefix('attendance')->name('admin.attendance.')->group(function () {
+        Route::get('/qr/display', [AttendanceController::class, 'qrDisplay'])->name('qr.display');
+        Route::get('/qr/image/{code}', [AttendanceController::class, 'qrImage'])->name('qr.image');
     });
 
     // Authenticated routes

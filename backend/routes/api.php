@@ -13,6 +13,12 @@ use App\Http\Controllers\Api\ReportController;
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 
+// Public QR endpoints for display monitors
+Route::prefix('qr')->group(function () {
+    Route::get('/today', [QrController::class, 'getTodayQr']); // Public for display screens
+    Route::post('/validate', [QrController::class, 'validateQr']); // Public for mobile app scanning
+});
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Authentication
@@ -49,10 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/classes', [StudentAttendanceController::class, 'getClasses']);
     });
 
-    // QR Code
+    // QR Code Management (Admin only)
     Route::prefix('qr')->group(function () {
-        Route::get('/today', [QrController::class, 'getTodayQr']);
-        Route::post('/validate', [QrController::class, 'validateQr']);
         Route::post('/generate', [QrController::class, 'generateQr'])
             ->middleware('role:Admin');
     });

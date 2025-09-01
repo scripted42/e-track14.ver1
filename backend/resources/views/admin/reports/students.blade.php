@@ -347,8 +347,8 @@
                                     </div>
                                     <div class="mt-3">
                                         <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-success" role="progressbar" 
-                                                 style="width: {{ $stats['attendance_rate'] }}%"></div>
+                                            <div class="progress-bar bg-success student-progress-bar" role="progressbar" 
+                                                 data-width="{{ $stats['attendance_rate'] }}"></div>
                                         </div>
                                         <div class="text-center mt-1">
                                             <small class="text-muted">{{ $stats['attendance_rate'] }}% kehadiran</small>
@@ -600,6 +600,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Auto-submit can be enabled here if desired
             // this.form.submit();
         });
+    });
+    
+    // Initialize progress bars with data-width attributes
+    document.querySelectorAll('.student-progress-bar').forEach(bar => {
+        const width = bar.getAttribute('data-width');
+        if (width) {
+            bar.style.width = width + '%';
+        }
     });
     
     // Add sorting functionality to tables

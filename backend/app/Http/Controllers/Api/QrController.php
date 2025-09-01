@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceQr;
 use App\Models\AuditLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -12,12 +13,9 @@ class QrController extends Controller
 {
     public function getTodayQr()
     {
-        $qr = AttendanceQr::getTodayQr();
-
-        if (!$qr) {
-            // Generate new QR if none exists for today
-            $qr = AttendanceQr::generateDailyQr();
-        }
+        // Always generate a new QR code for every request to ensure fresh QR every 10 seconds
+        // This approach ensures dynamic generation as requested by user
+        $qr = $this->generateShortTermQr();
 
         return response()->json([
             'success' => true,
@@ -25,7 +23,21 @@ class QrController extends Controller
                 'qr_code' => $qr->qr_code,
                 'valid_until' => $qr->valid_until,
                 'is_valid' => $qr->isValid(),
+                'generated_at' => $qr->created_at->format('Y-m-d H:i:s'),
             ]
+        ]);
+    }
+    
+    private function generateShortTermQr()
+    {
+        // Generate QR code with microsecond timestamp for true uniqueness every call
+        $timestamp = now()->format('YmdHis') . now()->micro;
+        $qrCode = 'QR_' . date('Y-m-d') . '_' . $timestamp . '_' . bin2hex(random_bytes(4));
+        $validUntil = now()->addSeconds(15); // Valid for 15 seconds
+
+        return AttendanceQr::create([
+            'qr_code' => $qrCode,
+            'valid_until' => $validUntil,
         ]);
     }
 

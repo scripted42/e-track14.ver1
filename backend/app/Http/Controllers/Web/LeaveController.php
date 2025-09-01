@@ -7,6 +7,7 @@ use App\Models\Leave;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class LeaveController extends Controller
 {

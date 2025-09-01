@@ -527,9 +527,12 @@
                     <div class="stat-value text-purple">{{ number_format($employeeStats['monthly_attendance']) }}</div>
                     <div class="stat-label">Kehadiran Pegawai Bulan Ini</div>
                     <div class="mt-2">
+                        @php
+                            $employeePercentage = $employeeStats['total_employees'] > 0 ? round(($employeeStats['monthly_attendance'] / $employeeStats['total_employees']) * 100, 1) : 0;
+                        @endphp
                         <div class="progress" style="height: 6px;">
                             <div class="progress-bar bg-purple" role="progressbar" 
-                                 style="width: {{ $employeeStats['total_employees'] > 0 ? ($employeeStats['monthly_attendance'] / $employeeStats['total_employees']) * 100 : 0 }}%"></div>
+                                 data-width="{{ $employeePercentage }}"></div>
                         </div>
                     </div>
                 </div>
@@ -545,9 +548,12 @@
                     <div class="stat-value text-pink">{{ number_format($studentStats['monthly_attendance']) }}</div>
                     <div class="stat-label">Kehadiran Siswa Bulan Ini</div>
                     <div class="mt-2">
+                        @php
+                            $studentPercentage = $studentStats['total_students'] > 0 ? round(($studentStats['monthly_attendance'] / $studentStats['total_students']) * 100, 1) : 0;
+                        @endphp
                         <div class="progress" style="height: 6px;">
                             <div class="progress-bar bg-pink" role="progressbar" 
-                                 style="width: {{ $studentStats['total_students'] > 0 ? ($studentStats['monthly_attendance'] / $studentStats['total_students']) * 100 : 0 }}%"></div>
+                                 data-width="{{ $studentPercentage }}"></div>
                         </div>
                     </div>
                 </div>
@@ -1083,6 +1089,13 @@ function refreshStatistics() {
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize progress bars with data-width attributes
+    const progressBars = document.querySelectorAll('.progress-bar[data-width]');
+    progressBars.forEach(bar => {
+        const width = bar.getAttribute('data-width');
+        bar.style.width = width + '%';
+    });
+    
     // Initialize search functionality
     initializeSearch();
     

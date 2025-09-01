@@ -259,56 +259,80 @@
 @endsection
 
 @push('scripts')
+<!-- Weekly Chart Data -->
+<script id="weekly-chart-data" type="application/json">
+<?php
+$chartData = [
+    'labels' => isset($weeklyData) ? array_column($weeklyData, 'day') : [],
+    'employeeData' => isset($weeklyData) ? array_column($weeklyData, 'employees') : [],
+    'studentData' => isset($weeklyData) ? array_column($weeklyData, 'students') : []
+];
+echo json_encode($chartData);
+?>
+</script>
+
 <script>
-    // Weekly Attendance Chart
-    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
-    const weeklyChart = new Chart(weeklyCtx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode(array_column($weeklyData, 'day')) !!},
-            datasets: [{
-                label: 'Pegawai',
-                data: {!! json_encode(array_column($weeklyData, 'employees')) !!},
-                borderColor: '#2563EB',
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4
-            }, {
-                label: 'Siswa',
-                data: {!! json_encode(array_column($weeklyData, 'students')) !!},
-                borderColor: '#10B981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Weekly Attendance Chart
+        const weeklyCtx = document.getElementById('weeklyChart');
+        if (weeklyCtx) {
+            // Get data from JSON script tag
+            const dataScript = document.getElementById('weekly-chart-data');
+            const chartData = dataScript ? JSON.parse(dataScript.textContent) : {
+                labels: [],
+                employeeData: [],
+                studentData: []
+            };
+            
+            const weeklyChart = new Chart(weeklyCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'Pegawai',
+                        data: chartData.employeeData,
+                        borderColor: '#2563EB',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Siswa',
+                        data: chartData.studentData,
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
                 },
-                x: {
-                    grid: {
-                        display: false
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
                     }
                 }
-            },
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20
-                    }
-                }
-            }
+            });
         }
     });
 </script>

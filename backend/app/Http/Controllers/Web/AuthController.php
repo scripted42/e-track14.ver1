@@ -33,8 +33,8 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $user = Auth::user();
 
-            // Check if user is admin or vice principal
-            if (!$user->isAdmin() && !$user->isVicePrincipal()) {
+            // Check if user is admin, kepala sekolah, or vice principal
+            if (!$user->isAdmin() && !$user->isKepalaSekolah() && !$user->isVicePrincipal()) {
                 Auth::logout();
                 return back()->withErrors([
                     'email' => 'You do not have permission to access the admin panel.',

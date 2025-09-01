@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class AuditLog extends Model
 {
@@ -46,11 +47,18 @@ class AuditLog extends Model
         return $query->where('created_at', '>=', now()->subDays($days));
     }
 
-    // Static methods
+    /**
+     * Log an audit entry
+     *
+     * @param string $action
+     * @param array|null $details
+     * @param int|null $userId
+     * @return static
+     */
     public static function log($action, $details = null, $userId = null)
     {
         return self::create([
-            'user_id' => $userId ?? auth()->id(),
+            'user_id' => $userId ?? Auth::id(),
             'action' => $action,
             'details' => $details,
         ]);

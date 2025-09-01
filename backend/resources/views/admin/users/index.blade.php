@@ -415,9 +415,10 @@
                                                 </a>
                                                 @if($user->id !== auth()->id())
                                                     <button type="button" 
-                                                            class="action-btn btn btn-danger" 
+                                                            class="action-btn btn btn-danger delete-user-btn" 
                                                             title="Hapus"
-                                                            onclick="deleteUser({{ $user->id }}, '{{ $user->name }}')">
+                                                            data-user-id="{{ $user->id }}"
+                                                            data-user-name="{{ $user->name }}">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 @endif
@@ -559,6 +560,15 @@ function refreshUsers() {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
+    // Add delete button event listeners
+    document.querySelectorAll('.delete-user-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const userName = this.getAttribute('data-user-name');
+            deleteUser(userId, userName);
+        });
+    });
+    
     // Add tooltips
     const tooltips = document.querySelectorAll('[title]');
     tooltips.forEach(el => {

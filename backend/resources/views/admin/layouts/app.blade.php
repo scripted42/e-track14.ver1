@@ -180,6 +180,14 @@
             </li>
             
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.attendance.qr') ? 'active' : '' }}" 
+                   href="{{ route('admin.attendance.qr') }}">
+                    <i class="fas fa-qrcode"></i>
+                    Kelola QR Code
+                </a>
+            </li>
+            
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}" 
                    href="{{ route('admin.students.index') }}">
                     <i class="fas fa-user-graduate"></i>
@@ -289,11 +297,10 @@
         });
         
         // CSRF token setup for AJAX
-        document.querySelector('meta[name="csrf-token"]')?.content && 
-        (window.axios = window.axios || {}, window.axios.defaults = window.axios.defaults || {}, 
-         window.axios.defaults.headers = window.axios.defaults.headers || {}, 
-         window.axios.defaults.headers.common = window.axios.defaults.headers.common || {}, 
-         window.axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').content);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken && window.axios) {
+            window.axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken.content;
+        }
     </script>
     
     @stack('scripts')
