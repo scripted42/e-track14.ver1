@@ -15,7 +15,7 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Attendance::with(['user:id,name,email', 'user.role:id,role_name'])
+        $query = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name'])
             ->orderBy('timestamp', 'desc');
 
         // Apply filters
@@ -42,7 +42,7 @@ class AttendanceController extends Controller
         $attendance = $query->paginate(20);
 
         // Get filter options
-        $users = User::whereIn('role_id', [2, 3]) // Guru and Pegawai
+        $users = User::whereIn('role_id', [2, 3, 4, 6]) // Guru, Pegawai, Kepala Sekolah, and other roles
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -245,7 +245,7 @@ class AttendanceController extends Controller
 
     public function export(Request $request)
     {
-        $query = Attendance::with(['user:id,name,email', 'user.role:id,role_name']);
+        $query = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name']);
 
         // Apply same filters as index
         if ($request->filled('user_id')) {
@@ -299,7 +299,7 @@ class AttendanceController extends Controller
                 fputcsv($file, [
                     $record->user->name,
                     $record->user->email,
-                    $record->user->role->role_name,
+                    $record->user->role ? $record->user->role->role_name : 'No Role',
                     ucfirst($record->type),
                     ucfirst($record->status),
                     $record->timestamp->format('Y-m-d'),
