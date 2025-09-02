@@ -1,32 +1,19 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Manajemen Pengguna')
+@section('title', 'Manajemen Staff')
 
 @push('styles')
 <style>
-.user-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
-
-.user-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
-    border-color: #3b82f6;
-}
-
 .user-avatar {
     width: 60px;
     height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border-radius: 8px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #6c757d;
     font-size: 1.5rem;
     font-weight: bold;
     margin-right: 1rem;
@@ -34,82 +21,120 @@
 
 .role-badge {
     padding: 0.375rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 6px;
     font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
 }
 
 .role-admin {
-    background-color: #fecaca;
-    color: #991b1b;
+    background: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
 }
 
 .role-teacher {
-    background-color: #bfdbfe;
-    color: #1e40af;
+    background: #d1ecf1;
+    color: #0c5460;
+    border-color: #bee5eb;
 }
 
 .role-employee {
-    background-color: #d1fae5;
-    color: #065f46;
+    background: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
 }
 
 .stats-card {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.2s ease;
     height: 100%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
 .stats-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 25px rgba(0,0,0,0.1);
 }
 
 .stats-icon {
     width: 50px;
     height: 50px;
-    border-radius: 50%;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0 auto 1rem;
     font-size: 1.25rem;
-    margin-bottom: 1rem;
+    color: white;
 }
 
 .stats-value {
     font-size: 2rem;
-    font-weight: bold;
+    font-weight: 600;
     margin-bottom: 0.5rem;
 }
 
 .stats-label {
-    color: #64748b;
+    color: #6c757d;
     font-size: 0.875rem;
     font-weight: 500;
 }
 
-.filter-card {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
 .btn-modern {
-    border-radius: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
     font-weight: 500;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+    background: white;
+    color: #6c757d;
 }
 
 .btn-modern:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+    color: white;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+    border-color: #1e7e34;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+    border-color: #545b62;
+    color: white;
 }
 
 .table {
@@ -117,38 +142,38 @@
 }
 
 .table thead th {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: #f8f9fa;
     border: none;
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     letter-spacing: 0.5px;
-    color: #475569;
+    color: #2c3e50;
     padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .table tbody td {
     padding: 1rem;
     vertical-align: middle;
-    border-color: #f1f5f9;
+    border-color: #f8f9fa;
 }
 
 .table tbody tr {
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .table tbody tr:hover {
-    background-color: #f8fafc;
-    transform: translateX(2px);
+    background-color: #f8f9fa;
 }
 
 .action-btn {
     padding: 0.375rem 0.75rem;
-    border-radius: 0.375rem;
+    border-radius: 6px;
     font-size: 0.75rem;
     font-weight: 500;
-    transition: all 0.3s ease;
-    border: none;
+    transition: all 0.2s ease;
+    border: 1px solid #dee2e6;
     margin: 0 0.125rem;
 }
 
@@ -157,30 +182,10 @@
 }
 
 .search-highlight {
-    background-color: #fef3c7;
+    background-color: #fff3cd;
     padding: 0.1rem 0.2rem;
     border-radius: 0.25rem;
 }
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-.animate-delay-1 { animation-delay: 0.1s; }
-.animate-delay-2 { animation-delay: 0.2s; }
-.animate-delay-3 { animation-delay: 0.3s; }
-.animate-delay-4 { animation-delay: 0.4s; }
 
 /* Responsive design */
 @media (max-width: 768px) {
@@ -211,17 +216,18 @@
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-1 text-gray-800">👥 Manajemen Pengguna</h1>
-                    <p class="text-muted mb-0">Kelola pengguna sistem, role, dan hak akses</p>
-                </div>
-                <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-modern">
-                    <i class="fas fa-plus me-2"></i>Tambah Pengguna Baru
-                </a>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Manajemen Staff</h1>
+            <p class="text-muted mb-0">Kelola staff sekolah, role, dan hak akses</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.users.import') }}" class="btn btn-success">
+                <i class="fas fa-upload me-2"></i>Import Staff
+            </a>
+            <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Tambah Staff Baru
+            </a>
         </div>
     </div>
 
@@ -235,89 +241,79 @@
         @endphp
         
         <div class="col-md-3 mb-3">
-            <div class="stats-card card animate-fade-in">
-                <div class="card-body text-center">
-                    <div class="stats-icon bg-primary bg-gradient text-white mx-auto">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stats-value text-primary">{{ $totalUsers }}</div>
-                    <div class="stats-label">Total Pengguna</div>
+            <div class="stats-card">
+                <div class="stats-icon" style="background: #007bff;">
+                    <i class="fas fa-users"></i>
                 </div>
+                <div class="stats-value" style="color: #007bff;">{{ $totalUsers }}</div>
+                <div class="stats-label">Total Pengguna</div>
             </div>
         </div>
         
         <div class="col-md-3 mb-3">
-            <div class="stats-card card animate-fade-in animate-delay-1">
-                <div class="card-body text-center">
-                    <div class="stats-icon bg-danger bg-gradient text-white mx-auto">
-                        <i class="fas fa-user-shield"></i>
-                    </div>
-                    <div class="stats-value text-danger">{{ $adminCount }}</div>
-                    <div class="stats-label">Administrator</div>
+            <div class="stats-card">
+                <div class="stats-icon" style="background: #dc3545;">
+                    <i class="fas fa-user-shield"></i>
                 </div>
+                <div class="stats-value" style="color: #dc3545;">{{ $adminCount }}</div>
+                <div class="stats-label">Administrator</div>
             </div>
         </div>
         
         <div class="col-md-3 mb-3">
-            <div class="stats-card card animate-fade-in animate-delay-2">
-                <div class="card-body text-center">
-                    <div class="stats-icon bg-info bg-gradient text-white mx-auto">
-                        <i class="fas fa-chalkboard-teacher"></i>
-                    </div>
-                    <div class="stats-value text-info">{{ $teacherCount }}</div>
-                    <div class="stats-label">Guru</div>
+            <div class="stats-card">
+                <div class="stats-icon" style="background: #17a2b8;">
+                    <i class="fas fa-chalkboard-teacher"></i>
                 </div>
+                <div class="stats-value" style="color: #17a2b8;">{{ $teacherCount }}</div>
+                <div class="stats-label">Guru</div>
             </div>
         </div>
         
         <div class="col-md-3 mb-3">
-            <div class="stats-card card animate-fade-in animate-delay-3">
-                <div class="card-body text-center">
-                    <div class="stats-icon bg-success bg-gradient text-white mx-auto">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <div class="stats-value text-success">{{ $employeeCount }}</div>
-                    <div class="stats-label">Pegawai</div>
+            <div class="stats-card">
+                <div class="stats-icon" style="background: #28a745;">
+                    <i class="fas fa-user-tie"></i>
                 </div>
+                <div class="stats-value" style="color: #28a745;">{{ $employeeCount }}</div>
+                <div class="stats-label">Pegawai</div>
             </div>
         </div>
     </div>
 
     <!-- Filter and Search Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="filter-card card animate-fade-in animate-delay-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">
-                        <i class="fas fa-filter text-primary me-2"></i>Filter & Pencarian Pengguna
-                    </h5>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="roleFilter" class="form-label fw-semibold">Filter Role</label>
-                            <select class="form-select" id="roleFilter">
-                                <option value="">Semua Role</option>
-                                <option value="admin">Administrator</option>
-                                <option value="teacher">Guru</option>
-                                <option value="employee">Pegawai</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="statusFilter" class="form-label fw-semibold">Filter Status</label>
-                            <select class="form-select" id="statusFilter">
-                                <option value="">Semua Status</option>
-                                <option value="active">Aktif</option>
-                                <option value="inactive">Tidak Aktif</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="searchUser" class="form-label fw-semibold">Pencarian</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="searchUser" placeholder="Cari nama atau email...">
-                                <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-search me-2"></i>Filter & Pencarian Pengguna
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="roleFilter" class="form-label">Filter Role</label>
+                    <select class="form-select" id="roleFilter">
+                        <option value="">Semua Role</option>
+                        <option value="admin">Administrator</option>
+                        <option value="teacher">Guru</option>
+                        <option value="employee">Pegawai</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="statusFilter" class="form-label">Filter Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">Semua Status</option>
+                        <option value="active">Aktif</option>
+                        <option value="inactive">Tidak Aktif</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="searchUser" class="form-label">Pencarian</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchUser" placeholder="Cari nama atau email...">
+                        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -327,21 +323,11 @@
     <!-- Users Table -->
     <div class="row">
         <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list me-2 text-primary"></i>Daftar Pengguna
-                        </h5>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-success btn-sm" onclick="exportUsers()">
-                                <i class="fas fa-file-excel me-1"></i>Export Excel
-                            </button>
-                            <button class="btn btn-outline-info btn-sm" onclick="refreshUsers()">
-                                <i class="fas fa-sync-alt me-1"></i>Refresh
-                            </button>
-                        </div>
-                    </div>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Daftar Pengguna
+                    </h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -349,10 +335,11 @@
                             <thead>
                                 <tr>
                                     <th>Pengguna</th>
+                                    <th>NIP/NIK</th>
                                     <th>Email</th>
                                     <th>Role</th>
-                                    <th>Tanggal Dibuat</th>
                                     <th>Status</th>
+                                    <th>Tanggal Dibuat</th>
                                     <th class="text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -362,13 +349,20 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="user-avatar">
-                                                    {{ substr($user->name, 0, 1) }}
+                                                    @if($user->photo && file_exists(public_path('storage/user-photos/' . $user->photo)))
+                                                        <img src="{{ asset('storage/user-photos/' . $user->photo) }}" alt="Foto" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                                    @else
+                                                        {{ substr($user->name, 0, 1) }}
+                                                    @endif
                                                 </div>
                                                 <div>
                                                     <div class="fw-semibold">{{ $user->name }}</div>
                                                     <small class="text-muted">ID: {{ $user->id }}</small>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td>
+                                            <span class="fw-medium">{{ $user->nip_nik ?? '-' }}</span>
                                         </td>
                                         <td>
                                             <span class="fw-medium">{{ $user->email }}</span>
@@ -395,11 +389,15 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="fw-medium">{{ $user->created_at->format('d M Y') }}</span>
-                                            <br><small class="text-muted">{{ $user->created_at->format('H:i') }}</small>
+                                            @if($user->status == 'Aktif')
+                                                <span class="badge bg-success">Aktif</span>
+                                            @else
+                                                <span class="badge bg-danger">Non-Aktif</span>
+                                            @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-success">Aktif</span>
+                                            <span class="fw-medium">{{ $user->created_at->format('d M Y') }}</span>
+                                            <br><small class="text-muted">{{ $user->created_at->format('H:i') }}</small>
                                         </td>
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-1">
@@ -438,7 +436,7 @@
                     </div>
                 </div>
                 @if($users->hasPages())
-                    <div class="card-footer bg-light">
+                    <div class="card-footer">
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="text-muted">
                                 Menampilkan {{ $users->firstItem() }} - {{ $users->lastItem() }} dari {{ $users->total() }} pengguna
@@ -457,8 +455,8 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title text-danger">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Konfirmasi Hapus
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Konfirmasi Hapus
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>

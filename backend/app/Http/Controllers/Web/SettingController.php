@@ -16,19 +16,25 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
+        // Debug: Log all request data
+        \Log::info('Settings Update Request:', $request->all());
+        
         $currentSettings = Setting::getSettings();
+        
+        // Debug: Log current settings
+        \Log::info('Current Settings:', $currentSettings->toArray());
         
         // Validate only the fields that are provided
         $rules = [];
         $data = [];
         
         if ($request->filled('latitude')) {
-            $rules['latitude'] = 'numeric|between:-90,90';
+            $rules['latitude'] = 'numeric|between:-90,90|regex:/^-?\d{1,3}\.\d{1,7}$/';
             $data['latitude'] = $request->latitude;
         }
         
         if ($request->filled('longitude')) {
-            $rules['longitude'] = 'numeric|between:-180,180';
+            $rules['longitude'] = 'numeric|between:-180,180|regex:/^-?\d{1,3}\.\d{1,7}$/';
             $data['longitude'] = $request->longitude;
         }
         
@@ -62,9 +68,22 @@ class SettingController extends Controller
             $request->validate($rules);
         }
         
+        // Debug: Log data to be updated
+        \Log::info('Data to update:', $data);
+        
         // Update only the provided fields
         if (!empty($data)) {
-            $currentSettings->update($data);
+            $updateResult = $currentSettings->update($data);
+            
+            // Debug: Log update result
+            \Log::info('Update result:', ['success' => $updateResult]);
+            
+            // Refresh the model to get updated data
+            $currentSettings->refresh();
+            
+            // Debug: Log updated settings
+            \Log::info('Updated Settings:', $currentSettings->toArray());
+            
             $updatedFields = [];
             foreach (array_keys($data) as $field) {
                 switch ($field) {

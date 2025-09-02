@@ -47,6 +47,9 @@
             padding: 0.75rem 1.5rem;
             border-radius: 0;
             transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
         }
         
         .sidebar .nav-link:hover,
@@ -58,6 +61,76 @@
         .sidebar .nav-link i {
             width: 20px;
             margin-right: 10px;
+        }
+        
+        /* Submenu Styles */
+        .sidebar .nav-item.has-submenu {
+            position: relative;
+        }
+        
+        .sidebar .nav-item.has-submenu > .nav-link {
+            cursor: pointer;
+        }
+        
+        .sidebar .nav-item.has-submenu > .nav-link::after {
+            content: '\f107';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar .nav-item.has-submenu.open > .nav-link::after {
+            transform: rotate(180deg);
+        }
+        
+        .sidebar .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar .submenu.show {
+            max-height: 300px;
+        }
+        
+        .sidebar .submenu .nav-link {
+            padding: 0.5rem 1.5rem 0.5rem 3rem;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar .submenu .nav-link:hover,
+        .sidebar .submenu .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-left-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .sidebar .submenu .nav-link i {
+            width: 16px;
+            margin-right: 8px;
+            font-size: 0.8rem;
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar .submenu {
+                max-height: 200px;
+            }
         }
         
         .main-content {
@@ -196,6 +269,14 @@
             </li>
             
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.classrooms.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.classrooms.index') }}">
+                    <i class="fas fa-chalkboard"></i>
+                    Manajemen Kelas
+                </a>
+            </li>
+            
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}" 
                    href="{{ route('admin.leaves.index') }}">
                     <i class="fas fa-calendar-times"></i>
@@ -207,16 +288,46 @@
                 <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
                    href="{{ route('admin.users.index') }}">
                     <i class="fas fa-users"></i>
-                    Pengguna
+                    Manajemen Staff
                 </a>
             </li>
             
-            <li class="nav-item">
+            <li class="nav-item has-submenu {{ request()->routeIs('admin.reports.*') ? 'open' : '' }}">
                 <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" 
-                   href="{{ route('admin.reports.index') }}">
+                   href="#" onclick="toggleSubmenu(this)">
                     <i class="fas fa-chart-bar"></i>
                     Laporan
                 </a>
+                <ul class="submenu {{ request()->routeIs('admin.reports.*') ? 'show' : '' }}">
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.index') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.index') }}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboard Laporan
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.attendance') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.attendance') }}">
+                            <i class="fas fa-users"></i>
+                            Kehadiran Pegawai
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.leaves') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.leaves') }}">
+                            <i class="fas fa-calendar-times"></i>
+                            Izin & Cuti
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.students') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.students') }}">
+                            <i class="fas fa-user-graduate"></i>
+                            Kehadiran Siswa
+                        </a>
+                    </li>
+                </ul>
             </li>
             
             <li class="nav-item">
@@ -294,6 +405,41 @@
         // Sidebar toggle for mobile
         document.getElementById('sidebarToggle')?.addEventListener('click', function() {
             document.querySelector('.sidebar').classList.toggle('show');
+        });
+        
+        // Submenu toggle functionality
+        function toggleSubmenu(element) {
+            event.preventDefault();
+            const navItem = element.closest('.nav-item');
+            const submenu = navItem.querySelector('.submenu');
+            
+            // Toggle the open class
+            navItem.classList.toggle('open');
+            
+            // Toggle the submenu visibility
+            if (submenu.classList.contains('show')) {
+                submenu.classList.remove('show');
+            } else {
+                submenu.classList.add('show');
+            }
+        }
+        
+        // Initialize submenu state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if any submenu should be open based on current route
+            const currentRoute = window.location.pathname;
+            
+            if (currentRoute.includes('/admin/reports')) {
+                const reportNavItem = document.querySelector('.nav-item.has-submenu');
+                const reportSubmenu = document.querySelector('.nav-item.has-submenu .submenu');
+                
+                if (reportNavItem && !reportNavItem.classList.contains('open')) {
+                    reportNavItem.classList.add('open');
+                    if (reportSubmenu && !reportSubmenu.classList.contains('show')) {
+                        reportSubmenu.classList.add('show');
+                    }
+                }
+            }
         });
         
         // CSRF token setup for AJAX

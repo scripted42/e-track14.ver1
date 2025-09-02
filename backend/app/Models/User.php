@@ -20,9 +20,16 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'nip_nik',
+        'photo',
+        'address',
+        'status',
         'email',
         'password',
         'role_id',
+        'is_walikelas',
+        'must_change_password',
+        'class_room_id',
     ];
 
     /**
@@ -77,6 +84,16 @@ class User extends Authenticatable
     public function auditLogs()
     {
         return $this->hasMany(AuditLog::class);
+    }
+
+    public function classRooms()
+    {
+        return $this->hasMany(ClassRoom::class, 'walikelas_id');
+    }
+
+    public function classRoom()
+    {
+        return $this->belongsTo(ClassRoom::class, 'class_room_id');
     }
 
     // Helper methods

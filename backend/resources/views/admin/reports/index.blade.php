@@ -3,23 +3,44 @@
 @section('title', 'Laporan')
 
 @push('styles')
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-.stat-card {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
-    height: 100%;
-    overflow: hidden;
+.detail-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    margin-bottom: 1.5rem;
 }
 
-.stat-card:hover {
+.detail-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1.5rem;
+    border-radius: 8px 8px 0 0;
+}
+
+.detail-body {
+    padding: 1.5rem;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.stats-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.stat-icon {
+.stats-icon {
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -27,162 +48,158 @@
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-    margin-bottom: 1rem;
+    margin: 0 auto 1rem;
+    color: white;
 }
 
-.stat-value {
-    font-size: 2.5rem;
-    font-weight: bold;
+.stats-value {
+    font-size: 2rem;
+    font-weight: 700;
     margin-bottom: 0.5rem;
-    line-height: 1;
 }
 
-.stat-label {
-    color: #64748b;
+.stats-label {
+    color: #6c757d;
     font-size: 0.875rem;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.stat-trend {
+.stats-trend {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
+    border-radius: 4px;
     font-weight: 500;
+    margin-top: 0.5rem;
 }
 
-.bg-primary-gradient {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+.bg-primary {
+    background: #007bff !important;
 }
 
-.bg-success-gradient {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+.bg-success {
+    background: #28a745 !important;
 }
 
-.bg-warning-gradient {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+.bg-warning {
+    background: #ffc107 !important;
 }
 
-.bg-info-gradient {
-    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+.bg-danger {
+    background: #dc3545 !important;
 }
 
-.bg-purple-gradient {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+.bg-info {
+    background: #17a2b8 !important;
 }
 
-.bg-pink-gradient {
-    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+.bg-secondary {
+    background: #6c757d !important;
 }
 
-.filter-card {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
+.text-primary {
+    color: #007bff !important;
 }
 
-.filter-card .form-control, .filter-card .form-select {
-    border-radius: 0.5rem;
-    border: 1px solid #d1d5db;
-    padding: 0.75rem 1rem;
-    transition: all 0.3s ease;
+.text-success {
+    color: #28a745 !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.text-info {
+    color: #17a2b8 !important;
+}
+
+.text-secondary {
+    color: #6c757d !important;
+}
+
+.btn-modern {
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
     background: white;
+    color: #6c757d;
 }
 
-.filter-card .form-control:focus, .filter-card .form-select:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    transform: translateY(-1px);
+.btn-modern:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
 }
 
-.search-highlight {
-    background-color: #fef3c7;
-    padding: 0.1rem 0.2rem;
-    border-radius: 0.25rem;
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
 }
 
-.report-section {
-    background: white;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-    overflow: hidden;
-    transition: all 0.3s ease;
+.btn-primary:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+    color: white;
 }
 
-.report-section:hover {
-    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
 }
 
-.section-header {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    padding: 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
+.btn-secondary:hover {
+    background: #545b62;
+    border-color: #545b62;
+    color: white;
 }
 
-.section-content {
-    padding: 1.5rem;
+.btn-warning {
+    background: #ffc107;
+    color: #212529;
+    border-color: #ffc107;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+    border-color: #e0a800;
+    color: #212529;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    border-color: #c82333;
+    color: white;
 }
 
 .chart-container {
     height: 300px;
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    border-radius: 0.5rem;
-    border: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-}
-
-.top-performer-item {
-    display: flex;
-    align-items: center;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
     padding: 1rem;
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    border-radius: 0.5rem;
-    border: 1px solid #e2e8f0;
-    margin-bottom: 0.75rem;
-    transition: all 0.3s ease;
-}
-
-.top-performer-item:hover {
-    transform: translateX(5px);
-    border-color: #3b82f6;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
-
-.performer-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-weight: bold;
-    margin-right: 1rem;
 }
 
-.btn-modern {
-    border-radius: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border: 2px solid transparent;
-}
-
-.btn-modern:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.chart-container canvas {
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .table {
@@ -190,151 +207,120 @@
 }
 
 .table thead th {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: #f8f9fa;
     border: none;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
-    color: #475569;
+    color: #495057;
     padding: 1rem;
 }
 
 .table tbody td {
     padding: 1rem;
     vertical-align: middle;
-    border-color: #f1f5f9;
+    border-color: #f1f3f4;
 }
 
 .table tbody tr {
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .table tbody tr:hover {
-    background-color: #f8fafc;
-    transform: translateX(2px);
+    background-color: #f8f9fa;
 }
 
 .badge {
     font-size: 0.75rem;
     padding: 0.375rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 4px;
     font-weight: 500;
 }
 
-.tooltip-custom {
-    animation: fadeIn 0.3s ease;
+.filter-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
+.form-control, .form-select {
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-.animate-fade-in {
-    animation: fadeInUp 0.6s ease-out;
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6c757d;
 }
 
-.animate-delay-1 { animation-delay: 0.1s; }
-.animate-delay-2 { animation-delay: 0.2s; }
-.animate-delay-3 { animation-delay: 0.3s; }
-.animate-delay-4 { animation-delay: 0.4s; }
-.animate-delay-5 { animation-delay: 0.5s; }
-.animate-delay-6 { animation-delay: 0.6s; }
-
-/* Loading states */
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
 }
 
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+.empty-state h6 {
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.empty-state p {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+.top-performer-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.top-performer-item:hover {
+    background: #e9ecef;
+    border-color: #007bff;
+}
+
+.performer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #007bff;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+    color: white;
+    font-weight: bold;
+    margin-right: 0.75rem;
 }
 
-.loading-overlay.show {
-    opacity: 1;
-    visibility: visible;
-}
-
-.loading-spinner {
-    background: white;
-    padding: 2rem;
-    border-radius: 1rem;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-/* Responsive design */
 @media (max-width: 768px) {
-    .stat-card {
+    .stats-card {
         margin-bottom: 1rem;
     }
     
-    .section-header {
-        padding: 1rem;
-    }
-    
-    .section-content {
-        padding: 1rem;
-    }
-    
-    .filter-card .row .col-md-3,
-    .filter-card .row .col-md-4 {
-        margin-bottom: 1rem;
-    }
-    
-    .btn-modern {
-        width: 100%;
-        justify-content: center;
-        margin-bottom: 0.5rem;
+    .chart-container {
+        height: 250px;
     }
     
     .table-responsive {
-        border-radius: 0.5rem;
-    }
-}
-
-/* Print styles */
-@media print {
-    .filter-card,
-    .btn,
-    .section-header .btn {
-        display: none !important;
-    }
-    
-    .report-section {
-        box-shadow: none;
-        border: 1px solid #ccc;
-        margin-bottom: 1rem;
-        page-break-inside: avoid;
-    }
-    
-    .table {
-        font-size: 0.8rem;
+        border-radius: 6px;
     }
 }
 </style>
@@ -343,52 +329,41 @@
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1 class="h3 mb-1 text-gray-800">📊 Dashboard Laporan</h1>
-                    <p class="text-muted mb-0">Pantau statistik kehadiran dan kinerja sistem secara real-time</p>
+            <h1 class="h3 mb-0">Laporan</h1>
+            <p class="text-muted mb-0">Analisis dan statistik sistem absensi</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <div class="badge bg-success px-3 py-2">
-                        <i class="fas fa-calendar-check me-1"></i>
-                        {{ \Carbon\Carbon::now()->format('d M Y') }}
-                    </div>
-                </div>
-            </div>
+            <button type="button" class="btn btn-primary" onclick="exportReport('excel')">
+                <i class="fas fa-file-excel me-2"></i>Export Excel
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="exportReport('pdf')">
+                <i class="fas fa-file-pdf me-2"></i>Export PDF
+            </button>
         </div>
     </div>
 
-    <!-- Enhanced Filter Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="filter-card card">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">
-                        <i class="fas fa-filter text-primary me-2"></i>Filter & Pencarian Laporan
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <h5 class="mb-3">
+            <i class="fas fa-filter me-2"></i>Filter Laporan
                     </h5>
                     <form id="reportFilterForm" method="GET">
                         <div class="row">
                             <div class="col-md-3 mb-3">
-                                <label for="start_date" class="form-label fw-semibold">
-                                    <i class="fas fa-calendar-alt me-1"></i>Tanggal Mulai
-                                </label>
-                                <input type="date" class="form-control form-control-lg" id="start_date" name="start_date" 
+                    <label for="start_date" class="form-label">Tanggal Mulai</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" 
                                        value="{{ request('start_date', \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d')) }}">
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label for="end_date" class="form-label fw-semibold">
-                                    <i class="fas fa-calendar-alt me-1"></i>Tanggal Akhir
-                                </label>
-                                <input type="date" class="form-control form-control-lg" id="end_date" name="end_date" 
+                    <label for="end_date" class="form-label">Tanggal Akhir</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" 
                                        value="{{ request('end_date', \Carbon\Carbon::now()->format('Y-m-d')) }}">
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label for="report_type" class="form-label fw-semibold">
-                                    <i class="fas fa-chart-bar me-1"></i>Tipe Laporan
-                                </label>
-                                <select class="form-select form-control-lg" id="report_type" name="report_type">
+                    <label for="report_type" class="form-label">Tipe Laporan</label>
+                    <select class="form-select" id="report_type" name="report_type">
                                     <option value="all" {{ request('report_type') == 'all' ? 'selected' : '' }}>Semua Laporan</option>
                                     <option value="attendance" {{ request('report_type') == 'attendance' ? 'selected' : '' }}>Kehadiran Pegawai</option>
                                     <option value="students" {{ request('report_type') == 'students' ? 'selected' : '' }}>Kehadiran Siswa</option>
@@ -396,11 +371,9 @@
                                 </select>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label for="search" class="form-label fw-semibold">
-                                    <i class="fas fa-search me-1"></i>Pencarian
-                                </label>
+                    <label for="search" class="form-label">Pencarian</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control form-control-lg" id="search" name="search" 
+                        <input type="text" class="form-control" id="search" name="search" 
                                            placeholder="Cari nama, email, kelas..." value="{{ request('search') }}">
                                     <button class="btn btn-primary" type="submit">
                                         <i class="fas fa-search"></i>
@@ -426,158 +399,140 @@
                                 </div>
                             </div>
                             <div class="col-md-3 text-end">
-                                <button type="submit" class="btn btn-primary btn-lg me-2">
+                    <button type="submit" class="btn btn-primary me-2">
                                     <i class="fas fa-filter me-2"></i>Terapkan Filter
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary btn-lg" onclick="resetFilters()">
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
                                     <i class="fas fa-undo me-2"></i>Reset
                                 </button>
                             </div>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Statistics Cards -->
     <div class="row mb-4">
-        <!-- Employee Statistics -->
         <div class="col-md-6 col-xl-3 mb-3">
-            <div class="stat-card animate-fade-in">
-                <div class="card-body text-center">
-                    <div class="stat-icon bg-primary-gradient text-white mx-auto">
+            <div class="stats-card">
+                <div class="stats-icon bg-primary">
                         <i class="fas fa-users"></i>
                     </div>
-                    <div class="stat-value text-primary">{{ number_format($employeeStats['total_employees']) }}</div>
-                    <div class="stat-label">Total Pegawai</div>
-                    <div class="mt-2">
-                        <small class="text-success">
+                <div class="stats-value text-primary">{{ number_format($employeeStats['total_employees']) }}</div>
+                <div class="stats-label">Total Pegawai</div>
+                <div class="stats-trend bg-success text-white">
                             <i class="fas fa-check-circle me-1"></i>
                             {{ $employeeStats['today_attendance'] }} hadir hari ini
-                        </small>
-                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-6 col-xl-3 mb-3">
-            <div class="stat-card animate-fade-in animate-delay-1">
-                <div class="card-body text-center">
-                    <div class="stat-icon bg-success-gradient text-white mx-auto">
+            <div class="stats-card">
+                <div class="stats-icon bg-success">
                         <i class="fas fa-user-graduate"></i>
                     </div>
-                    <div class="stat-value text-success">{{ number_format($studentStats['total_students']) }}</div>
-                    <div class="stat-label">Total Siswa</div>
-                    <div class="mt-2">
-                        <small class="text-info">
+                <div class="stats-value text-success">{{ number_format($studentStats['total_students']) }}</div>
+                <div class="stats-label">Total Siswa</div>
+                <div class="stats-trend bg-info text-white">
                             <i class="fas fa-school me-1"></i>
                             {{ $studentStats['classes_count'] }} kelas aktif
-                        </small>
-                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-6 col-xl-3 mb-3">
-            <div class="stat-card animate-fade-in animate-delay-2">
-                <div class="card-body text-center">
-                    <div class="stat-icon bg-warning-gradient text-white mx-auto">
+            <div class="stats-card">
+                <div class="stats-icon bg-warning">
                         <i class="fas fa-calendar-times"></i>
                     </div>
-                    <div class="stat-value text-warning">{{ number_format($leaveStats['pending_leaves']) }}</div>
-                    <div class="stat-label">Izin Menunggu</div>
-                    <div class="mt-2">
-                        <small class="text-primary">
+                <div class="stats-value text-warning">{{ number_format($leaveStats['pending_leaves']) }}</div>
+                <div class="stats-label">Izin Menunggu</div>
+                <div class="stats-trend bg-primary text-white">
                             <i class="fas fa-calendar me-1"></i>
                             {{ $leaveStats['total_leaves'] }} total bulan ini
-                        </small>
-                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-6 col-xl-3 mb-3">
-            <div class="stat-card animate-fade-in animate-delay-3">
-                <div class="card-body text-center">
-                    <div class="stat-icon bg-info-gradient text-white mx-auto">
+            <div class="stats-card">
+                <div class="stats-icon bg-danger">
                         <i class="fas fa-clock"></i>
                     </div>
-                    <div class="stat-value text-info">{{ number_format($employeeStats['late_today']) }}</div>
-                    <div class="stat-label">Terlambat Hari Ini</div>
-                    <div class="mt-2">
-                        <small class="text-muted">
+                <div class="stats-value text-danger">{{ number_format($employeeStats['late_today']) }}</div>
+                <div class="stats-label">Terlambat Hari Ini</div>
+                <div class="stats-trend bg-secondary text-white">
                             <i class="fas fa-chart-line me-1"></i>
                             Monitoring ketepatan waktu
-                        </small>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Monthly Statistics -->
+    <!-- Charts Section -->
     <div class="row mb-4">
-        <div class="col-lg-6 mb-3">
-            <div class="stat-card animate-fade-in animate-delay-4">
-                <div class="card-body text-center">
-                    <div class="stat-icon bg-purple-gradient text-white mx-auto">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <div class="stat-value text-purple">{{ number_format($employeeStats['monthly_attendance']) }}</div>
-                    <div class="stat-label">Kehadiran Pegawai Bulan Ini</div>
-                    <div class="mt-2">
-                        @php
-                            $employeePercentage = $employeeStats['total_employees'] > 0 ? round(($employeeStats['monthly_attendance'] / $employeeStats['total_employees']) * 100, 1) : 0;
-                        @endphp
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-purple" role="progressbar" 
-                                 data-width="{{ $employeePercentage }}"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6 mb-3">
-            <div class="stat-card animate-fade-in animate-delay-5">
-                <div class="card-body text-center">
-                    <div class="stat-icon bg-pink-gradient text-white mx-auto">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
-                    <div class="stat-value text-pink">{{ number_format($studentStats['monthly_attendance']) }}</div>
-                    <div class="stat-label">Kehadiran Siswa Bulan Ini</div>
-                    <div class="mt-2">
-                        @php
-                            $studentPercentage = $studentStats['total_students'] > 0 ? round(($studentStats['monthly_attendance'] / $studentStats['total_students']) * 100, 1) : 0;
-                        @endphp
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-pink" role="progressbar" 
-                                 data-width="{{ $studentPercentage }}"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts and Reports Section -->
-    <div class="row">
         <!-- Attendance Trend Chart -->
         <div class="col-lg-8 mb-4">
-            <div class="report-section animate-fade-in animate-delay-6">
-                <div class="section-header">
-                    <h5 class="mb-0 d-flex align-items-center">
-                        <i class="fas fa-chart-line text-primary me-2"></i>
-                        Tren Kehadiran 30 Hari Terakhir
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Tren Kehadiran 30 Hari Terakhir
+                    </h5>
+                    </div>
+                <div class="detail-body">
+                    <div class="chart-container">
+                        <canvas id="attendanceTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Status Distribution -->
+        <div class="col-lg-4 mb-4">
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Distribusi Status Kehadiran
+                    </h5>
+                    </div>
+                <div class="detail-body">
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="attendanceStatusChart"></canvas>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Charts -->
+    <div class="row mb-4">
+        <!-- Monthly Comparison Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Perbandingan Bulanan
                     </h5>
                 </div>
-                <div class="section-content">
+                <div class="detail-body">
                     <div class="chart-container">
-                        <div class="text-center">
-                            <i class="fas fa-chart-area fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Grafik tren kehadiran akan ditampilkan di sini</p>
-                            <small class="text-muted">Fitur visualisasi data sedang dalam pengembangan</small>
+                        <canvas id="monthlyComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Class Attendance Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-school me-2"></i>Kehadiran per Kelas
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <div class="chart-container">
+                        <canvas id="classAttendanceChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -585,15 +540,15 @@
         </div>
 
         <!-- Top Performers -->
-        <div class="col-lg-4 mb-4">
-            <div class="report-section animate-fade-in animate-delay-6">
-                <div class="section-header">
-                    <h5 class="mb-0 d-flex align-items-center">
-                        <i class="fas fa-trophy text-warning me-2"></i>
-                        Pegawai Terbaik
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>Pegawai Terbaik
                     </h5>
                 </div>
-                <div class="section-content">
+                <div class="detail-body">
                     @if($topPerformers->count() > 0)
                         @foreach($topPerformers->take(5) as $index => $performer)
                             <div class="top-performer-item">
@@ -618,34 +573,58 @@
                             </div>
                         @endforeach
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-user-clock fa-2x text-muted mb-2"></i>
-                            <p class="text-muted">Belum ada data kehadiran bulan ini</p>
+                        <div class="empty-state">
+                            <i class="fas fa-user-clock"></i>
+                            <h6>Belum ada data</h6>
+                            <p>Belum ada data kehadiran bulan ini</p>
                         </div>
                     @endif
                 </div>
             </div>
         </div>
+
+        <!-- Quick Access -->
+        <div class="col-lg-6 mb-4">
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-link me-2"></i>Akses Cepat Laporan
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('admin.reports.attendance') }}" class="btn btn-primary">
+                            <i class="fas fa-user-check me-2"></i>Laporan Kehadiran Pegawai
+                        </a>
+                        <a href="{{ route('admin.reports.leaves') }}" class="btn btn-warning">
+                            <i class="fas fa-calendar-times me-2"></i>Laporan Izin & Cuti
+                        </a>
+                        <a href="{{ route('admin.reports.students') }}" class="btn btn-success">
+                            <i class="fas fa-graduation-cap me-2"></i>Laporan Kehadiran Siswa
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Detailed Tables Section -->
+    <!-- Recent Data Tables -->
     <div class="row">
-        <!-- Recent Attendance Records -->
+        <!-- Recent Attendance -->
         <div class="col-lg-6 mb-4">
-            <div class="report-section">
-                <div class="section-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 d-flex align-items-center">
-                        <i class="fas fa-clock text-success me-2"></i>
-                        Kehadiran Terbaru (Hari Ini)
+            <div class="detail-card">
+                <div class="detail-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Kehadiran Terbaru (Hari Ini)
                     </h5>
-                    <a href="{{ route('admin.reports.attendance') }}" class="btn btn-sm btn-outline-success">
+                    <a href="{{ route('admin.reports.attendance') }}" class="btn btn-sm btn-outline-primary">
                         <i class="fas fa-eye me-1"></i>Lihat Semua
                     </a>
                 </div>
-                <div class="section-content p-0">
+                <div class="detail-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
                                     <th>Pegawai</th>
                                     <th>Waktu</th>
@@ -664,7 +643,7 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
                                                      style="width: 30px; height: 30px; font-size: 0.7rem;">
                                                     {{ substr($record->user->name, 0, 1) }}
                                                 </div>
@@ -704,22 +683,21 @@
             </div>
         </div>
 
-        <!-- Recent Leave Requests -->
+        <!-- Recent Leaves -->
         <div class="col-lg-6 mb-4">
-            <div class="report-section">
-                <div class="section-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 d-flex align-items-center">
-                        <i class="fas fa-calendar-times text-warning me-2"></i>
-                        Pengajuan Izin Terbaru
+            <div class="detail-card">
+                <div class="detail-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-times me-2"></i>Pengajuan Izin Terbaru
                     </h5>
                     <a href="{{ route('admin.reports.leaves') }}" class="btn btn-sm btn-outline-warning">
                         <i class="fas fa-eye me-1"></i>Lihat Semua
                     </a>
                 </div>
-                <div class="section-content p-0">
+                <div class="detail-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
                                     <th>Pegawai</th>
                                     <th>Tipe</th>
@@ -771,181 +749,6 @@
                                 @endforelse
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Student Attendance -->
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="report-section">
-                <div class="section-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 d-flex align-items-center">
-                        <i class="fas fa-graduation-cap text-info me-2"></i>
-                        Kehadiran Siswa Terbaru (Hari Ini)
-                    </h5>
-                    <a href="{{ route('admin.reports.students') }}" class="btn btn-sm btn-outline-info">
-                        <i class="fas fa-eye me-1"></i>Lihat Semua
-                    </a>
-                </div>
-                <div class="section-content p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Siswa</th>
-                                    <th>Kelas</th>
-                                    <th>Status</th>
-                                    <th>Waktu</th>
-                                    <th>Guru Pengajar</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php
-                                    $recentStudentAttendance = \App\Models\StudentAttendance::with(['student', 'teacher'])
-                                        ->whereDate('created_at', today())
-                                        ->orderBy('created_at', 'desc')
-                                        ->take(8)
-                                        ->get();
-                                @endphp
-                                @forelse($recentStudentAttendance as $record)
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
-                                                     style="width: 30px; height: 30px; font-size: 0.7rem;">
-                                                    {{ substr($record->student->name, 0, 1) }}
-                                                </div>
-                                                <div>
-                                                    <div class="fw-semibold">{{ $record->student->name }}</div>
-                                                    <small class="text-muted">ID: {{ $record->student->id }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td><span class="badge bg-primary">{{ $record->student->class_name }}</span></td>
-                                        <td>
-                                            @php
-                                                $statusClass = match($record->status) {
-                                                    'hadir' => 'bg-success',
-                                                    'izin' => 'bg-info',
-                                                    'sakit' => 'bg-danger',
-                                                    'alpha' => 'bg-secondary',
-                                                    default => 'bg-secondary'
-                                                };
-                                            @endphp
-                                            <span class="badge {{ $statusClass }}">{{ ucfirst($record->status) }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="fw-semibold">{{ \Carbon\Carbon::parse($record->created_at)->format('H:i') }}</span>
-                                        </td>
-                                        <td>
-                                            @if($record->teacher)
-                                                <div>
-                                                    <div class="fw-semibold">{{ $record->teacher->name }}</div>
-                                                    <small class="text-muted">{{ $record->teacher->email }}</small>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-3 text-muted">
-                                            <i class="fas fa-user-graduate me-2"></i>Belum ada kehadiran siswa hari ini
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Access Reports -->
-    <div class="row">
-        <div class="col-12">
-            <div class="report-section">
-                <div class="section-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 d-flex align-items-center">
-                            <i class="fas fa-file-alt text-success me-2"></i>
-                            Akses Cepat Laporan & Export
-                        </h5>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-success btn-sm" onclick="exportReport('excel')">
-                                <i class="fas fa-file-excel me-1"></i>Export Excel
-                            </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="exportReport('pdf')">
-                                <i class="fas fa-file-pdf me-1"></i>Export PDF
-                            </button>
-                            <button type="button" class="btn btn-outline-info btn-sm" onclick="exportReport('csv')">
-                                <i class="fas fa-file-csv me-1"></i>Export CSV
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <div class="card border-primary">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-user-check fa-3x text-primary mb-3"></i>
-                                    <h6 class="card-title">Laporan Kehadiran Pegawai</h6>
-                                    <p class="card-text text-muted">Analisis kehadiran, keterlambatan, dan performa pegawai</p>
-                                    <a href="{{ route('admin.reports.attendance') }}" class="btn btn-outline-primary btn-modern w-100">
-                                        <i class="fas fa-eye me-2"></i>Lihat Detail
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card border-warning">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-calendar-times fa-3x text-warning mb-3"></i>
-                                    <h6 class="card-title">Laporan Izin & Cuti</h6>
-                                    <p class="card-text text-muted">Monitoring pengajuan izin, cuti, dan perjalanan dinas</p>
-                                    <a href="{{ route('admin.reports.leaves') }}" class="btn btn-outline-warning btn-modern w-100">
-                                        <i class="fas fa-eye me-2"></i>Lihat Detail
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card border-success">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-graduation-cap fa-3x text-success mb-3"></i>
-                                    <h6 class="card-title">Laporan Kehadiran Siswa</h6>
-                                    <p class="card-text text-muted">Statistik kehadiran siswa berdasarkan kelas dan periode</p>
-                                    <a href="{{ route('admin.reports.students') }}" class="btn btn-outline-success btn-modern w-100">
-                                        <i class="fas fa-eye me-2"></i>Lihat Detail
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Summary Information -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="alert alert-info border-0" style="background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-info-circle text-info me-3" style="font-size: 1.5rem;"></i>
-                                    <div>
-                                        <h6 class="mb-1 text-info">📊 Informasi Filter Aktif</h6>
-                                        <p class="mb-0 text-info">
-                                            <strong>Periode:</strong> {{ $startDate->format('d M Y') }} - {{ $endDate->format('d M Y') }} |
-                                            <strong>Tipe:</strong> {{ ucfirst($reportType) }} |
-                                            <strong>Pencarian:</strong> {{ $search ?: 'Tidak ada' }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1006,26 +809,6 @@ function resetFilters() {
     window.location.href = window.location.pathname;
 }
 
-// Real-time search functionality
-function initializeSearch() {
-    const searchInput = document.getElementById('search');
-    const tables = document.querySelectorAll('.table tbody');
-    
-    searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        
-        tables.forEach(tbody => {
-            const rows = tbody.querySelectorAll('tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                const shouldShow = text.includes(searchTerm);
-                row.style.display = shouldShow ? '' : 'none';
-            });
-        });
-    });
-}
-
 // Export functionality
 function exportReport(type = 'all') {
     const startDate = document.getElementById('start_date').value;
@@ -1054,142 +837,221 @@ function exportReport(type = 'all') {
         exportBtn.innerHTML = originalText;
         exportBtn.disabled = false;
     }, 2000);
-    
-    // Future implementation:
-    // window.location.href = `/admin/reports/export?${params}`;
 }
 
-// Auto-refresh statistics every 5 minutes
-let refreshInterval;
+// Initialize charts with real data
+function initializeCharts() {
+    // Get real data from PHP variables
+    const employeeStats = @json($employeeStats);
+    const studentStats = @json($studentStats);
+    const leaveStats = @json($leaveStats);
+    const topPerformers = @json($topPerformers);
+    const chartData = @json($chartData);
+    
+    // Attendance Trend Chart (Line Chart)
+    const attendanceTrendCtx = document.getElementById('attendanceTrendChart');
+    if (attendanceTrendCtx) {
+        new Chart(attendanceTrendCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.attendance_trend.labels,
+                datasets: [{
+                    label: 'Kehadiran Pegawai',
+                    data: chartData.attendance_trend.employee_data,
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Kehadiran Siswa',
+                    data: chartData.attendance_trend.student_data,
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Tren Kehadiran 30 Hari Terakhir'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
 
-function startAutoRefresh() {
-    refreshInterval = setInterval(function() {
-        // Refresh only statistics cards, not the entire page
-        refreshStatistics();
-    }, 300000); // 5 minutes
+    // Attendance Status Distribution (Doughnut Chart)
+    const attendanceStatusCtx = document.getElementById('attendanceStatusChart');
+    if (attendanceStatusCtx) {
+        new Chart(attendanceStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Hadir', 'Terlambat', 'Izin', 'Sakit', 'Alpha'],
+                datasets: [{
+                    data: [
+                        employeeStats.monthly_attendance || 0,
+                        employeeStats.late_today || 0,
+                        leaveStats.total_leaves || 0,
+                        Math.floor((leaveStats.total_leaves || 0) * 0.3),
+                        Math.floor((leaveStats.total_leaves || 0) * 0.1)
+                    ],
+                    backgroundColor: [
+                        '#28a745',
+                        '#ffc107',
+                        '#007bff',
+                        '#dc3545',
+                        '#6c757d'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Monthly Comparison Chart (Bar Chart)
+    const monthlyComparisonCtx = document.getElementById('monthlyComparisonChart');
+    if (monthlyComparisonCtx) {
+        new Chart(monthlyComparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.monthly_comparison.labels,
+                datasets: [{
+                    label: 'Pegawai',
+                    data: chartData.monthly_comparison.employee_data,
+                    backgroundColor: 'rgba(0, 123, 255, 0.8)',
+                    borderColor: '#007bff',
+                    borderWidth: 1
+                }, {
+                    label: 'Siswa',
+                    data: chartData.monthly_comparison.student_data,
+                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                    borderColor: '#28a745',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Class Attendance Chart (Horizontal Bar Chart)
+    const classAttendanceCtx = document.getElementById('classAttendanceChart');
+    if (classAttendanceCtx) {
+        new Chart(classAttendanceCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.class_attendance.labels,
+                datasets: [{
+                    label: 'Tingkat Kehadiran (%)',
+                    data: chartData.class_attendance.data,
+                    backgroundColor: [
+                        'rgba(0, 123, 255, 0.8)',
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(108, 117, 125, 0.8)',
+                        'rgba(23, 162, 184, 0.8)',
+                        'rgba(111, 66, 193, 0.8)',
+                        'rgba(253, 126, 20, 0.8)',
+                        'rgba(32, 201, 151, 0.8)',
+                        'rgba(233, 84, 81, 0.8)',
+                        'rgba(102, 16, 242, 0.8)',
+                        'rgba(255, 159, 67, 0.8)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
-function refreshStatistics() {
-    // Future implementation: AJAX call to refresh statistics
-    console.log('Statistics refresh - ' + new Date().toLocaleTimeString());
-    
-    // Show refresh indicator
-    const indicator = document.createElement('div');
-    indicator.className = 'position-fixed top-0 end-0 m-3 alert alert-info alert-dismissible';
-    indicator.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Memperbarui statistik... <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-    document.body.appendChild(indicator);
-    
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-        if (indicator.parentNode) {
-            indicator.remove();
-        }
-    }, 3000);
-}
+
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize progress bars with data-width attributes
-    const progressBars = document.querySelectorAll('.progress-bar[data-width]');
-    progressBars.forEach(bar => {
-        const width = bar.getAttribute('data-width');
-        bar.style.width = width + '%';
-    });
-    
-    // Initialize search functionality
-    initializeSearch();
-    
-    // Start auto-refresh
-    startAutoRefresh();
-    
-    // Add hover effects to statistics cards
-    const statCards = document.querySelectorAll('.stat-card');
-    statCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px) scale(1.02)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
-        });
-    });
-    
-    // Add smooth scrolling to navigation links
-    const navLinks = document.querySelectorAll('a[href^="#"]');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-    });
-    
-    // Add loading states to buttons
-    const buttons = document.querySelectorAll('.btn');
-    buttons.forEach(button => {
-        button.addEventListener('click', function() {
-            if (this.type === 'submit' || this.classList.contains('btn-primary')) {
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
-                this.disabled = true;
-                
-                // Re-enable after form submission or navigation
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                    this.disabled = false;
-                }, 2000);
-            }
-        });
-    });
-    
-    // Enhanced table interactions
-    const tableRows = document.querySelectorAll('.table tbody tr');
-    tableRows.forEach(row => {
-        row.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = '#f8f9fa';
-            this.style.cursor = 'pointer';
-        });
-        
-        row.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
-        });
-    });
-    
-    // Add tooltips to badges and status indicators
-    const badges = document.querySelectorAll('.badge');
-    badges.forEach(badge => {
-        badge.addEventListener('mouseenter', function() {
-            // Simple tooltip implementation
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip-custom';
-            tooltip.textContent = this.textContent + ' - ' + new Date().toLocaleString();
-            tooltip.style.position = 'absolute';
-            tooltip.style.backgroundColor = '#333';
-            tooltip.style.color = 'white';
-            tooltip.style.padding = '5px 10px';
-            tooltip.style.borderRadius = '4px';
-            tooltip.style.fontSize = '12px';
-            tooltip.style.zIndex = '1000';
-            tooltip.style.pointerEvents = 'none';
-            
-            document.body.appendChild(tooltip);
-            
-            const rect = this.getBoundingClientRect();
-            tooltip.style.left = rect.left + 'px';
-            tooltip.style.top = (rect.top - 30) + 'px';
-            
-            this.tooltipElement = tooltip;
-        });
-        
-        badge.addEventListener('mouseleave', function() {
-            if (this.tooltipElement) {
-                this.tooltipElement.remove();
-                this.tooltipElement = null;
-            }
-        });
-    });
+    // Initialize charts
+    initializeCharts();
     
     // Form validation
     const form = document.getElementById('reportFilterForm');
@@ -1204,13 +1066,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
         });
-    }
-});
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', function() {
-    if (refreshInterval) {
-        clearInterval(refreshInterval);
     }
 });
 </script>

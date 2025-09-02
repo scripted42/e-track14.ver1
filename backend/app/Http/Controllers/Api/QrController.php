@@ -8,14 +8,43 @@ use App\Models\AuditLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class QrController extends Controller
 {
     public function getTodayQr()
     {
-        // Always generate a new QR code for every request to ensure fresh QR every 10 seconds
-        // This approach ensures dynamic generation as requested by user
-        $qr = $this->generateShortTermQr();
+        // Reuse the same QR within a 10s window; validity lasts 15s total
+        // Use MySQL advisory lock to prevent concurrent double-generation
+        $lockName = 'qr_generation_lock';
+        $lockAcquired = false;
+        try {
+            $lock = DB::select('SELECT GET_LOCK(?, ? ) as l', [$lockName, 2]);
+            $lockAcquired = isset($lock[0]) && (int)($lock[0]->l) === 1;
+
+            // Always re-check to avoid race conditions
+            $existing = AttendanceQr::where('valid_until', '>', now())
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($existing && $existing->created_at->gt(now()->subSeconds(10))) {
+                $qr = $existing;
+            } else if ($lockAcquired) {
+                // Only generate if we hold the lock
+                $qr = $this->generateShortTermQr();
+            } else {
+                // Could not acquire lock: brief wait then re-check, avoid generating
+                usleep(200000); // 200ms
+                $existing = AttendanceQr::where('valid_until', '>', now())
+                    ->orderByDesc('created_at')
+                    ->first();
+                $qr = $existing;
+            }
+        } finally {
+            if ($lockAcquired) {
+                DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -30,10 +59,10 @@ class QrController extends Controller
     
     private function generateShortTermQr()
     {
-        // Generate QR code with microsecond timestamp for true uniqueness every call
-        $timestamp = now()->format('YmdHis') . now()->micro;
+        // Generate a unique QR code; valid for 15 seconds (10s + 5s spare)
+        $timestamp = now()->format('YmdHis');
         $qrCode = 'QR_' . date('Y-m-d') . '_' . $timestamp . '_' . bin2hex(random_bytes(4));
-        $validUntil = now()->addSeconds(15); // Valid for 15 seconds
+        $validUntil = now()->addSeconds(15);
 
         return AttendanceQr::create([
             'qr_code' => $qrCode,

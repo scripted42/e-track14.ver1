@@ -90,12 +90,16 @@ class ReportController extends Controller
         // Top performers (filtered by date range and search)
         $topPerformers = $this->getTopPerformers($startDate, $endDate, $search);
         
+        // Real data for charts
+        $chartData = $this->getChartData($startDate, $endDate);
+        
         return view('admin.reports.index', compact(
             'employeeStats',
             'studentStats',
             'leaveStats',
             'attendanceTrend',
             'topPerformers',
+            'chartData',
             'startDate',
             'endDate',
             'reportType',
@@ -225,32 +229,52 @@ class ReportController extends Controller
         $studentStats = $attendance->groupBy('student_id')->map(function ($studentAttendance) {
             $student = $studentAttendance->first()->student;
             $present = $studentAttendance->where('status', 'hadir')->count();
+            $late = $studentAttendance->where('status', 'terlambat')->count();
             $absent = $studentAttendance->whereIn('status', ['izin', 'sakit', 'alpha'])->count();
+            $total = $studentAttendance->count();
             
             return [
                 'student' => $student,
-                'total_days' => $studentAttendance->count(),
+                'total_days' => $total,
                 'present' => $present,
+                'late' => $late,
                 'absent' => $absent,
-                'attendance_rate' => $studentAttendance->count() > 0 ? 
-                    round($present / $studentAttendance->count() * 100, 1) : 0
+                'attendance_rate' => $total > 0 ? 
+                    round(($present + $late) / $total * 100, 1) : 0
             ];
         });
         
         // Group by class
         $classStats = $attendance->groupBy('student.class_name')->map(function ($classAttendance) {
             $present = $classAttendance->where('status', 'hadir')->count();
+            $late = $classAttendance->where('status', 'terlambat')->count();
             $total = $classAttendance->count();
             
             return [
                 'total_records' => $total,
                 'present' => $present,
-                'absent' => $total - $present,
-                'attendance_rate' => $total > 0 ? round($present / $total * 100, 1) : 0
+                'late' => $late,
+                'absent' => $total - $present - $late,
+                'attendance_rate' => $total > 0 ? round(($present + $late) / $total * 100, 1) : 0
             ];
         });
         
-        $classes = Student::distinct('class_name')->orderBy('class_name')->pluck('class_name');
+        // Get classes from class_rooms table first, then fallback to students table
+        $classes = \App\Models\ClassRoom::orderBy('name')->pluck('name');
+        
+        // If no classes from class_rooms, get from students
+        if ($classes->isEmpty()) {
+            $classes = Student::distinct('class_name')->orderBy('class_name')->pluck('class_name');
+        }
+        
+        // If still empty, create default classes
+        if ($classes->isEmpty()) {
+            $classes = collect([
+                '7A', '7B', '7C', '7D',
+                '8A', '8B', '8C', '8D', 
+                '9A', '9B', '9C', '9D'
+            ]);
+        }
         
         return view('admin.reports.students', compact(
             'attendance',
@@ -322,8 +346,8 @@ class ReportController extends Controller
                 DB::raw('COUNT(*) as total_records')
             )
             ->join('users', 'attendance.user_id', '=', 'users.id')
-            ->whereBetween('timestamp', [$startDate, $endDate])
-            ->whereIn('status', ['hadir', 'terlambat'])
+            ->whereBetween('attendance.timestamp', [$startDate, $endDate])
+            ->whereIn('attendance.status', ['hadir', 'terlambat'])
             ->groupBy('users.id', 'users.name')
             ->orderByDesc('days_present');
             
@@ -353,5 +377,103 @@ class ReportController extends Controller
     {
         // Implementation for students export
         return response()->json(['message' => 'Students export feature - To be implemented']);
+    }
+    
+    private function getChartData($startDate, $endDate)
+    {
+        // Get real attendance data for the last 30 days
+        $attendanceData = [];
+        $studentAttendanceData = [];
+        $labels = [];
+        
+        for ($i = 29; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $labels[] = $date->format('d/m');
+            
+            // Employee attendance for this day
+            $employeeCount = Attendance::whereDate('timestamp', $date->format('Y-m-d'))
+                ->whereIn('status', ['hadir', 'terlambat'])
+                ->distinct('user_id')
+                ->count();
+            $attendanceData[] = $employeeCount;
+            
+            // Student attendance for this day
+            $studentCount = StudentAttendance::whereDate('created_at', $date->format('Y-m-d'))
+                ->where('status', 'hadir')
+                ->count();
+            $studentAttendanceData[] = $studentCount;
+        }
+        
+        // Get monthly comparison data (last 12 months)
+        $monthlyEmployeeData = [];
+        $monthlyStudentData = [];
+        $monthlyLabels = [];
+        
+        for ($i = 11; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $monthlyLabels[] = $month->format('M');
+            
+            // Employee attendance rate for this month
+            $employeeAttendance = Attendance::whereYear('timestamp', $month->year)
+                ->whereMonth('timestamp', $month->month)
+                ->whereIn('status', ['hadir', 'terlambat'])
+                ->distinct('user_id')
+                ->count();
+            
+            $totalEmployees = User::whereIn('role_id', [2, 3])->count();
+            $employeeRate = $totalEmployees > 0 ? round(($employeeAttendance / $totalEmployees) * 100, 1) : 0;
+            $monthlyEmployeeData[] = $employeeRate;
+            
+            // Student attendance rate for this month
+            $studentAttendance = StudentAttendance::whereYear('created_at', $month->year)
+                ->whereMonth('created_at', $month->month)
+                ->where('status', 'hadir')
+                ->count();
+            
+            $totalStudents = Student::count();
+            $studentRate = $totalStudents > 0 ? round(($studentAttendance / $totalStudents) * 100, 1) : 0;
+            $monthlyStudentData[] = $studentRate;
+        }
+        
+        // Get class attendance data
+        $classAttendanceData = [];
+        $classLabels = [];
+        
+        $classes = Student::select('class_name')
+            ->distinct()
+            ->orderBy('class_name')
+            ->get();
+            
+        foreach ($classes as $class) {
+            $classLabels[] = $class->class_name;
+            
+            $classStudents = Student::where('class_name', $class->class_name)->count();
+            $classAttendance = StudentAttendance::whereHas('student', function($query) use ($class) {
+                $query->where('class_name', $class->class_name);
+            })
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'hadir')
+            ->count();
+            
+            $attendanceRate = $classStudents > 0 ? round(($classAttendance / $classStudents) * 100, 1) : 0;
+            $classAttendanceData[] = $attendanceRate;
+        }
+        
+        return [
+            'attendance_trend' => [
+                'labels' => $labels,
+                'employee_data' => $attendanceData,
+                'student_data' => $studentAttendanceData
+            ],
+            'monthly_comparison' => [
+                'labels' => $monthlyLabels,
+                'employee_data' => $monthlyEmployeeData,
+                'student_data' => $monthlyStudentData
+            ],
+            'class_attendance' => [
+                'labels' => $classLabels,
+                'data' => $classAttendanceData
+            ]
+        ];
     }
 }

@@ -17,242 +17,264 @@
     
     <!-- Custom CSS -->
     <style>
+        :root {
+            --bg-start: #f8fafc; /* slate-50 */
+            --bg-end: #ffffff;   /* white */
+            --card-bg: #ffffff;
+            --card-border: rgba(15, 23, 42, 0.08);
+            --text-primary: #0f172a; /* slate-900 */
+            --text-muted: #475569;   /* slate-600 */
+            --accent: #06b6d4;       /* cyan-500 */
+            --accent-2: #7c3aed;     /* violet-600 */
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+        }
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                radial-gradient(1200px 600px at 20% 0%, rgba(124, 58, 237, 0.06), transparent 60%),
+                radial-gradient(800px 400px at 80% 20%, rgba(6, 182, 212, 0.08), transparent 60%),
+                linear-gradient(160deg, var(--bg-start), var(--bg-end));
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            color: var(--text-primary);
+            font-size: clamp(14px, 1.15vw, 16px);
         }
-        
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(15,23,42,0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(15,23,42,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle at center, black, transparent 70%);
+            pointer-events: none;
+        }
         .qr-display-container {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            color: white;
-            text-align: center;
+            padding: 24px 16px 64px;
         }
-        
-        .school-header {
-            margin-bottom: 2rem;
-        }
-        
-        .school-logo {
-            width: 120px;
-            height: 120px;
-            background: white;
-            border-radius: 50%;
+        .topbar {
+            width: 100%;
+            max-width: 1100px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 0 8px;
         }
-        
-        .school-name {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
-        
-        .school-subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-bottom: 0;
+        .brand-details { display:flex; flex-direction:column; justify-content:center; height:44px; }
+        .logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(145deg, rgba(124,58,237,0.12), rgba(6,182,212,0.12));
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 30px rgba(2,6,23,0.08);
+            color: var(--text-primary);
         }
-        
-        .qr-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            padding: 3rem;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.2);
-            margin: 2rem 0;
-            min-width: 500px;
-        }
-        
-        .qr-code-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            display: inline-block;
-            margin: 1rem 0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .qr-code-container canvas,
-        .qr-code-container img {
-            border-radius: 8px;
-        }
-        
-        .qr-info {
-            color: #333;
-            margin-top: 1.5rem;
-        }
-        
-        .countdown-container {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-top: 2rem;
-        }
-        
-        .countdown-timer {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-        
+        .brand-title { font-weight:700; letter-spacing:0.2px; line-height:1.2; margin-bottom:2px; }
         .status-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-        }
-        
-        .instructions {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 2rem;
-            margin-top: 2rem;
-        }
-        
-        .instruction-step {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(2,6,23,0.06);
+            min-height: 44px;
+            line-height: 1;
         }
-        
-        .step-number {
-            background: #FFD700;
-            color: #333;
-            width: 30px;
-            height: 30px;
+        .status-float { position: fixed; top: 18px; right: 18px; z-index: 50; }
+        .status-dot {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 0 4px rgba(34,197,94,0.15);
+        }
+        .content {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 16px;
+        }
+        @media (max-width: 992px) {
+            .content { grid-template-columns: 1fr; }
+        }
+        .card {
+            border-radius: 20px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            box-shadow: 0 10px 30px rgba(2,6,23,0.06);
+        }
+        .card-body { padding: 20px; }
+        .section-title {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 1rem;
+            gap: 10px;
+            margin-bottom: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            font-size: 12px;
         }
-        
+        .page-title { text-align:center; margin-bottom: 10px; }
+        .page-title .title { font-weight: 800; font-size: clamp(18px, 2vw, 24px); }
+        .page-title .subtitle { color: var(--text-muted); font-size: clamp(12px, 1.4vw, 14px); }
+        .qr-wrapper {
+            display: grid;
+            place-items: center;
+            padding: 14px;
+            background: rgba(2, 6, 23, 0.03);
+            border: 1px dashed rgba(2, 6, 23, 0.08);
+            border-radius: 16px;
+        }
+        .qr-code-container {
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(2,6,23,0.08);
+            box-shadow: 0 6px 24px rgba(2,6,23,0.06);
+        }
+        .qr-code-container.updating { animation: pulse 0.5s ease-in-out; }
+        @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+        .info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .info-pill {
+            background: #ffffff;
+            border: 1px solid rgba(2,6,23,0.08);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+        .info-label { color: var(--text-muted); font-size: 12px; }
+        .info-value { font-weight: 600; margin-top: 2px; font-size: 0.95em; }
+        .countdown-wrap { display:flex; align-items:center; gap:14px; }
+        .progress { width: 72px; height: 72px; position: relative; }
+        .progress svg { transform: rotate(-90deg); }
+        .progress .bg { stroke: rgba(2,6,23,0.08); }
+        .progress .bar { stroke: url(#grad); transition: stroke-dashoffset 0.3s ease; }
+        .progress .center {
+            position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700;
+        }
+        .instructions { color: var(--text-muted); }
+        .instructions .step { display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
         .footer-info {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 30px;
-            border-radius: 25px;
+            position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 8px 14px; border-radius: 999px; border: 1px solid var(--card-border);
+            background: #fff;
+            box-shadow: 0 6px 24px rgba(2,6,23,0.06);
         }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        .qr-code-container.updating {
-            animation: pulse 0.5s ease-in-out;
-        }
-        
-        .loading-spinner {
-            display: none;
-            color: #007bff;
-        }
+        .loading-spinner { display: none; color: var(--accent); }
     </style>
 </head>
 <body>
-    <!-- Status Indicator -->
-    <div class="status-indicator">
-        <i class="fas fa-wifi"></i>
+    <div class="grid-overlay"></div>
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo"><i class="fas fa-graduation-cap"></i></div>
+            <div class="brand-details">
+                <div class="brand-title" style="opacity:0.9">E-Track14</div>
+                <div style="font-size:12px; color:var(--text-muted)">QR Attendance Display</div>
+            </div>
+        </div>
+        <div></div>
+    </div>
+    <div class="status-float">
+        <div class="status-indicator" id="status-pill">
+            <span class="status-dot" id="status-dot"></span>
         <span id="connection-status">Terhubung</span>
+        </div>
     </div>
 
     <!-- Main Content -->
     <div class="qr-display-container">
-        <!-- School Header -->
-        <div class="school-header">
-            <div class="school-logo">
-                <i class="fas fa-graduation-cap fa-3x text-primary"></i>
+        <div class="content">
+            <div class="card">
+                <div class="card-body">
+                    <div class="page-title">
+                        <div class="title">SMPN 14 SURABAYA</div>
+                        <div class="subtitle">Sistem Absensi Digital</div>
             </div>
-            <div class="school-name">SMPN 14 SURABAYA</div>
-            <div class="school-subtitle">Sistem Absensi Digital</div>
-        </div>
-
-        <!-- QR Code Card -->
-        <div class="qr-card">
-            <h2 class="text-dark mb-3">
-                <i class="fas fa-qrcode me-2"></i>
-                Scan QR Code untuk Absensi
-            </h2>
-            
+                    <div class="section-title" style="justify-content:center"><i class="fas fa-qrcode"></i> Absensi QR Code</div>
+                    <div class="qr-wrapper">
             <div id="qr-code-container" class="qr-code-container">
                 <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin fa-3x"></i>
-                    <p class="mt-2">Memuat QR Code...</p>
+                                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            </div>
+                            <div id="qr-content"></div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-pill">
+                            <div class="info-label">Berlaku Sampai</div>
+                            <div class="info-value" id="qr-valid-until">-</div>
+                        </div>
+                        <div class="info-pill">
+                            <div class="info-label">Diperbarui</div>
+                            <div class="info-value" id="last-updated">-</div>
+                        </div>
                 </div>
-                <div id="qr-content">
-                    <!-- QR Code will be loaded here -->
                 </div>
             </div>
-            
-            <div class="qr-info">
-                <p class="mb-1"><strong>Berlaku sampai:</strong> <span id="qr-valid-until">-</span></p>
-                <p class="mb-0"><strong>Diperbarui:</strong> <span id="last-updated">-</span></p>
+            <div class="card">
+                <div class="card-body">
+                    <div class="section-title"><i class="fas fa-bolt"></i> Pembaruan Otomatis</div>
+                    <div class="countdown-wrap">
+                        <div class="progress">
+                            <svg width="72" height="72" viewBox="0 0 100 100">
+                                <defs>
+                                    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#22d3ee"/>
+                                        <stop offset="100%" stop-color="#a78bfa"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle class="bg" cx="50" cy="50" r="40" fill="none" stroke-width="8" />
+                                <circle id="progress-bar" class="bar" cx="50" cy="50" r="40" fill="none" stroke-width="8"
+                                        stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="0" />
+                            </svg>
+                            <div class="center" id="countdown">10</div>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-weight:600">QR akan diperbarui otomatis</div>
+                            <div style="color:var(--text-muted); font-size:14px">Ketika penghitung mencapai nol, kode akan dimuat ulang.</div>
             </div>
         </div>
-
-        <!-- Countdown -->
-        <div class="countdown-container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h5 class="mb-0">Pembaruan Otomatis</h5>
-                    <small class="opacity-75">QR Code akan diperbarui dalam:</small>
+                    <div class="instructions" style="margin-top:16px">
+                        <div class="step"><i class="fas fa-mobile-alt" style="color:var(--accent)"></i> Buka aplikasi E-Track14</div>
+                        <div class="step"><i class="fas fa-location-arrow" style="color:var(--warning)"></i> Aktifkan GPS dalam radius sekolah</div>
+                        <div class="step"><i class="fas fa-camera" style="color:var(--accent-2)"></i> Ambil selfie sesuai instruksi</div>
+                        <div class="step"><i class="fas fa-qrcode" style="color:var(--accent)"></i> Scan QR di layar ini</div>
                 </div>
-                <div class="col-md-6">
-                    <div class="countdown-timer" id="countdown">10</div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Instructions -->
-        <div class="instructions">
-            <h5 class="mb-3">
-                <i class="fas fa-mobile-alt me-2"></i>
-                Cara Melakukan Absensi
-            </h5>
-            <div class="instruction-step">
-                <div class="step-number">1</div>
-                <span>Buka aplikasi E-Track14 di smartphone Anda</span>
-            </div>
-            <div class="instruction-step">
-                <div class="step-number">2</div>
-                <span>Ambil foto selfie dengan GPS aktif dalam radius sekolah</span>
-            </div>
-            <div class="instruction-step">
-                <div class="step-number">3</div>
-                <span>Scan QR Code yang ditampilkan di monitor ini</span>
-            </div>
-            <div class="instruction-step">
-                <div class="step-number">4</div>
-                <span>Pastikan status absensi berhasil tercatat</span>
             </div>
         </div>
     </div>
 
     <!-- Footer Info -->
     <div class="footer-info">
-        <i class="fas fa-clock me-2"></i>
+        <i class="fas fa-clock"></i>
         <span id="current-time">{{ now()->format('d M Y, H:i:s') }}</span>
     </div>
 
@@ -284,7 +306,7 @@
             loadQRCode();
             startCountdown();
             startTimeUpdate();
-            startAutoUpdate();
+            // Removed parallel auto-update to prevent double refresh; countdown handles reload
         });
         
         // Function to clear all intervals
@@ -444,6 +466,8 @@
         // Start countdown timer
         function startCountdown() {
             const countdownElement = document.getElementById('countdown');
+            const progressCircle = document.getElementById('progress-bar');
+            const circumference = 2 * Math.PI * 40; // r=40 (synced with SVG)
             
             // Clear any existing countdown first
             if (countdownInterval) {
@@ -456,6 +480,13 @@
             countdownInterval = setInterval(() => {
                 countdownElement.textContent = countdownTimer;
                 console.log('Countdown:', countdownTimer);
+                // Update circular progress
+                const ratio = countdownTimer / 10; // 10s cycle
+                const offset = circumference * (1 - ratio);
+                if (progressCircle) {
+                    progressCircle.style.strokeDasharray = `${circumference}`;
+                    progressCircle.style.strokeDashoffset = `${offset}`;
+                }
                 
                 if (countdownTimer <= 0) {
                     console.log('Countdown reached 0, loading new QR code...');
@@ -468,20 +499,7 @@
         }
         
         // Start auto update
-        function startAutoUpdate() {
-            // Clear any existing interval first
-            if (updateInterval) {
-                clearInterval(updateInterval);
-                updateInterval = null;
-            }
-            
-            console.log('Starting auto update interval (10 seconds)');
-            
-            updateInterval = setInterval(() => {
-                console.log('Auto update triggered');
-                loadQRCode();
-            }, 10000); // Update every 10 seconds
-        }
+        // Auto update removed; rely on countdown reaching 0 to trigger loadQRCode()
         
         // Start time update
         function startTimeUpdate() {
@@ -506,12 +524,16 @@
         // Update connection status
         function updateConnectionStatus(isConnected) {
             const statusElement = document.getElementById('connection-status');
+            const dot = document.getElementById('status-dot');
+            const pill = document.getElementById('status-pill');
             if (isConnected) {
-                statusElement.innerHTML = '<i class="fas fa-wifi me-1"></i>Terhubung';
-                statusElement.parentElement.style.background = 'rgba(40, 167, 69, 0.8)';
+                statusElement.innerHTML = 'Terhubung';
+                if (dot) dot.style.background = 'var(--success)';
+                if (pill) pill.style.borderColor = 'rgba(34,197,94,0.25)';
             } else {
-                statusElement.innerHTML = '<i class="fas fa-wifi-slash me-1"></i>Terputus';
-                statusElement.parentElement.style.background = 'rgba(220, 53, 69, 0.8)';
+                statusElement.innerHTML = 'Terputus';
+                if (dot) dot.style.background = 'var(--danger)';
+                if (pill) pill.style.borderColor = 'rgba(239,68,68,0.25)';
             }
         }
         
@@ -545,7 +567,6 @@
                 if (isInitialized) {
                     countdownTimer = 10; // Reset countdown
                     startCountdown();
-                    startAutoUpdate();
                     startTimeUpdate();
                     loadQRCode(); // Refresh immediately when tab becomes active
                 }

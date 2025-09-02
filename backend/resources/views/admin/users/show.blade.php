@@ -1,194 +1,275 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Detail Pengguna')
+@section('title', 'Detail Staff')
 
 @push('styles')
 <style>
-.profile-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.profile-header {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    border-radius: 1rem 1rem 0 0;
-    padding: 2rem;
-    text-align: center;
-    color: white;
-}
-
-.avatar-wrapper {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    font-size: 3rem;
-    font-weight: bold;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-}
-
-.info-card {
+.detail-card {
     background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    margin-bottom: 1.5rem;
 }
 
-.info-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+.detail-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1.5rem;
+    border-radius: 8px 8px 0 0;
+}
+
+.detail-body {
+    padding: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.info-item:last-child {
+    border-bottom: none;
 }
 
 .info-label {
-    font-size: 0.875rem;
     font-weight: 600;
-    color: #6b7280;
-    margin-bottom: 0.25rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: #495057;
+    margin: 0;
 }
 
 .info-value {
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: #1f2937;
+    color: #6c757d;
+    margin: 0;
 }
 
-.role-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+.user-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
 }
 
-.role-admin {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-    color: #991b1b;
-}
-
-.role-kepala_sekolah {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    color: #92400e;
-}
-
-.role-waka_kurikulum {
-    background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
-    color: #0369a1;
-}
-
-.role-guru {
-    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-    color: #166534;
-}
-
-.role-pegawai {
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-    color: #374151;
-}
-
-.role-siswa {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    color: #1e40af;
-}
-
-.btn-modern {
-    border-radius: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-
-.btn-modern:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.user-subtitle {
+    color: #6c757d;
+    margin-bottom: 0;
 }
 
 .status-badge {
     padding: 0.375rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
 }
 
 .status-active {
-    background-color: #dcfce7;
-    color: #166534;
+    background: #d4edda;
+    color: #155724;
 }
 
 .status-inactive {
-    background-color: #fee2e2;
-    color: #991b1b;
+    background: #f8d7da;
+    color: #721c24;
 }
 
-.activity-item {
-    padding: 1rem;
-    border-left: 3px solid #e2e8f0;
-    margin-bottom: 1rem;
-    background: #f8fafc;
-    border-radius: 0 0.5rem 0.5rem 0;
+.role-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
-.activity-item.recent {
-    border-left-color: #3b82f6;
-    background: #eff6ff;
+.role-admin {
+    background: #d1ecf1;
+    color: #0c5460;
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+.role-guru {
+    background: #d4edda;
+    color: #155724;
 }
 
-.stat-card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
+.role-pegawai {
+    background: #fff3cd;
+    color: #856404;
 }
 
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
+.user-avatar {
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
+    background: #6c757d;
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 3rem;
+    font-weight: 600;
     margin: 0 auto 1rem;
-    font-size: 1.5rem;
+    position: relative;
+    overflow: hidden;
 }
 
-.stat-value {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 }
 
-.stat-label {
-    color: #6b7280;
-    font-size: 0.875rem;
+.walikelas-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.classroom-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.btn-modern {
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
     font-weight: 500;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+    background: white;
+    color: #6c757d;
+}
+
+.btn-modern:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+    border-color: #545b62;
+    color: white;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #212529;
+    border-color: #ffc107;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+    border-color: #e0a800;
+    color: #212529;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    border-color: #c82333;
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h6 {
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.empty-state p {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+.contact-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.contact-item:last-child {
+    margin-bottom: 0;
+}
+
+.contact-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.contact-text {
+    flex: 1;
+}
+
+.contact-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.contact-value {
+    font-weight: 500;
+    color: #495057;
+    margin: 0;
 }
 </style>
 @endpush
@@ -196,373 +277,247 @@
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-1 text-gray-800">👤 Detail Pengguna</h1>
-                    <p class="text-muted mb-0">Informasi lengkap pengguna sistem</p>
-                </div>
-                <div class="d-flex gap-2">
-                    <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-primary btn-modern">
-                        <i class="fas fa-edit me-2"></i>Edit Pengguna
-                    </a>
-                    <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary btn-modern">
-                        <i class="fas fa-arrow-left me-2"></i>Kembali ke Daftar
-                    </a>
-                </div>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Detail Staff</h1>
+            <p class="text-muted mb-0">Informasi lengkap {{ $user->name }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>Edit Staff
+            </a>
+            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Kembali
+            </a>
         </div>
     </div>
 
     <div class="row">
-        <!-- Profile Card -->
-        <div class="col-lg-4 mb-4">
-            <div class="profile-card">
-                <div class="profile-header">
-                    <div class="avatar-wrapper">
-                        {{ substr($user->name, 0, 1) }}
-                    </div>
-                    <h4 class="mb-2">{{ $user->name }}</h4>
-                    <p class="mb-3 opacity-75">{{ $user->email }}</p>
-                    
-                    @php
-                        $roleClass = 'role-' . strtolower(str_replace(' ', '_', $user->role->role_name ?? 'user'));
-                    @endphp
-                    <div class="role-badge {{ $roleClass }}">
-                        @switch($user->role->role_name ?? '')
-                            @case('admin')
-                                <i class="fas fa-user-shield"></i>
-                                Administrator
-                                @break
-                            @case('kepala sekolah')
-                                <i class="fas fa-crown"></i>
-                                Kepala Sekolah
-                                @break
-                            @case('waka kurikulum')
-                                <i class="fas fa-user-tie"></i>
-                                Waka Kurikulum
-                                @break
-                            @case('guru')
-                                <i class="fas fa-chalkboard-teacher"></i>
-                                Guru
-                                @break
-                            @case('pegawai')
-                                <i class="fas fa-user-cog"></i>
-                                Pegawai
-                                @break
-                            @case('siswa')
-                                <i class="fas fa-graduation-cap"></i>
-                                Siswa
-                                @break
-                            @default
-                                <i class="fas fa-user"></i>
-                                Pengguna
-                        @endswitch
-                    </div>
-                </div>
-                
-                <div class="card-body p-4">
-                    <!-- Account Information -->
-                    <div class="info-card">
-                        <div class="info-label">
-                            <i class="fas fa-info-circle me-2"></i>Informasi Akun
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-6">
-                                <div class="info-label">ID Pengguna</div>
-                                <div class="info-value">#{{ str_pad($user->id, 4, '0', STR_PAD_LEFT) }}</div>
-                            </div>
-                            <div class="col-6">
-                                <div class="info-label">Status</div>
-                                <div class="info-value">
-                                    <span class="status-badge status-active">
-                                        <i class="fas fa-check-circle me-1"></i>Aktif
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Registration Information -->
-                    <div class="info-card">
-                        <div class="info-label">
-                            <i class="fas fa-calendar-plus me-2"></i>Tanggal Registrasi
-                        </div>
-                        <div class="info-value">
-                            {{ \Carbon\Carbon::parse($user->created_at)->format('d F Y') }}
-                        </div>
-                        <small class="text-muted">
-                            {{ \Carbon\Carbon::parse($user->created_at)->diffForHumans() }}
-                        </small>
-                    </div>
-
-                    <!-- Last Updated -->
-                    <div class="info-card">
-                        <div class="info-label">
-                            <i class="fas fa-clock me-2"></i>Terakhir Diperbarui
-                        </div>
-                        <div class="info-value">
-                            {{ \Carbon\Carbon::parse($user->updated_at)->format('d F Y, H:i') }}
-                        </div>
-                        <small class="text-muted">
-                            {{ \Carbon\Carbon::parse($user->updated_at)->diffForHumans() }}
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Details and Statistics -->
+        <!-- Main Information -->
         <div class="col-lg-8">
-            <!-- Statistics Cards -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="profile-card">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">
-                                <i class="fas fa-chart-bar text-primary me-2"></i>Statistik Pengguna
-                            </h5>
+            <!-- User Profile Card -->
+            <div class="detail-card">
+                <div class="detail-header">
+                    <div class="text-center">
+                        <div class="user-avatar">
+                            @if($user->photo && file_exists(public_path('storage/user-photos/' . $user->photo)))
+                                <img src="{{ asset('storage/user-photos/' . $user->photo) }}" alt="Foto {{ $user->name }}">
+                            @else
+                                {{ substr($user->name, 0, 1) }}
+                            @endif
                         </div>
-                        <div class="card-body">
-                            <div class="stats-grid">
-                                <div class="stat-card">
-                                    <div class="stat-icon bg-success bg-gradient text-white">
-                                        <i class="fas fa-calendar-check"></i>
-                                    </div>
-                                    <div class="stat-value text-success">0</div>
-                                    <div class="stat-label">Total Kehadiran</div>
-                                </div>
-                                
-                                <div class="stat-card">
-                                    <div class="stat-icon bg-warning bg-gradient text-white">
-                                        <i class="fas fa-calendar-times"></i>
-                                    </div>
-                                    <div class="stat-value text-warning">0</div>
-                                    <div class="stat-label">Izin/Cuti</div>
-                                </div>
-                                
-                                <div class="stat-card">
-                                    <div class="stat-icon bg-info bg-gradient text-white">
-                                        <i class="fas fa-percentage"></i>
-                                    </div>
-                                    <div class="stat-value text-info">0%</div>
-                                    <div class="stat-label">Tingkat Kehadiran</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact Information -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="profile-card">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">
-                                <i class="fas fa-address-card text-primary me-2"></i>Informasi Kontak
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="info-card">
-                                        <div class="info-label">
-                                            <i class="fas fa-envelope me-2"></i>Email
-                                        </div>
-                                        <div class="info-value">{{ $user->email }}</div>
-                                        <small class="text-muted">Email utama untuk komunikasi</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-card">
-                                        <div class="info-label">
-                                            <i class="fas fa-user-tag me-2"></i>Peran
-                                        </div>
-                                        <div class="info-value">{{ ucfirst($user->role->role_name ?? 'N/A') }}</div>
-                                        <small class="text-muted">Tingkat akses dalam sistem</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Role Permissions -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="profile-card">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">
-                                <i class="fas fa-shield-alt text-primary me-2"></i>Hak Akses dan Izin
-                            </h5>
-                        </div>
-                        <div class="card-body">
+                        <h2 class="user-title">{{ $user->name }}</h2>
+                        <p class="user-subtitle">
                             @php
-                                $permissions = [];
-                                switch($user->role->role_name ?? '') {
+                                $roleClass = '';
+                                switch(strtolower($user->role->role_name ?? '')) {
                                     case 'admin':
-                                        $permissions = [
-                                            ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => true],
-                                            ['name' => 'Kelola Laporan', 'icon' => 'fas fa-chart-line', 'status' => true],
-                                            ['name' => 'Kelola Pengaturan', 'icon' => 'fas fa-cogs', 'status' => true],
-                                            ['name' => 'Kelola Kehadiran', 'icon' => 'fas fa-calendar-check', 'status' => true],
-                                            ['name' => 'Kelola Izin/Cuti', 'icon' => 'fas fa-calendar-times', 'status' => true],
-                                        ];
-                                        break;
-                                    case 'kepala sekolah':
-                                        $permissions = [
-                                            ['name' => 'Lihat Semua Laporan', 'icon' => 'fas fa-chart-line', 'status' => true],
-                                            ['name' => 'Approve Izin/Cuti', 'icon' => 'fas fa-calendar-times', 'status' => true],
-                                            ['name' => 'Kelola Pengaturan Sekolah', 'icon' => 'fas fa-school', 'status' => true],
-                                            ['name' => 'Monitor Kehadiran', 'icon' => 'fas fa-calendar-check', 'status' => true],
-                                            ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => false],
-                                        ];
-                                        break;
-                                    case 'waka kurikulum':
-                                        $permissions = [
-                                            ['name' => 'Lihat Laporan Akademik', 'icon' => 'fas fa-chart-line', 'status' => true],
-                                            ['name' => 'Kelola Kurikulum', 'icon' => 'fas fa-book', 'status' => true],
-                                            ['name' => 'Monitor Kehadiran Siswa', 'icon' => 'fas fa-calendar-check', 'status' => true],
-                                            ['name' => 'Approve Izin Guru', 'icon' => 'fas fa-calendar-times', 'status' => true],
-                                            ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => false],
-                                        ];
+                                        $roleClass = 'role-admin';
                                         break;
                                     case 'guru':
-                                        $permissions = [
-                                            ['name' => 'Lihat Laporan', 'icon' => 'fas fa-chart-line', 'status' => true],
-                                            ['name' => 'Kelola Kehadiran Siswa', 'icon' => 'fas fa-calendar-check', 'status' => true],
-                                            ['name' => 'Ajukan Izin/Cuti', 'icon' => 'fas fa-calendar-times', 'status' => true],
-                                            ['name' => 'Kelola Kelas', 'icon' => 'fas fa-chalkboard', 'status' => true],
-                                            ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => false],
-                                        ];
+                                        $roleClass = 'role-guru';
                                         break;
                                     case 'pegawai':
-                                        $permissions = [
-                                            ['name' => 'Lihat Kehadiran Sendiri', 'icon' => 'fas fa-calendar-check', 'status' => true],
-                                            ['name' => 'Ajukan Izin/Cuti', 'icon' => 'fas fa-calendar-times', 'status' => true],
-                                            ['name' => 'Lihat Profil', 'icon' => 'fas fa-user', 'status' => true],
-                                            ['name' => 'Kelola Laporan', 'icon' => 'fas fa-chart-line', 'status' => false],
-                                            ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => false],
-                                        ];
-                                        break;
-                                    case 'siswa':
-                                        $permissions = [
-                                            ['name' => 'Lihat Kehadiran Sendiri', 'icon' => 'fas fa-calendar-check', 'status' => true],
-                                            ['name' => 'Ajukan Izin', 'icon' => 'fas fa-calendar-times', 'status' => true],
-                                            ['name' => 'Lihat Profil', 'icon' => 'fas fa-user', 'status' => true],
-                                            ['name' => 'Kelola Laporan', 'icon' => 'fas fa-chart-line', 'status' => false],
-                                            ['name' => 'Kelola Pengguna', 'icon' => 'fas fa-users', 'status' => false],
-                                        ];
+                                        $roleClass = 'role-pegawai';
                                         break;
                                     default:
-                                        $permissions = [
-                                            ['name' => 'Akses Dasar', 'icon' => 'fas fa-eye', 'status' => true],
-                                        ];
+                                        $roleClass = 'bg-secondary text-white';
                                 }
                             @endphp
-
-                            <div class="row">
-                                @foreach($permissions as $permission)
-                                    <div class="col-md-6 mb-3">
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-3">
-                                                @if($permission['status'])
-                                                    <i class="fas fa-check-circle text-success"></i>
-                                                @else
-                                                    <i class="fas fa-times-circle text-danger"></i>
-                                                @endif
-                                            </div>
-                                            <div class="me-3">
-                                                <i class="{{ $permission['icon'] }} text-primary"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <span class="{{ $permission['status'] ? 'text-dark' : 'text-muted' }}">
-                                                    {{ $permission['name'] }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                            <span class="role-badge {{ $roleClass }}">
+                                {{ ucfirst($user->role->role_name ?? 'Unknown') }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="detail-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <p class="info-label">NIP/NIK</p>
+                                <p class="info-value">{{ $user->nip_nik ?? 'Tidak ada' }}</p>
                             </div>
+                            <div class="info-item">
+                                <p class="info-label">Status</p>
+                                <p class="info-value">
+                                    @if($user->status == 'Aktif')
+                                        <span class="status-badge status-active">Aktif</span>
+                                    @else
+                                        <span class="status-badge status-inactive">Non-Aktif</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <div class="info-item">
+                                <p class="info-label">Peran</p>
+                                <p class="info-value">{{ ucfirst($user->role->role_name ?? 'Unknown') }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <p class="info-label">Tanggal Dibuat</p>
+                                <p class="info-value">{{ $user->created_at->format('d M Y H:i') }}</p>
+                            </div>
+                            <div class="info-item">
+                                <p class="info-label">Terakhir Diupdate</p>
+                                <p class="info-value">{{ $user->updated_at->format('d M Y H:i') }}</p>
+                            </div>
+                            <div class="info-item">
+                                <p class="info-label">ID Pengguna</p>
+                                <p class="info-value">#{{ $user->id }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            @if($user->address)
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>Alamat
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <p class="mb-0">{{ $user->address }}</p>
+                </div>
+            </div>
+            @endif
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Contact Information -->
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>Informasi Kontak
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="contact-text">
+                                <p class="contact-label">Email</p>
+                                <p class="contact-value">{{ $user->email }}</p>
+                            </div>
+                        </div>
+                        @if($user->nip_nik)
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <div class="contact-text">
+                                <p class="contact-label">NIP/NIK</p>
+                                <p class="contact-value">{{ $user->nip_nik }}</p>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Walikelas Information -->
+            @if($user->is_walikelas && $user->classRoom)
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chalkboard me-2"></i>Informasi Walikelas
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <div class="walikelas-info">
+                        <div class="classroom-badge mb-2">
+                            Kelas {{ $user->classRoom->level }}
+                        </div>
+                        <h6 class="fw-semibold mb-1">{{ $user->classRoom->name }}</h6>
+                        <p class="text-muted mb-2">{{ $user->classRoom->description ?? 'Tidak ada deskripsi' }}</p>
+                        <p class="text-muted small mb-0">
+                            <i class="fas fa-users me-1"></i>
+                            {{ $user->classRoom->students->count() }} Siswa
+                        </p>
+                    </div>
+                </div>
+            </div>
+            @elseif($user->is_walikelas)
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chalkboard me-2"></i>Informasi Walikelas
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h6>Belum Ditugaskan</h6>
+                        <p>User ini ditandai sebagai walikelas tetapi belum ditugaskan ke kelas tertentu.</p>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Quick Actions -->
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Aksi Cepat
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Edit Staff
+                        </a>
+                        @if($user->is_walikelas && $user->classRoom)
+                        <a href="{{ route('admin.classrooms.show', $user->classRoom) }}" class="btn btn-secondary">
+                            <i class="fas fa-chalkboard me-2"></i>Lihat Kelas
+                        </a>
+                        @endif
+                        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-2"></i>Daftar Pengguna
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Status -->
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Status Akun
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="mb-2">
+                                @if($user->status == 'Aktif')
+                                    <i class="fas fa-check-circle text-success fa-2x"></i>
+                                @else
+                                    <i class="fas fa-times-circle text-danger fa-2x"></i>
+                                @endif
+                            </div>
+                            <p class="mb-0 small">Status</p>
+                            <p class="fw-semibold">{{ $user->status }}</p>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-2">
+                                @if($user->is_walikelas)
+                                    <i class="fas fa-chalkboard text-primary fa-2x"></i>
+                                @else
+                                    <i class="fas fa-user text-muted fa-2x"></i>
+                                @endif
+                            </div>
+                            <p class="mb-0 small">Walikelas</p>
+                            <p class="fw-semibold">{{ $user->is_walikelas ? 'Ya' : 'Tidak' }}</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Action Buttons -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-center gap-3">
-                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-primary btn-modern">
-                    <i class="fas fa-edit me-2"></i>Edit Pengguna
-                </a>
-                
-                @if($user->role->role_name !== 'admin')
-                    <button type="button" class="btn btn-danger btn-modern" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <i class="fas fa-trash me-2"></i>Hapus Pengguna
-                    </button>
-                @endif
-                
-                <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary btn-modern">
-                    <i class="fas fa-list me-2"></i>Daftar Semua Pengguna
-                </a>
-            </div>
-        </div>
-    </div>
 </div>
-
-<!-- Delete Confirmation Modal -->
-@if($user->role->role_name !== 'admin')
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Konfirmasi Hapus
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center">
-                    <i class="fas fa-user-times fa-3x text-danger mb-3"></i>
-                    <h5>Hapus Pengguna</h5>
-                    <p class="mb-3">
-                        Apakah Anda yakin ingin menghapus pengguna <strong>{{ $user->name }}</strong>?
-                    </p>
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Peringatan:</strong> Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data terkait pengguna ini.
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Batal
-                </button>
-                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-2"></i>Ya, Hapus
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
 @endsection
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add any interactive features here
-    console.log('User detail page loaded for user: {{ $user->name }}');
-});
-</script>
-@endpush

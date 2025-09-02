@@ -10,9 +10,13 @@ class Student extends Model
     use HasFactory;
 
     protected $fillable = [
+        'nisn',
         'name',
+        'photo',
         'class_name',
+        'address',
         'card_qr_code',
+        'status',
     ];
 
     // Relationships
