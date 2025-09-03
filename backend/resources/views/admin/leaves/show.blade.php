@@ -505,7 +505,7 @@
             @endif
 
             <!-- Action Buttons -->
-            @if($leave->isPending())
+            @if($leave->isPending() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum')))
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title">
@@ -535,6 +535,7 @@
 </div>
 
 <!-- Approve Modal -->
+@if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
 <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -570,8 +571,10 @@
         </div>
     </div>
 </div>
+@endif
 
 <!-- Reject Modal -->
+@if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -607,6 +610,7 @@
         </div>
     </div>
 </div>
+@endif
 @endsection
 
 @push('scripts')

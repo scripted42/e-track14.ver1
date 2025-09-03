@@ -170,7 +170,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3">{{ $students->links() }}</div>
+                <div class="mt-3 d-flex justify-content-center">{{ $students->links('pagination::bootstrap-4') }}</div>
             @else
                 <div class="text-center py-5">
                     <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>

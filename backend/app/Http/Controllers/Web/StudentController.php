@@ -21,7 +21,19 @@ class StudentController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = Student::query();
+        
+        // For Guru role, only show students from their classes
+        if ($user->hasRole('Guru')) {
+            $myClassIds = $user->classRooms()->pluck('id');
+            if ($myClassIds->count() > 0) {
+                $query->whereIn('class_room_id', $myClassIds);
+            } else {
+                // If guru is not walikelas, show no students
+                $query->where('id', 0);
+            }
+        }
         
         // Search by name or NISN
         if ($request->filled('search')) {
@@ -62,6 +74,11 @@ class StudentController extends Controller
 
     public function create()
     {
+        // Only admin can create students
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Anda tidak memiliki izin untuk menambah siswa.');
+        }
+        
         // Get classes from class_rooms table
         $classes = ClassRoom::where('is_active', true)->orderBy('name')->get();
         
@@ -105,6 +122,11 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
+        // Only admin can create students
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Anda tidak memiliki izin untuk menambah siswa.');
+        }
+        
         $request->validate([
             'nisn' => 'required|string|max:20|unique:students,nisn',
             'name' => 'required|string|max:200',
@@ -136,6 +158,11 @@ class StudentController extends Controller
 
     public function edit(Student $student)
     {
+        // Only admin can edit students
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit siswa.');
+        }
+        
         // Get classes from class_rooms table
         $classes = ClassRoom::where('is_active', true)->orderBy('name')->get();
         
@@ -144,6 +171,11 @@ class StudentController extends Controller
 
     public function update(Request $request, Student $student)
     {
+        // Only admin can update students
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit siswa.');
+        }
+        
         $request->validate([
             'nisn' => 'required|string|max:20|unique:students,nisn,' . $student->id,
             'name' => 'required|string|max:200',
@@ -180,6 +212,11 @@ class StudentController extends Controller
 
     public function destroy(Student $student)
     {
+        // Only admin can delete students
+        if (!auth()->user()->hasRole('Admin')) {
+            abort(403, 'Anda tidak memiliki izin untuk menghapus siswa.');
+        }
+        
         $student->delete();
 
         return redirect()->route('admin.students.index')

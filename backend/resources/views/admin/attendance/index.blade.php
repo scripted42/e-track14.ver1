@@ -4,126 +4,6 @@
 
 @push('styles')
 <style>
-.stats-card {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e9ecef;
-}
-
-.stats-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.stats-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin-bottom: 0.25rem;
-}
-
-.stats-label {
-    color: #6c757d;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.btn-modern {
-    border-radius: 6px;
-    padding: 0.5rem 1.2rem;
-    font-weight: 500;
-    border: 1px solid #dee2e6;
-    transition: all 0.2s ease;
-    background: white;
-    color: #6c757d;
-}
-
-.btn-modern:hover {
-    background: #f8f9fa;
-    border-color: #adb5bd;
-    color: #495057;
-}
-
-.btn-primary {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
-.btn-primary:hover {
-    background: #0056b3;
-    border-color: #0056b3;
-    color: white;
-}
-
-.btn-success {
-    background: #28a745;
-    color: white;
-    border-color: #28a745;
-}
-
-.btn-success:hover {
-    background: #1e7e34;
-    border-color: #1e7e34;
-    color: white;
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-    border-color: #6c757d;
-}
-
-.btn-secondary:hover {
-    background: #545b62;
-    border-color: #545b62;
-    color: white;
-}
-
-.btn-info {
-    background: #17a2b8;
-    color: white;
-    border-color: #17a2b8;
-}
-
-.btn-info:hover {
-    background: #138496;
-    border-color: #138496;
-    color: white;
-}
-
-.btn-warning {
-    background: #ffc107;
-    color: #212529;
-    border-color: #ffc107;
-}
-
-.btn-warning:hover {
-    background: #e0a800;
-    border-color: #e0a800;
-    color: #212529;
-}
-
-.btn-danger {
-    background: #dc3545;
-    color: white;
-    border-color: #dc3545;
-}
-
-.btn-danger:hover {
-    background: #c82333;
-    border-color: #c82333;
-    color: white;
-}
-
 .action-btn {
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
@@ -192,6 +72,22 @@
 .status-dinas_luar {
     background: #d1ecf1;
     color: #0c5460;
+}
+
+/* Check-out specific status styles */
+.status-pulang-lebih-awal {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-lembur {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-on-time {
+    background: #d4edda;
+    color: #155724;
 }
 
 .type-badge {
@@ -286,42 +182,72 @@
             <p class="text-muted mb-0">Kelola data kehadiran pegawai dan guru</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('admin.attendance.qr') }}" class="btn btn-info">
-                <i class="fas fa-qrcode me-2"></i>QR Code
-            </a>
             <a href="{{ route('admin.attendance.export', request()->query()) }}" class="btn btn-success">
                 <i class="fas fa-download me-2"></i>Export Data
             </a>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
+    <!-- Summary Cards -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="stats-card">
-                <div class="stats-icon" style="background: #e8f5e8; color: #28a745;">
-                    <i class="fas fa-users"></i>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ $stats['present_today'] }}</h4>
+                            <p class="mb-0">Hadir Hari Ini</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-75"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="stats-number">{{ $stats['today_total'] }}</div>
-                <div class="stats-label">Hadir Hari Ini</div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stats-card">
-                <div class="stats-icon" style="background: #fff3cd; color: #856404;">
-                    <i class="fas fa-clock"></i>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ $stats['ontime_today'] }}</h4>
+                            <p class="mb-0">On-Time Hari Ini</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="stats-number">{{ $stats['today_late'] }}</div>
-                <div class="stats-label">Terlambat Hari Ini</div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stats-card">
-                <div class="stats-icon" style="background: #e3f2fd; color: #1976d2;">
-                    <i class="fas fa-calendar-alt"></i>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ $stats['late_today'] }}</h4>
+                            <p class="mb-0">Terlambat Hari Ini</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="stats-number">{{ $stats['this_month'] }}</div>
-                <div class="stats-label">Total Bulan Ini</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ $stats['not_attended_today'] }}</h4>
+                            <p class="mb-0">Belum Absen Hari Ini</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-times fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -329,58 +255,62 @@
     <!-- Search and Filter -->
     <div class="search-form">
         <form method="GET" action="{{ route('admin.attendance.index') }}">
-            <div class="row">
+            <!-- First Row -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Cari Nama Pegawai</label>
+                    <input type="text" name="search" class="form-control" placeholder="Masukkan nama pegawai..." value="{{ request('search') }}">
+                </div>
                 <div class="col-md-3">
-                    <label class="form-label">Pegawai/Guru</label>
-                    <select name="user_id" class="form-control">
-                        <option value="">Semua Pegawai</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
-                                {{ $user->name }}
-                            </option>
-                        @endforeach
+                    <label class="form-label">Periode</label>
+                    <select name="period" class="form-control">
+                        <option value="">Pilih Periode</option>
+                        <option value="today" {{ request('period') == 'today' ? 'selected' : '' }}>Hari Ini</option>
+                        <option value="yesterday" {{ request('period') == 'yesterday' ? 'selected' : '' }}>Kemarin</option>
+                        <option value="this_week" {{ request('period') == 'this_week' ? 'selected' : '' }}>Minggu Ini</option>
+                        <option value="this_month" {{ request('period') == 'this_month' ? 'selected' : '' }}>Bulan Ini</option>
+                        <option value="custom" {{ request('period') == 'custom' ? 'selected' : '' }}>Tanggal Kustom</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-control">
-                        <option value="">Semua Status</option>
-                        @foreach($statuses as $status)
-                            <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
-                                {{ ucfirst($status) }}
-                            </option>
-                        @endforeach
-                    </select>
+                <div class="col-md-3" id="custom-date" style="{{ request('period') == 'custom' ? '' : 'display: none;' }}">
+                    <label class="form-label">Tanggal</label>
+                    <input type="date" name="date" class="form-control" value="{{ request('date') }}">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Jenis</label>
-                    <select name="type" class="form-control">
-                        <option value="">Semua Jenis</option>
-                        @foreach($types as $type)
-                            <option value="{{ $type }}" {{ request('type') == $type ? 'selected' : '' }}>
-                                {{ ucfirst($type) }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Dari Tanggal</label>
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Sampai Tanggal</label>
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-                </div>
-                <div class="col-md-1">
                     <label class="form-label">&nbsp;</label>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary flex-fill">
-                            <i class="fas fa-search"></i>
+                            <i class="fas fa-search me-1"></i>Cari
                         </button>
                         <a href="{{ route('admin.attendance.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i>
+                            <i class="fas fa-times me-1"></i>Reset
                         </a>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Second Row -->
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-control">
+                        <option value="">Semua Status</option>
+                        <option value="on-time" {{ request('status') == 'on-time' ? 'selected' : '' }}>On-time</option>
+                        <option value="terlambat" {{ request('status') == 'terlambat' ? 'selected' : '' }}>Terlambat</option>
+                        <option value="izin" {{ request('status') == 'izin' ? 'selected' : '' }}>Izin</option>
+                        <option value="sakit" {{ request('status') == 'sakit' ? 'selected' : '' }}>Sakit</option>
+                        <option value="cuti" {{ request('status') == 'cuti' ? 'selected' : '' }}>Cuti</option>
+                        <option value="dinas_luar" {{ request('status') == 'dinas_luar' ? 'selected' : '' }}>Dinas Luar</option>
+                        <option value="alpha" {{ request('status') == 'alpha' ? 'selected' : '' }}>Alpha</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Jenis</label>
+                    <select name="type" class="form-control">
+                        <option value="">Semua Jenis</option>
+                        <option value="checkin" {{ request('type') == 'checkin' ? 'selected' : '' }}>Check-in</option>
+                        <option value="checkout" {{ request('type') == 'checkout' ? 'selected' : '' }}>Check-out</option>
+                    </select>
                 </div>
             </div>
         </form>
@@ -400,11 +330,10 @@
                         <tr>
                             <th>Nama</th>
                             <th>Role</th>
-                            <th>Jenis</th>
-                            <th>Status</th>
                             <th>Tanggal</th>
-                            <th>Waktu</th>
-                            <th>Lokasi</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Status</th>
                             <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -412,54 +341,99 @@
                         @forelse($attendance as $record)
                             <tr>
                                 <td>
-                                    <div class="fw-semibold">{{ $record->user->name }}</div>
-                                    <small class="text-muted">{{ $record->user->email }}</small>
+                                    <div class="fw-semibold">{{ $record['user']->name }}</div>
+                                    <small class="text-muted">{{ $record['user']->email }}</small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">{{ $record->user->role ? $record->user->role->role_name : 'No Role' }}</span>
+                                    <span class="badge bg-secondary">{{ $record['user']->role ? $record['user']->role->role_name : 'No Role' }}</span>
                                 </td>
                                 <td>
-                                    <span class="type-badge type-{{ $record->type }}">
-                                        {{ ucfirst($record->type) }}
-                                    </span>
+                                    <span class="fw-medium">{{ \Carbon\Carbon::parse($record['date'])->format('d M Y') }}</span>
                                 </td>
                                 <td>
-                                    <span class="status-badge status-{{ $record->status }}">
-                                        {{ ucfirst($record->status) }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="fw-medium">{{ $record->timestamp->format('d M Y') }}</span>
-                                </td>
-                                <td>
-                                    <span class="fw-medium">{{ $record->timestamp->format('H:i:s') }}</span>
-                                </td>
-                                <td>
-                                    @if($record->latitude && $record->longitude)
-                                        <small class="text-muted">
-                                            {{ number_format($record->latitude, 6) }}, {{ number_format($record->longitude, 6) }}
-                                        </small>
-                                        @if($record->accuracy)
-                                            <br><small class="text-muted">±{{ $record->accuracy }}m</small>
-                                        @endif
+                                    @if($record['checkin'])
+                                        <div>
+                                            <span class="fw-medium text-success">{{ $record['checkin']['time'] }}</span>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-map-marker-alt"></i> Lokasi tercatat
+                                            </small>
+                                        </div>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
+                                </td>
+                                <td>
+                                    @if($record['checkout'])
+                                        <div>
+                                            <span class="fw-medium text-danger">{{ $record['checkout']['time'] }}</span>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-map-marker-alt"></i> Lokasi tercatat
+                                            </small>
+                                        </div>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1">
+                                        @if(isset($record['leave']))
+                                            <span class="status-badge status-{{ $record['leave']['type'] }}">
+                                                {{ ucfirst($record['leave']['type']) }}
+                                            </span>
+                                            @if($record['leave']['status'] === 'disetujui')
+                                                <small class="text-success">✓ Disetujui</small>
+                                            @elseif($record['leave']['status'] === 'ditolak')
+                                                <small class="text-danger">✗ Ditolak</small>
+                                            @else
+                                                <small class="text-warning">⏳ Menunggu</small>
+                                            @endif
+                                        @elseif($record['checkin'])
+                                            <span class="status-badge status-{{ strtolower(str_replace(' ', '-', $record['checkin']['status'])) }}">
+                                                Check-in: {{ $record['checkin']['status'] }}
+                                            </span>
+                                        @endif
+                                        @if($record['checkout'])
+                                            <span class="status-badge status-{{ strtolower(str_replace(' ', '-', $record['checkout']['status'])) }}">
+                                                Check-out: {{ $record['checkout']['status'] }}
+                                            </span>
+                                        @endif
+                                        @if(!$record['checkin'] && !$record['checkout'] && !isset($record['leave']))
+                                            <span class="status-badge status-alpha">
+                                                Alpha
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
                                         <button type="button" 
                                                 class="action-btn btn btn-info" 
                                                 title="Lihat Detail"
-                                                onclick="showDetail({{ $record->id }})">
+                                                onclick="showDetail('{{ $record['user']->id }}', '{{ $record['date'] }}')">
                                             <i class="fas fa-eye"></i>
                                         </button>
+                                        @if(isset($record['leave']) && $record['leave']['status'] === 'menunggu' && auth()->user()->hasRole(['Admin', 'Kepala Sekolah', 'Waka Kurikulum']))
+                                            <button type="button" 
+                                                    class="action-btn btn btn-success" 
+                                                    title="Setujui Izin"
+                                                    onclick="approveLeave('{{ $record['leave']['id'] ?? '' }}', '{{ $record['user']->name }}')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button" 
+                                                    class="action-btn btn btn-danger" 
+                                                    title="Tolak Izin"
+                                                    onclick="rejectLeave('{{ $record['leave']['id'] ?? '' }}', '{{ $record['user']->name }}')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center">
+                                <td colspan="7" class="text-center">
                                     <div class="empty-state">
                                         <i class="fas fa-clipboard-list"></i>
                                         <h5>Belum ada data kehadiran</h5>
@@ -477,7 +451,7 @@
     <!-- Pagination -->
     @if($attendance->hasPages())
         <div class="d-flex justify-content-center mt-4">
-            {{ $attendance->links() }}
+            {{ $attendance->links('pagination::bootstrap-4') }}
         </div>
     @endif
 </div>
@@ -503,17 +477,205 @@
 
 @push('scripts')
 <script>
-function showDetail(id) {
-    // For now, just show a placeholder
-    // In a real implementation, you would fetch the detail via AJAX
+// Show/hide custom date field based on period selection
+document.addEventListener('DOMContentLoaded', function() {
+    const periodSelect = document.querySelector('select[name="period"]');
+    const customDateDiv = document.getElementById('custom-date');
+    
+    if (periodSelect && customDateDiv) {
+        periodSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateDiv.style.display = '';
+            } else {
+                customDateDiv.style.display = 'none';
+            }
+        });
+    }
+});
+
+function showDetail(userId, date) {
+    // Show loading state
     document.getElementById('detailContent').innerHTML = `
         <div class="text-center p-4">
-            <i class="fas fa-info-circle fa-3x text-primary mb-3"></i>
-            <h6>Detail Kehadiran #${id}</h6>
-            <p class="text-muted">Fitur detail akan segera tersedia</p>
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Memuat detail kehadiran...</p>
         </div>
     `;
+    
+    // Show modal
     new bootstrap.Modal(document.getElementById('detailModal')).show();
+    
+    // Fetch detail data
+    fetch(`/admin/attendance/detail/${userId}/${date}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('detailContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> ${data.error}
+                    </div>
+                `;
+                return;
+            }
+            
+            // Build detail content
+            let content = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-user me-2"></i>Informasi Pegawai</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Nama:</strong></td><td>${data.user.name}</td></tr>
+                            <tr><td><strong>Email:</strong></td><td>${data.user.email}</td></tr>
+                            <tr><td><strong>Role:</strong></td><td>${data.user.role ? data.user.role.role_name : 'No Role'}</td></tr>
+                            <tr><td><strong>Tanggal:</strong></td><td>${new Date(data.date).toLocaleDateString('id-ID')}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-calendar-check me-2"></i>Status Kehadiran</h6>
+                        <div class="d-flex flex-column gap-2">
+            `;
+            
+            if (data.leave) {
+                content += `
+                    <div class="alert alert-info">
+                        <strong>${data.leave.type.charAt(0).toUpperCase() + data.leave.type.slice(1)}</strong><br>
+                        <small>Status: ${data.leave.status}</small><br>
+                        <small>Alasan: ${data.leave.reason}</small>
+                        ${data.leave.approved_by ? `<br><small>Disetujui oleh: ${data.leave.approved_by}</small>` : ''}
+                    </div>
+                `;
+            } else if (data.checkin || data.checkout) {
+                if (data.checkin) {
+                    content += `
+                        <div class="alert alert-success">
+                            <strong>Check-in:</strong> ${data.checkin.time}<br>
+                            <small>Status: ${data.checkin.status}</small>
+                        </div>
+                    `;
+                }
+                if (data.checkout) {
+                    content += `
+                        <div class="alert alert-danger">
+                            <strong>Check-out:</strong> ${data.checkout.time}<br>
+                            <small>Status: ${data.checkout.status}</small>
+                        </div>
+                    `;
+                }
+            } else {
+                content += `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Tidak ada data kehadiran
+                    </div>
+                `;
+            }
+            
+            content += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add location info if available
+            if (data.checkin && data.checkin.latitude) {
+                content += `
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6><i class="fas fa-map-marker-alt me-2"></i>Informasi Lokasi</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Check-in:</strong><br>
+                                    <small>Koordinat: ${data.checkin.latitude}, ${data.checkin.longitude}</small><br>
+                                    <small>Akurasi: ${data.checkin.accuracy}m</small>
+                                </div>
+                `;
+                if (data.checkout && data.checkout.latitude) {
+                    content += `
+                                <div class="col-md-6">
+                                    <strong>Check-out:</strong><br>
+                                    <small>Koordinat: ${data.checkout.latitude}, ${data.checkout.longitude}</small><br>
+                                    <small>Akurasi: ${data.checkout.accuracy}m</small>
+                                </div>
+                    `;
+                }
+                content += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('detailContent').innerHTML = content;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('detailContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Terjadi kesalahan saat memuat data
+                </div>
+            `;
+        });
+}
+
+function approveLeave(leaveId, userName) {
+    if (!leaveId) {
+        alert('Leave ID tidak ditemukan');
+        return;
+    }
+    
+    if (confirm(`Apakah Anda yakin ingin menyetujui izin untuk ${userName}?`)) {
+        fetch(`/admin/attendance/leave/${leaveId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Izin berhasil disetujui');
+                location.reload(); // Refresh page to show updated status
+            } else {
+                alert('Error: ' + (data.error || 'Terjadi kesalahan'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat menyetujui izin');
+        });
+    }
+}
+
+function rejectLeave(leaveId, userName) {
+    if (!leaveId) {
+        alert('Leave ID tidak ditemukan');
+        return;
+    }
+    
+    if (confirm(`Apakah Anda yakin ingin menolak izin untuk ${userName}?`)) {
+        fetch(`/admin/attendance/leave/${leaveId}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Izin berhasil ditolak');
+                location.reload(); // Refresh page to show updated status
+            } else {
+                alert('Error: ' + (data.error || 'Terjadi kesalahan'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat menolak izin');
+        });
+    }
 }
 </script>
 @endpush

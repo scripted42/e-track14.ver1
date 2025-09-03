@@ -14,6 +14,7 @@ class Student extends Model
         'name',
         'photo',
         'class_name',
+        'class_room_id',
         'address',
         'card_qr_code',
         'status',
@@ -23,6 +24,11 @@ class Student extends Model
     public function attendance()
     {
         return $this->hasMany(StudentAttendance::class);
+    }
+
+    public function classRoom()
+    {
+        return $this->belongsTo(ClassRoom::class);
     }
 
     // Scopes

@@ -16,19 +16,25 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (!$request->user()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ], 401);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
+            return redirect()->route('admin.login');
         }
 
         $userRole = $request->user()->role->role_name;
 
         if (!in_array($userRole, $roles)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Insufficient permissions'
-            ], 403);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient permissions'
+                ], 403);
+            }
+            return redirect()->route('admin.dashboard')->with('error', 'Anda tidak memiliki izin untuk mengakses halaman tersebut.');
         }
 
         return $next($request);

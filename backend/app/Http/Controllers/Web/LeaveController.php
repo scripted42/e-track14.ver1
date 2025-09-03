@@ -13,8 +13,17 @@ class LeaveController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Leave::with(['user:id,name,email', 'user.role:id,role_name', 'approver:id,name'])
-            ->orderBy('created_at', 'desc');
+        $user = auth()->user();
+        
+        // For non-admin users, only show their own leaves
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
+            $query = Leave::with(['user:id,name,email', 'user.role:id,role_name', 'approver:id,name'])
+                ->where('user_id', $user->id)
+                ->orderBy('created_at', 'desc');
+        } else {
+            $query = Leave::with(['user:id,name,email', 'user.role:id,role_name', 'approver:id,name'])
+                ->orderBy('created_at', 'desc');
+        }
 
         // Apply filters
         if ($request->filled('status')) {
@@ -25,7 +34,7 @@ class LeaveController extends Controller
             $query->where('leave_type', $request->leave_type);
         }
 
-        if ($request->filled('user_id')) {
+        if ($request->filled('user_id') && ($user->hasRole('Admin') || $user->hasRole('Kepala Sekolah') || $user->hasRole('Waka Kurikulum'))) {
             $query->where('user_id', $request->user_id);
         }
 
@@ -39,10 +48,13 @@ class LeaveController extends Controller
 
         $leaves = $query->paginate(20);
 
-        // Get filter options
-        $users = \App\Models\User::whereIn('role_id', [2, 3]) // Guru and Pegawai
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        // Get filter options (only for admin/approvers)
+        $users = collect();
+        if ($user->hasRole('Admin') || $user->hasRole('Kepala Sekolah') || $user->hasRole('Waka Kurikulum')) {
+            $users = \App\Models\User::whereIn('role_id', [2, 3, 4, 5]) // Guru, Pegawai, Kepala Sekolah, Waka Kurikulum
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
 
         $statuses = ['menunggu', 'disetujui', 'ditolak'];
         $leaveTypes = ['izin', 'sakit', 'cuti', 'dinas_luar'];
@@ -67,6 +79,58 @@ class LeaveController extends Controller
         ));
     }
 
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'leave_type' => 'required|in:izin,sakit,cuti,dinas_luar',
+            'start_date' => 'required|date|after_or_equal:today',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'reason' => 'required|string|max:1000',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            // Calculate duration
+            $startDate = \Carbon\Carbon::parse($request->start_date);
+            $endDate = \Carbon\Carbon::parse($request->end_date);
+            $duration = $startDate->diffInDays($endDate) + 1;
+
+            // Create leave request
+            $leave = Leave::create([
+                'user_id' => auth()->id(),
+                'leave_type' => $request->leave_type,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'duration_days' => $duration,
+                'reason' => $request->reason,
+                'notes' => $request->notes,
+                'status' => 'menunggu',
+            ]);
+
+            // Log activity
+            AuditLog::log('leave_created', [
+                'leave_id' => $leave->id,
+                'leave_type' => $leave->leave_type,
+                'duration_days' => $duration,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+            ], auth()->id());
+
+            return redirect()->route('admin.leaves.index')
+                ->with('success', 'Pengajuan izin berhasil dikirim dan sedang menunggu persetujuan.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal mengajukan izin: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
     public function show(Leave $leave)
     {
         $leave->load(['user:id,name,email', 'user.role:id,role_name', 'approver:id,name']);
@@ -76,6 +140,11 @@ class LeaveController extends Controller
 
     public function approve(Request $request, Leave $leave)
     {
+        // Check if user has permission to approve
+        if (!auth()->user()->hasRole('Admin') && !auth()->user()->hasRole('Kepala Sekolah') && !auth()->user()->hasRole('Waka Kurikulum')) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menyetujui izin.');
+        }
+
         if ($leave->status !== 'menunggu') {
             return redirect()->back()->with('error', 'Izin sudah diproses sebelumnya.');
         }
@@ -119,6 +188,11 @@ class LeaveController extends Controller
 
     public function reject(Request $request, Leave $leave)
     {
+        // Check if user has permission to reject
+        if (!auth()->user()->hasRole('Admin') && !auth()->user()->hasRole('Kepala Sekolah') && !auth()->user()->hasRole('Waka Kurikulum')) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menolak izin.');
+        }
+
         if ($leave->status !== 'menunggu') {
             return redirect()->back()->with('error', 'Izin sudah diproses sebelumnya.');
         }

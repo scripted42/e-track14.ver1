@@ -441,7 +441,7 @@
                             <div class="text-muted">
                                 Menampilkan {{ $users->firstItem() }} - {{ $users->lastItem() }} dari {{ $users->total() }} pengguna
                             </div>
-                            {{ $users->links() }}
+                            {{ $users->links('pagination::bootstrap-4') }}
                         </div>
                     </div>
                 @endif

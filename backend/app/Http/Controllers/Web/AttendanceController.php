@@ -15,58 +15,371 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name'])
-            ->orderBy('timestamp', 'desc');
+        $user = auth()->user();
+        
+        // Build base query
+        $query = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name']);
+        
+        // For non-admin users, only show their own attendance
+        if (!$user->hasRole('Admin')) {
+            $query->where('user_id', $user->id);
+        }
 
         // Apply filters
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->user_id);
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
         }
 
+        // Apply period filter
+        if ($request->filled('period')) {
+            $period = $request->period;
+            $today = Carbon::today();
+            
+            switch ($period) {
+                case 'today':
+                    $query->whereDate('timestamp', $today);
+                    break;
+                case 'yesterday':
+                    $query->whereDate('timestamp', $today->subDay());
+                    break;
+                case 'this_week':
+                    $query->whereBetween('timestamp', [
+                        $today->startOfWeek(),
+                        $today->endOfWeek()
+                    ]);
+                    break;
+                case 'this_month':
+                    $query->whereMonth('timestamp', $today->month)
+                          ->whereYear('timestamp', $today->year);
+                    break;
+                case 'custom':
+                    if ($request->filled('date')) {
+                        $query->whereDate('timestamp', $request->date);
+                    }
+                    break;
+            }
+        }
+
+        // Apply status filter
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $status = $request->status;
+            if ($status === 'on-time') {
+                // For check-in: time <= 07:05 (425 minutes)
+                $query->where('type', 'checkin')
+                      ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425');
+            } elseif ($status === 'terlambat') {
+                // For check-in: time > 07:05 (425 minutes)
+                $query->where('type', 'checkin')
+                      ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425');
+            } else {
+                // For other statuses (izin, sakit, alpha), use original logic
+                $query->where('status', $status);
+            }
         }
 
+        // Apply type filter
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('timestamp', '>=', $request->date_from);
+        // Get all attendance records with optimized query
+        $allAttendance = $query->orderBy('timestamp', 'desc')->get();
+
+        // Get leave records for the same period with optimized query
+        $leaveQuery = \App\Models\Leave::with(['user:id,name,email,role_id', 'user.role:id,role_name', 'approver:id,name']);
+        
+        // Apply same filters for leaves
+        if (!$user->hasRole('Admin')) {
+            $leaveQuery->where('user_id', $user->id);
         }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('timestamp', '<=', $request->date_to);
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $leaveQuery->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
         }
+        
+        // Apply period filter for leaves
+        if ($request->filled('period')) {
+            $period = $request->period;
+            $today = Carbon::today();
+            
+            switch ($period) {
+                case 'today':
+                    $leaveQuery->whereDate('start_date', '<=', $today)
+                              ->whereDate('end_date', '>=', $today);
+                    break;
+                case 'yesterday':
+                    $yesterday = $today->subDay();
+                    $leaveQuery->whereDate('start_date', '<=', $yesterday)
+                              ->whereDate('end_date', '>=', $yesterday);
+                    break;
+                case 'this_week':
+                    $leaveQuery->whereBetween('start_date', [
+                        $today->startOfWeek(),
+                        $today->endOfWeek()
+                    ])->orWhereBetween('end_date', [
+                        $today->startOfWeek(),
+                        $today->endOfWeek()
+                    ]);
+                    break;
+                case 'this_month':
+                    $leaveQuery->whereMonth('start_date', $today->month)
+                              ->whereYear('start_date', $today->year)
+                              ->orWhere(function($q) use ($today) {
+                                  $q->whereMonth('end_date', $today->month)
+                                    ->whereYear('end_date', $today->year);
+                              });
+                    break;
+                case 'custom':
+                    if ($request->filled('date')) {
+                        $customDate = $request->date;
+                        $leaveQuery->whereDate('start_date', '<=', $customDate)
+                                  ->whereDate('end_date', '>=', $customDate);
+                    }
+                    break;
+            }
+        }
+        
+        // Apply status filter for leaves
+        if ($request->filled('status')) {
+            $status = $request->status;
+            if (in_array($status, ['izin', 'sakit', 'alpha', 'cuti'])) {
+                if ($status === 'alpha') {
+                    // Alpha means no attendance and no approved leave
+                    // This will be handled in the final filtering
+                } else {
+                    $leaveQuery->where('leave_type', $status)
+                              ->where('status', 'disetujui');
+                }
+            }
+        }
+        
+        $allLeaves = $leaveQuery->get();
 
-        $attendance = $query->paginate(20);
+        // Group by user and date to create daily summary
+        $groupedAttendance = $allAttendance->groupBy(function ($item) {
+            return $item->user_id . '_' . $item->timestamp->format('Y-m-d');
+        });
 
-        // Get filter options
-        $users = User::whereIn('role_id', [2, 3, 4, 6]) // Guru, Pegawai, Kepala Sekolah, and other roles
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        $attendanceSummary = collect();
+        
+        foreach ($groupedAttendance as $key => $records) {
+            $userRecord = $records->first();
+            $checkin = $records->where('type', 'checkin')->first();
+            $checkout = $records->where('type', 'checkout')->first();
+            
+            // Determine check-in status based on time
+            $checkinStatus = null;
+            if ($checkin) {
+                $hour = (int) $checkin->timestamp->format('H');
+                $minute = (int) $checkin->timestamp->format('i');
+                $timeMinutes = $hour * 60 + $minute;
+                
+                // Staff rule: On-Time if ≤ 07:05 (425 minutes), Late if > 07:05
+                if ($timeMinutes <= 425) {
+                    $checkinStatus = 'On-Time';
+                } else {
+                    $checkinStatus = 'Terlambat';
+                }
+            }
+            
+            // Determine check-out status
+            $checkoutStatus = null;
+            if ($checkout) {
+                $checkoutTime = $checkout->timestamp->format('H:i');
+                $checkoutHour = (int) $checkout->timestamp->format('H');
+                
+                if ($checkoutHour < 15) {
+                    $checkoutStatus = 'Pulang Lebih Awal';
+                } elseif ($checkoutHour >= 15 && $checkoutHour <= 17) {
+                    $checkoutStatus = 'On-Time';
+                } else {
+                    $checkoutStatus = 'Lembur';
+                }
+            }
+            
+            $attendanceSummary->push([
+                'user' => $userRecord->user,
+                'date' => $userRecord->timestamp->format('Y-m-d'),
+                'checkin' => $checkin ? [
+                    'time' => $checkin->timestamp->format('H:i:s'),
+                    'status' => $checkinStatus,
+                    'original_status' => $checkin->status,
+                    'latitude' => $checkin->latitude,
+                    'longitude' => $checkin->longitude,
+                    'accuracy' => $checkin->accuracy,
+                ] : null,
+                'checkout' => $checkout ? [
+                    'time' => $checkout->timestamp->format('H:i:s'),
+                    'status' => $checkoutStatus,
+                    'original_status' => $checkout->status,
+                    'latitude' => $checkout->latitude,
+                    'longitude' => $checkout->longitude,
+                    'accuracy' => $checkout->accuracy,
+                ] : null,
+                'timestamp' => $userRecord->timestamp, // For sorting
+                'type' => 'attendance'
+            ]);
+        }
+        
+                        // Add leave records to summary
+                foreach ($allLeaves as $leave) {
+                    $currentDate = $leave->start_date;
+                    while ($currentDate <= $leave->end_date) {
+                        $attendanceSummary->push([
+                            'user' => $leave->user,
+                            'date' => $currentDate->format('Y-m-d'),
+                            'checkin' => null,
+                            'checkout' => null,
+                            'leave' => [
+                                'id' => $leave->id,
+                                'type' => $leave->leave_type,
+                                'reason' => $leave->reason,
+                                'status' => $leave->status,
+                                'start_date' => $leave->start_date->format('Y-m-d'),
+                                'end_date' => $leave->end_date->format('Y-m-d'),
+                            ],
+                            'timestamp' => $currentDate->toDateTimeString(),
+                            'type' => 'leave'
+                        ]);
+                        $currentDate->addDay();
+                    }
+                }
 
-        $statuses = ['hadir', 'terlambat', 'izin', 'sakit', 'alpha', 'cuti', 'dinas_luar'];
-        $types = ['checkin', 'checkout'];
-
-        // Statistics
+        // Calculate statistics
         $today = Carbon::today();
         $stats = [
-            'today_total' => Attendance::whereDate('timestamp', $today)->distinct('user_id')->count(),
-            'today_late' => Attendance::whereDate('timestamp', $today)->where('status', 'terlambat')->count(),
-            'this_month' => Attendance::whereYear('timestamp', $today->year)
-                ->whereMonth('timestamp', $today->month)
-                ->distinct('user_id')
-                ->count(),
+            'present_today' => 0,
+            'ontime_today' => 0,
+            'late_today' => 0,
+            'not_attended_today' => 0,
+            'leave_pending' => 0,
+            'leave_approved' => 0,
+            'leave_rejected' => 0,
+            'alpha_today' => 0,
         ];
 
-        return view('admin.attendance.index', compact(
-            'attendance',
-            'users',
-            'statuses',
-            'types',
-            'stats'
-        ));
+        // Count today's statistics
+        $todayAttendance = $attendanceSummary->where('date', $today->format('Y-m-d'));
+        $stats['present_today'] = $todayAttendance->where('checkin', '!=', null)->count();
+        $stats['ontime_today'] = $todayAttendance->where('checkin.status', 'On-Time')->count();
+        $stats['late_today'] = $todayAttendance->where('checkin.status', 'Terlambat')->count();
+        $stats['alpha_today'] = $todayAttendance->where('checkin', null)->where('leave', null)->count();
+
+        // Count leave statistics
+        $stats['leave_pending'] = $attendanceSummary->where('leave.status', 'menunggu')->count();
+        $stats['leave_approved'] = $attendanceSummary->where('leave.status', 'disetujui')->count();
+        $stats['leave_rejected'] = $attendanceSummary->where('leave.status', 'ditolak')->count();
+        
+        // Calculate staff who have NOT attended today (no checkin and no leave)
+        $totalStaff = User::whereIn('role_id', [2, 3, 4, 5])->count(); // Guru, Pegawai, Kepala Sekolah, Waka Kurikulum
+        $attendedOrOnLeave = $stats['present_today'] + $stats['leave_approved'] + $stats['leave_pending'];
+        $stats['not_attended_today'] = max(0, $totalStaff - $attendedOrOnLeave); // Ensure no negative values
+
+        // Apply final filters to the combined data
+        if ($request->filled('period')) {
+            $period = $request->period;
+            $today = Carbon::today();
+            
+            switch ($period) {
+                case 'today':
+                    $attendanceSummary = $attendanceSummary->filter(function ($item) use ($today) {
+                        return $item['date'] === $today->format('Y-m-d');
+                    });
+                    break;
+                case 'yesterday':
+                    $yesterday = $today->subDay();
+                    $attendanceSummary = $attendanceSummary->filter(function ($item) use ($yesterday) {
+                        return $item['date'] === $yesterday->format('Y-m-d');
+                    });
+                    break;
+                case 'this_week':
+                    $startWeek = $today->startOfWeek();
+                    $endWeek = $today->endOfWeek();
+                    $attendanceSummary = $attendanceSummary->filter(function ($item) use ($startWeek, $endWeek) {
+                        $itemDate = Carbon::parse($item['date']);
+                        return $itemDate->between($startWeek, $endWeek);
+                    });
+                    break;
+                case 'this_month':
+                    $attendanceSummary = $attendanceSummary->filter(function ($item) use ($today) {
+                        $itemDate = Carbon::parse($item['date']);
+                        return $itemDate->month === $today->month && $itemDate->year === $today->year;
+                    });
+                    break;
+                case 'custom':
+                    if ($request->filled('date')) {
+                        $customDate = $request->date;
+                        $attendanceSummary = $attendanceSummary->filter(function ($item) use ($customDate) {
+                            return $item['date'] === $customDate;
+                        });
+                    }
+                    break;
+            }
+        }
+
+        // Apply status filter to final result
+        if ($request->filled('status')) {
+            $status = $request->status;
+            $attendanceSummary = $attendanceSummary->filter(function ($item) use ($status) {
+                if ($status === 'on-time') {
+                    return isset($item['checkin']) && $item['checkin']['status'] === 'On-Time';
+                } elseif ($status === 'terlambat') {
+                    return isset($item['checkin']) && $item['checkin']['status'] === 'Terlambat';
+                } elseif (in_array($status, ['izin', 'sakit', 'cuti', 'dinas_luar'])) {
+                    return isset($item['leave']) && $item['leave']['type'] === $status;
+                } elseif ($status === 'alpha') {
+                    return !isset($item['checkin']) && !isset($item['leave']);
+                }
+                return true;
+            });
+        }
+
+        // Apply type filter to final result
+        if ($request->filled('type')) {
+            $type = $request->type;
+            $attendanceSummary = $attendanceSummary->filter(function ($item) use ($type) {
+                if ($type === 'checkin') {
+                    return isset($item['checkin']);
+                } elseif ($type === 'checkout') {
+                    return isset($item['checkout']);
+                }
+                return true;
+            });
+        }
+
+        // Sort by timestamp desc and paginate manually
+        $attendanceSummary = $attendanceSummary->sortByDesc('timestamp');
+        $perPage = 20;
+        $currentPage = $request->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        $items = $attendanceSummary->slice($offset, $perPage)->values();
+        
+        // Create paginator manually with query parameters preserved
+        $attendance = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $attendanceSummary->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'page',
+                'query' => $request->query(), // Preserve all query parameters
+            ]
+        );
+
+
+
+
+
+
+
+        return view('admin.attendance.index', compact('attendance', 'stats'));
     }
 
     public function qr()
@@ -314,5 +627,145 @@ class AttendanceController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function detail(Request $request, $userId, $date)
+    {
+        $user = auth()->user();
+        
+        // Check permissions
+        if (!$user->hasRole('Admin') && $user->id != $userId) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Get attendance data for specific user and date with optimized query
+        $attendance = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name'])
+            ->where('user_id', $userId)
+            ->whereDate('timestamp', $date)
+            ->orderBy('timestamp', 'asc')
+            ->get();
+
+        // Get leave data for the same date with optimized query
+        $leave = \App\Models\Leave::with(['user:id,name,email,role_id', 'user.role:id,role_name', 'approver:id,name'])
+            ->where('user_id', $userId)
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->first();
+
+        // Group attendance by type
+        $checkin = $attendance->where('type', 'checkin')->first();
+        $checkout = $attendance->where('type', 'checkout')->first();
+
+        // Calculate status
+        $checkinStatus = null;
+        if ($checkin) {
+            $hour = (int) $checkin->timestamp->format('H');
+            $minute = (int) $checkin->timestamp->format('i');
+            $timeMinutes = $hour * 60 + $minute;
+            
+            if ($timeMinutes <= 425) {
+                $checkinStatus = 'On-Time';
+            } else {
+                $checkinStatus = 'Terlambat';
+            }
+        }
+
+        $checkoutStatus = null;
+        if ($checkout) {
+            $checkoutHour = (int) $checkout->timestamp->format('H');
+            
+            if ($checkoutHour < 15) {
+                $checkoutStatus = 'Pulang Lebih Awal';
+            } elseif ($checkoutHour >= 15 && $checkoutHour <= 17) {
+                $checkoutStatus = 'On-Time';
+            } else {
+                $checkoutStatus = 'Lembur';
+            }
+        }
+
+        $data = [
+            'user' => $attendance->first()?->user ?? $leave?->user,
+            'date' => $date,
+            'checkin' => $checkin ? [
+                'time' => $checkin->timestamp->format('H:i:s'),
+                'status' => $checkinStatus,
+                'latitude' => $checkin->latitude,
+                'longitude' => $checkin->longitude,
+                'accuracy' => $checkin->accuracy,
+            ] : null,
+            'checkout' => $checkout ? [
+                'time' => $checkout->timestamp->format('H:i:s'),
+                'status' => $checkoutStatus,
+                'latitude' => $checkout->latitude,
+                'longitude' => $checkout->longitude,
+                'accuracy' => $checkout->accuracy,
+            ] : null,
+            'leave' => $leave ? [
+                'id' => $leave->id,
+                'type' => $leave->leave_type,
+                'reason' => $leave->reason,
+                'status' => $leave->status,
+                'start_date' => $leave->start_date->format('Y-m-d'),
+                'end_date' => $leave->end_date->format('Y-m-d'),
+                'approved_by' => $leave->approver?->name,
+                'approved_at' => $leave->approved_at?->format('d M Y H:i'),
+            ] : null,
+        ];
+
+        return response()->json($data);
+    }
+
+    public function approveLeave(Request $request, $leaveId)
+    {
+        $user = auth()->user();
+        
+        // Check if user has permission to approve leaves
+        if (!$user->hasRole(['Admin', 'Kepala Sekolah', 'Waka Kurikulum'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $leave = \App\Models\Leave::findOrFail($leaveId);
+        
+        if ($leave->status !== 'menunggu') {
+            return response()->json(['error' => 'Leave request is not pending'], 400);
+        }
+
+        $leave->update([
+            'status' => 'disetujui',
+            'approver_id' => $user->id,
+            'approved_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Leave request approved successfully'
+        ]);
+    }
+
+    public function rejectLeave(Request $request, $leaveId)
+    {
+        $user = auth()->user();
+        
+        // Check if user has permission to reject leaves
+        if (!$user->hasRole(['Admin', 'Kepala Sekolah', 'Waka Kurikulum'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $leave = \App\Models\Leave::findOrFail($leaveId);
+        
+        if ($leave->status !== 'menunggu') {
+            return response()->json(['error' => 'Leave request is not pending'], 400);
+        }
+
+        $leave->update([
+            'status' => 'ditolak',
+            'approver_id' => $user->id,
+            'approved_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Leave request rejected successfully'
+        ]);
     }
 }

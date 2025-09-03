@@ -477,7 +477,7 @@
     <!-- Pagination -->
     @if($classRooms->hasPages())
         <div class="d-flex justify-content-center mt-4">
-            {{ $classRooms->links() }}
+            {{ $classRooms->links('pagination::bootstrap-4') }}
         </div>
     @endif
 </div>

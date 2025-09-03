@@ -28,7 +28,7 @@ class ClassRoom extends Model
 
     public function students(): HasMany
     {
-        return $this->hasMany(Student::class, 'class_name', 'name');
+        return $this->hasMany(Student::class, 'class_room_id');
     }
 
     public function walikelasUser(): BelongsTo

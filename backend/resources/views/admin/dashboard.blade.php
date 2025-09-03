@@ -3,10 +3,42 @@
 @section('title', 'Dashboard')
 
 @section('content')
+@if(session('error'))
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ session('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+@endif
+
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i>
+    {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+@endif
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-0">Dashboard</h1>
-        <p class="text-muted">Selamat datang di panel admin E-Track14</p>
+        <h1 class="h3 mb-0">
+            @if(auth()->user()->hasRole('Admin'))
+                Dashboard Admin
+            @elseif(auth()->user()->hasRole('Guru'))
+                Dashboard Guru
+            @elseif(auth()->user()->hasRole('Kepala Sekolah'))
+                Dashboard Kepala Sekolah
+            @elseif(auth()->user()->hasRole('Waka Kurikulum'))
+                Dashboard Waka Kurikulum
+            @elseif(auth()->user()->hasRole('Pegawai'))
+                Dashboard Pegawai
+            @else
+                Dashboard
+            @endif
+        </h1>
+        <p class="text-muted">
+            Selamat datang, {{ auth()->user()->name }} - {{ auth()->user()->role->role_name }}
+        </p>
     </div>
     <div class="text-muted">
         <i class="fas fa-calendar me-1"></i>
@@ -16,57 +48,342 @@
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e;">
-                <i class="fas fa-user-check"></i>
+    @if(auth()->user()->hasRole('Admin'))
+        <!-- Admin Dashboard -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-number text-success">{{ $todayAttendance }}</div>
+                <div class="stat-label">Absensi Hari Ini</div>
+                <small class="text-muted">dari {{ $totalEmployees }} pegawai</small>
             </div>
-            <div class="stat-number text-success">{{ $todayAttendance }}</div>
-            <div class="stat-label">Absensi Hari Ini</div>
-            <small class="text-muted">dari {{ $totalEmployees }} pegawai</small>
         </div>
-    </div>
-    
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6;">
-                <i class="fas fa-user-graduate"></i>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="stat-number text-primary">{{ $todayStudentAttendance }}</div>
+                <div class="stat-label">Siswa Hadir Hari Ini</div>
+                <small class="text-muted">dari {{ $totalStudents }} siswa</small>
             </div>
-            <div class="stat-number text-primary">{{ $todayStudentAttendance }}</div>
-            <div class="stat-label">Siswa Hadir Hari Ini</div>
-            <small class="text-muted">dari {{ $totalStudents }} siswa</small>
         </div>
-    </div>
-    
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(251, 146, 60, 0.1); color: #fb923c;">
-                <i class="fas fa-calendar-times"></i>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(251, 146, 60, 0.1); color: #fb923c;">
+                    <i class="fas fa-calendar-times"></i>
+                </div>
+                <div class="stat-number text-warning">{{ $pendingLeaves }}</div>
+                <div class="stat-label">Izin Menunggu</div>
+                <small class="text-muted">perlu persetujuan</small>
             </div>
-            <div class="stat-number text-warning">{{ $pendingLeaves }}</div>
-            <div class="stat-label">Izin Menunggu</div>
-            <small class="text-muted">perlu persetujuan</small>
         </div>
-    </div>
-    
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7;">
-                <i class="fas fa-qrcode"></i>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+                <div class="stat-number {{ $todayQr ? 'text-success' : 'text-danger' }}">
+                    {{ $todayQr ? 'AKTIF' : 'NONAKTIF' }}
+                </div>
+                <div class="stat-label">QR Code Hari Ini</div>
+                @if($todayQr)
+                    <small class="text-muted">Berlaku sampai {{ $todayQr->valid_until->format('H:i') }}</small>
+                @else
+                    <small class="text-muted">Belum dibuat</small>
+                @endif
             </div>
-            <div class="stat-number {{ $todayQr ? 'text-success' : 'text-danger' }}">
-                {{ $todayQr ? 'AKTIF' : 'NONAKTIF' }}
+        </div>
+    @elseif(auth()->user()->hasRole('Guru'))
+        <!-- Guru Dashboard -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-number text-success">{{ $thisMonthAttendance ?? 0 }}</div>
+                <div class="stat-label">Kehadiran Bulanan</div>
+                <small class="text-muted">{{ $thisMonthLate ?? 0 }} terlambat</small>
             </div>
-            <div class="stat-label">QR Code Hari Ini</div>
-            @if($todayQr)
-                <small class="text-muted">Berlaku sampai {{ $todayQr->valid_until->format('H:i') }}</small>
-            @else
-                <small class="text-muted">Belum dibuat</small>
-            @endif
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="stat-number text-primary">{{ $myStudentsPresentToday ?? 0 }}</div>
+                <div class="stat-label">Siswa Hadir Hari Ini</div>
+                <small class="text-muted">{{ $myStudentsLateToday ?? 0 }} terlambat</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(251, 146, 60, 0.1); color: #fb923c;">
+                    <i class="fas fa-calendar-times"></i>
+                </div>
+                <div class="stat-number text-warning">{{ $myPendingLeaves ?? 0 }}</div>
+                <div class="stat-label">Izin Bulanan</div>
+                <small class="text-muted">menunggu approval</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="stat-number text-info">
+                    @if(isset($myStudents) && $myStudents->count() > 0)
+                        {{ round((($myStudentsPresentToday ?? 0) / $myStudents->count()) * 100) }}%
+                    @else
+                        0%
+                    @endif
+                </div>
+                <div class="stat-label">Persentase Kehadiran</div>
+                <small class="text-muted">Siswa hari ini</small>
+            </div>
+        </div>
+    @else
+        <!-- Default Dashboard for other roles -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-number text-success">{{ $todayAttendance ?? 0 }}</div>
+                <div class="stat-label">Absensi Hari Ini</div>
+                <small class="text-muted">dari {{ $totalEmployees ?? 0 }} pegawai</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="stat-number text-primary">{{ $todayStudentAttendance ?? 0 }}</div>
+                <div class="stat-label">Siswa Hadir Hari Ini</div>
+                <small class="text-muted">dari {{ $totalStudents ?? 0 }} siswa</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(251, 146, 60, 0.1); color: #fb923c;">
+                    <i class="fas fa-calendar-times"></i>
+                </div>
+                <div class="stat-number text-warning">{{ $pendingLeaves ?? 0 }}</div>
+                <div class="stat-label">Izin Menunggu</div>
+                <small class="text-muted">perlu persetujuan</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card">
+                <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+                <div class="stat-number {{ isset($todayQr) && $todayQr ? 'text-success' : 'text-danger' }}">
+                    {{ isset($todayQr) && $todayQr ? 'AKTIF' : 'NONAKTIF' }}
+                </div>
+                <div class="stat-label">QR Code Hari Ini</div>
+                @if(isset($todayQr) && $todayQr)
+                    <small class="text-muted">Berlaku sampai {{ $todayQr->valid_until->format('H:i') }}</small>
+                @else
+                    <small class="text-muted">Belum dibuat</small>
+                @endif
+            </div>
+        </div>
+    @endif
+</div>
+
+@if(auth()->user()->hasRole('Guru'))
+<!-- Class Attendance Progress for Guru -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Progress Absensi Kelas Hari Ini
+                </h5>
+            </div>
+            <div class="card-body">
+                @if(isset($myStudents) && $myStudents->count() > 0)
+                    @php
+                        $classProgress = [];
+                        foreach($myStudents->groupBy('class_name') as $className => $students) {
+                            $totalStudents = $students->count();
+                            $presentStudents = 0;
+                            foreach($students as $student) {
+                                $todayAttendance = \App\Models\StudentAttendance::where('student_id', $student->id)
+                                    ->whereDate('created_at', \Carbon\Carbon::today())
+                                    ->first();
+                                if($todayAttendance) {
+                                    $presentStudents++;
+                                }
+                            }
+                            $percentage = $totalStudents > 0 ? round(($presentStudents / $totalStudents) * 100) : 0;
+                            $classProgress[] = [
+                                'class_name' => $className,
+                                'total_students' => $totalStudents,
+                                'present_students' => $presentStudents,
+                                'percentage' => $percentage
+                            ];
+                        }
+                    @endphp
+                    
+                    @foreach($classProgress as $class)
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-0">{{ $class['class_name'] }}</h6>
+                                    <small class="text-muted">{{ $class['present_students'] }} dari {{ $class['total_students'] }} siswa hadir</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge {{ $class['percentage'] == 100 ? 'bg-success' : ($class['percentage'] >= 80 ? 'bg-warning' : 'bg-danger') }}">
+                                        {{ $class['percentage'] }}%
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {{ $class['percentage'] == 100 ? 'bg-success' : ($class['percentage'] >= 80 ? 'bg-warning' : 'bg-danger') }}" 
+                                     role="progressbar" 
+                                     style="width: {{ $class['percentage'] }}%" 
+                                     aria-valuenow="{{ $class['percentage'] }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                        <h5>Belum ada data kelas</h5>
+                        <p>Hubungi admin untuk mengatur kelas yang diampu</p>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Student Attendance Table for Guru -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user-graduate me-2"></i>
+                    Realtime Absensi Siswa Hari Ini
+                </h5>
+            </div>
+            <div class="card-body">
+                @if(isset($myStudents) && $myStudents->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Siswa</th>
+                                    <th>Kelas</th>
+                                    <th>Status</th>
+                                    <th>Waktu Absen</th>
+                                    <th>Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($myStudents as $index => $student)
+                                    @php
+                                        $todayAttendance = \App\Models\StudentAttendance::where('student_id', $student->id)
+                                            ->whereDate('created_at', \Carbon\Carbon::today())
+                                            ->first();
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                                     style="width: 35px; height: 35px; font-size: 14px;">
+                                                    {{ substr($student->name, 0, 1) }}
+                                                </div>
+                                                {{ $student->name }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ $student->class_name }}</span>
+                                        </td>
+                                        <td>
+                                            @if($todayAttendance)
+                                                @if($todayAttendance->status == 'hadir')
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>Hadir
+                                                    </span>
+                                                @elseif($todayAttendance->status == 'terlambat')
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-clock me-1"></i>Terlambat
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-question me-1"></i>{{ ucfirst($todayAttendance->status) }}
+                                                    </span>
+                                                @endif
+                                            @else
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>Tidak Hadir
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($todayAttendance)
+                                                <small class="text-muted">
+                                                    {{ $todayAttendance->created_at->format('H:i') }}
+                                                </small>
+                                            @else
+                                                <small class="text-muted">-</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($todayAttendance && $todayAttendance->notes)
+                                                <small class="text-muted">{{ $todayAttendance->notes }}</small>
+                                            @else
+                                                <small class="text-muted">-</small>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            <i class="fas fa-user-graduate fa-2x mb-2"></i><br>
+                                            Tidak ada siswa yang terdaftar
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-user-graduate fa-3x mb-3"></i>
+                        <h5>Belum ada siswa yang diampu</h5>
+                        <p>Hubungi admin untuk mengatur kelas yang diampu</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+@if(auth()->user()->hasRole('Admin'))
 <!-- Charts and Recent Activity -->
 <div class="row">
     <!-- Weekly Attendance Chart -->
@@ -101,7 +418,7 @@
                     </a>
                     <a href="{{ route('admin.leaves.index') }}" class="btn btn-warning">
                         <i class="fas fa-calendar-times me-2"></i>
-                        Kelola Izin ({{ $pendingLeaves }})
+                        Kelola Izin ({{ $pendingLeaves ?? 0 }})
                     </a>
                     <a href="{{ route('admin.reports.index') }}" class="btn btn-info">
                         <i class="fas fa-chart-bar me-2"></i>
@@ -116,7 +433,9 @@
         </div>
     </div>
 </div>
+@endif
 
+@if(auth()->user()->hasRole('Admin'))
 <!-- Recent Activity -->
 <div class="row">
     <!-- Recent Attendance -->
@@ -256,6 +575,7 @@
         </div>
     </div>
 </div>
+@endif
 @endsection
 
 @push('scripts')

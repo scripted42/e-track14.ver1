@@ -253,8 +253,8 @@
             <p class="text-muted mb-0">Kelola pengajuan izin, cuti, dan perjalanan dinas pegawai</p>
         </div>
         <div>
-            <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#exportModal">
-                <i class="fas fa-download me-2"></i>Export Data
+            <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createLeaveModal">
+                <i class="fas fa-plus me-2"></i>Ajukan Izin
             </button>
             <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Kembali ke Dashboard
@@ -380,6 +380,8 @@
         </div>
     </div>
 
+
+
     <!-- Leaves Table -->
     @if($leaves->count() > 0)
     <div class="row">
@@ -458,7 +460,7 @@
                                                title="Lihat Detail">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            @if($leave->isPending())
+                                            @if($leave->isPending() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum')))
                                                 <button type="button" 
                                                         class="btn btn-sm btn-success btn-modern"
                                                         onclick="approveLeave({{ $leave->id }})"
@@ -490,8 +492,8 @@
                                 dari {{ $leaves->total() }} pengajuan
                             </small>
                         </div>
-                        <div>
-                            {{ $leaves->appends(request()->query())->links() }}
+                        <div class="d-flex justify-content-center">
+                            {{ $leaves->appends(request()->query())->links('pagination::bootstrap-4') }}
                         </div>
                     </div>
                 </div>
@@ -588,34 +590,67 @@
     </div>
 </div>
 
-<!-- Export Modal -->
-<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+
+
+<!-- Create Leave Modal -->
+<div class="modal fade" id="createLeaveModal" tabindex="-1" aria-labelledby="createLeaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="exportModalLabel">
-                    <i class="fas fa-download me-2"></i>Export Data Izin
+            <div class="modal-header">
+                <h5 class="modal-title" id="createLeaveModalLabel">
+                    <i class="fas fa-plus me-2"></i>Ajukan Izin / Cuti
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="text-center mb-3">
-                    <i class="fas fa-file-excel fa-3x text-success mb-3"></i>
-                    <h6>Pilih Format Export</h6>
-                    <p class="text-muted">Data akan diexport sesuai filter yang sedang aktif.</p>
+            <form action="{{ route('admin.leaves.store') }}" method="POST" id="createLeaveForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="leave_type" class="form-label">Jenis Izin <span class="text-danger">*</span></label>
+                            <select class="form-select" id="leave_type" name="leave_type" required>
+                                <option value="">Pilih Jenis Izin</option>
+                                <option value="izin">Izin</option>
+                                <option value="sakit">Sakit</option>
+                                <option value="cuti">Cuti</option>
+                                <option value="dinas_luar">Dinas Luar</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="start_date" class="form-label">Tanggal Mulai <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="end_date" class="form-label">Tanggal Selesai <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="duration" class="form-label">Durasi (Hari)</label>
+                            <input type="number" class="form-control" id="duration" name="duration" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Alasan <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="reason" name="reason" rows="4" 
+                                  placeholder="Jelaskan alasan pengajuan izin..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Catatan Tambahan</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                  placeholder="Catatan tambahan (opsional)"></textarea>
+                    </div>
                 </div>
-                <div class="d-grid gap-2">
-                    <button type="button" class="btn btn-success btn-modern" onclick="exportData('excel')">
-                        <i class="fas fa-file-excel me-2"></i>Export ke Excel
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Batal
                     </button>
-                    <button type="button" class="btn btn-danger btn-modern" onclick="exportData('pdf')">
-                        <i class="fas fa-file-pdf me-2"></i>Export ke PDF
-                    </button>
-                    <button type="button" class="btn btn-info btn-modern" onclick="exportData('csv')">
-                        <i class="fas fa-file-csv me-2"></i>Export ke CSV
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Ajukan Izin
                     </button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -624,13 +659,35 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-submit form when filters change
-    const filterInputs = document.querySelectorAll('#status, #leave_type, #user_id, #date_from, #date_to');
+    // Auto-submit form when filters change (exclude modal inputs)
+    const filterInputs = document.querySelectorAll('#status, #user_id, #date_from, #date_to');
     filterInputs.forEach(input => {
         input.addEventListener('change', function() {
-            this.closest('form').submit();
+            // Only submit if not inside a modal
+            if (!this.closest('.modal')) {
+                this.closest('form').submit();
+            }
         });
     });
+    
+    // Handle leave_type filter separately (not in modal)
+    const leaveTypeFilter = document.querySelector('#leave_type');
+    if (leaveTypeFilter && !leaveTypeFilter.closest('.modal')) {
+        leaveTypeFilter.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    }
+    
+    // Prevent auto-submit on modal form inputs
+    const modalForm = document.getElementById('createLeaveForm');
+    if (modalForm) {
+        const modalInputs = modalForm.querySelectorAll('select, input');
+        modalInputs.forEach(input => {
+            input.addEventListener('change', function(e) {
+                e.stopPropagation(); // Prevent event bubbling
+            });
+        });
+    }
 });
 
 function approveLeave(leaveId) {
@@ -647,19 +704,32 @@ function rejectLeave(leaveId) {
     modal.show();
 }
 
-function exportData(format) {
-    // Get current filter parameters
-    const params = new URLSearchParams(window.location.search);
-    params.set('format', format);
+// Calculate duration between start and end date
+function calculateDuration() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
     
-    // For now, just show a message
-    alert(`Export ${format.toUpperCase()} sedang dalam pengembangan`);
-    
-    // Future implementation:
-    // window.location.href = `/admin/leaves/export?${params}`;
-    
-    const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
-    modal.hide();
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end dates
+        
+        document.getElementById('duration').value = diffDays;
+    }
 }
+
+// Add event listeners for date inputs in modal
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    
+    if (startDateInput) {
+        startDateInput.addEventListener('change', calculateDuration);
+    }
+    if (endDateInput) {
+        endDateInput.addEventListener('change', calculateDuration);
+    }
+});
 </script>
 @endpush
