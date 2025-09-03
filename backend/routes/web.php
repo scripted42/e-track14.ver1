@@ -99,6 +99,7 @@ Route::prefix('admin')->group(function () {
             Route::get('/', [LeaveController::class, 'index'])->name('index');
             Route::post('/', [LeaveController::class, 'store'])->name('store');
             Route::get('/{leave}', [LeaveController::class, 'show'])->name('show');
+            Route::get('/evidence/{leave}', [LeaveController::class, 'viewEvidence'])->name('evidence');
             Route::post('/{leave}/approve', [LeaveController::class, 'approve'])->name('approve')->middleware('role:Admin,Kepala Sekolah,Waka Kurikulum');
             Route::post('/{leave}/reject', [LeaveController::class, 'reject'])->name('reject')->middleware('role:Admin,Kepala Sekolah,Waka Kurikulum');
         });

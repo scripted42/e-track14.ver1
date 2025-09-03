@@ -403,6 +403,7 @@
                                 <th>Durasi</th>
                                 <th>Status</th>
                                 <th>Alasan</th>
+                                <th>Evidence</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -452,6 +453,21 @@
                                         <span class="text-muted" title="{{ $leave->reason }}">
                                             {{ Str::limit($leave->reason, 50) }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        @if($leave->evidence_path)
+                                            <a href="{{ route('admin.leaves.evidence', $leave) }}" 
+                                               class="btn btn-sm btn-outline-primary" 
+                                               target="_blank" 
+                                               title="Lihat Evidence">
+                                                <i class="fas fa-file-alt me-1"></i>
+                                                {{ Str::limit($leave->evidence_original_name, 15) }}
+                                            </a>
+                                        @else
+                                            <span class="text-muted">
+                                                <i class="fas fa-minus me-1"></i>Tidak ada
+                                            </span>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="action-buttons">
@@ -602,9 +618,9 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="{{ route('admin.leaves.store') }}" method="POST" id="createLeaveForm">
+            <form action="{{ route('admin.leaves.store') }}" method="POST" id="createLeaveForm" enctype="multipart/form-data">
                 @csrf
-                <div class="modal-body">
+            <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="leave_type" class="form-label">Jenis Izin <span class="text-danger">*</span></label>
@@ -635,6 +651,16 @@
                         <label for="reason" class="form-label">Alasan <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="reason" name="reason" rows="4" 
                                   placeholder="Jelaskan alasan pengajuan izin..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="evidence" class="form-label">Upload Evidence</label>
+                        <input type="file" class="form-control" id="evidence" name="evidence" 
+                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Upload bukti pendukung (Surat dokter, undangan, dll). 
+                            Format: JPG, PNG, PDF, DOC, DOCX. Maksimal 5MB.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="notes" class="form-label">Catatan Tambahan</label>
@@ -685,8 +711,8 @@ document.addEventListener('DOMContentLoaded', function() {
         modalInputs.forEach(input => {
             input.addEventListener('change', function(e) {
                 e.stopPropagation(); // Prevent event bubbling
-            });
         });
+    });
     }
 });
 

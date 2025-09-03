@@ -18,6 +18,8 @@ class Leave extends Model
         'end_date',
         'reason',
         'attachment_path',
+        'evidence_path',
+        'evidence_original_name',
         'status',
         'approved_by',
         'approved_at',

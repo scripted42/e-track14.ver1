@@ -43,15 +43,44 @@ class DashboardController extends Controller
         
         // Employee/Teacher attendance today
         $todayAttendance = Attendance::whereDate('timestamp', $today)->count();
-        $totalEmployees = User::whereIn('role_id', [2, 3])->count(); // Guru and Pegawai
+        $totalEmployees = User::whereIn('role_id', [2, 3, 5, 6])->count(); // All staff
+        
+        // Employee attendance breakdown
+        $onTimeToday = Attendance::whereDate('timestamp', $today)
+            ->where('type', 'checkin')
+            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425')
+            ->distinct('user_id')
+            ->count('user_id');
+        
+        $lateToday = Attendance::whereDate('timestamp', $today)
+            ->where('type', 'checkin')
+            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425')
+            ->distinct('user_id')
+            ->count('user_id');
+        
+        $absentToday = $totalEmployees - $onTimeToday - $lateToday;
         
         // Student attendance today
         $todayStudentAttendance = StudentAttendance::whereDate('created_at', $today)->count();
         $totalStudents = Student::count();
         
+        $studentsOnTime = StudentAttendance::whereDate('created_at', $today)
+            ->whereRaw('(HOUR(created_at) * 60 + MINUTE(created_at)) <= 390')
+            ->count();
+        
+        $studentsLate = StudentAttendance::whereDate('created_at', $today)
+            ->whereRaw('(HOUR(created_at) * 60 + MINUTE(created_at)) > 390')
+            ->count();
+        
+        $studentsAbsent = $totalStudents - $studentsOnTime - $studentsLate;
+        
         // Leave requests
         $pendingLeaves = Leave::where('status', 'menunggu')->count();
         $approvedLeavesToday = Leave::where('status', 'disetujui')
+            ->whereDate('approved_at', $today)
+            ->count();
+        
+        $rejectedLeavesToday = Leave::where('status', 'ditolak')
             ->whereDate('approved_at', $today)
             ->count();
         
@@ -73,24 +102,60 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
         
+        // Leaderboard - Most punctual employees this month
+        $leaderboard = $this->getEmployeeLeaderboard();
+        
+        // Student late leaderboard
+        $studentLateLeaderboard = $this->getStudentLateLeaderboard();
+        
         // Weekly attendance chart data
         $weeklyData = $this->getWeeklyAttendanceData();
         
         // Monthly statistics
         $monthlyStats = $this->getMonthlyStats();
         
+        // Department performance
+        $departmentStats = $this->getDepartmentStats();
+        
+        // Attendance trends
+        $attendanceTrends = $this->getAttendanceTrends();
+        
+        // Leave analytics
+        $leaveAnalytics = $this->getLeaveAnalytics();
+        
+        // Notification data for pending leaves
+        $pendingLeaveNotifications = Leave::where('status', 'menunggu')
+            ->with(['user' => function($query) {
+                $query->with('role');
+            }])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
         return view('admin.dashboard', compact(
             'todayAttendance',
             'totalEmployees',
+            'onTimeToday',
+            'lateToday',
+            'absentToday',
             'todayStudentAttendance',
             'totalStudents',
+            'studentsOnTime',
+            'studentsLate',
+            'studentsAbsent',
             'pendingLeaves',
             'approvedLeavesToday',
+            'rejectedLeavesToday',
             'todayQr',
             'recentAttendance',
             'recentLeaves',
+            'leaderboard',
+            'studentLateLeaderboard',
             'weeklyData',
-            'monthlyStats'
+            'monthlyStats',
+            'departmentStats',
+            'attendanceTrends',
+            'leaveAnalytics',
+            'pendingLeaveNotifications'
         ));
     }
     
@@ -299,6 +364,14 @@ class DashboardController extends Controller
         // Weekly overview
         $weeklyData = $this->getWeeklyAttendanceData();
         
+        // Notification data for pending leaves
+        $pendingLeaveNotifications = Leave::where('status', 'menunggu')
+            ->with(['user' => function($query) {
+                $query->with('role');
+            }])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
         return view('kepala-sekolah.dashboard', compact(
             'todayEmployeeAttendance',
             'totalEmployees',
@@ -309,7 +382,8 @@ class DashboardController extends Controller
             'recentAttendance',
             'recentLeaves',
             'monthlyTrends',
-            'weeklyData'
+            'weeklyData',
+            'pendingLeaveNotifications'
         ));
     }
     
@@ -534,6 +608,160 @@ class DashboardController extends Controller
                     ? (($currentMonthStudents - $lastMonthStudents) / $lastMonthStudents) * 100 
                     : 0
             ]
+        ];
+    }
+    
+    private function getEmployeeLeaderboard()
+    {
+        $currentMonth = Carbon::now();
+        
+        // Get all employees with their attendance stats this month
+        $employees = User::whereIn('role_id', [2, 3, 5, 6])
+            ->with(['role:id,role_name'])
+            ->get();
+        
+        $leaderboard = [];
+        
+        foreach ($employees as $employee) {
+            $totalAttendance = Attendance::where('user_id', $employee->id)
+                ->whereYear('timestamp', $currentMonth->year)
+                ->whereMonth('timestamp', $currentMonth->month)
+                ->where('type', 'checkin')
+                ->count();
+            
+            $onTimeAttendance = Attendance::where('user_id', $employee->id)
+                ->whereYear('timestamp', $currentMonth->year)
+                ->whereMonth('timestamp', $currentMonth->month)
+                ->where('type', 'checkin')
+                ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425')
+                ->count();
+            
+            $punctualityRate = $totalAttendance > 0 ? ($onTimeAttendance / $totalAttendance) * 100 : 0;
+            
+            if ($totalAttendance > 0) {
+                $leaderboard[] = [
+                    'user' => $employee,
+                    'total_attendance' => $totalAttendance,
+                    'on_time' => $onTimeAttendance,
+                    'late' => $totalAttendance - $onTimeAttendance,
+                    'punctuality_rate' => round($punctualityRate, 1)
+                ];
+            }
+        }
+        
+        // Sort by punctuality rate descending
+        usort($leaderboard, function($a, $b) {
+            return $b['punctuality_rate'] <=> $a['punctuality_rate'];
+        });
+        
+        return array_slice($leaderboard, 0, 5); // Top 5
+    }
+    
+    private function getStudentLateLeaderboard()
+    {
+        $currentMonth = Carbon::now();
+        
+        // Get all students with their attendance stats this month
+        $students = Student::with(['classRoom:id,name'])
+            ->get();
+        
+        $lateLeaderboard = [];
+        
+        foreach ($students as $student) {
+            $totalAttendance = StudentAttendance::where('student_id', $student->id)
+                ->whereYear('created_at', $currentMonth->year)
+                ->whereMonth('created_at', $currentMonth->month)
+                ->count();
+            
+            $lateAttendance = StudentAttendance::where('student_id', $student->id)
+                ->whereYear('created_at', $currentMonth->year)
+                ->whereMonth('created_at', $currentMonth->month)
+                ->whereRaw('(HOUR(created_at) * 60 + MINUTE(created_at)) > 390')
+                ->count();
+            
+            $lateRate = $totalAttendance > 0 ? ($lateAttendance / $totalAttendance) * 100 : 0;
+            
+            if ($totalAttendance > 0 && $lateAttendance > 0) {
+                $lateLeaderboard[] = [
+                    'student' => $student,
+                    'total_attendance' => $totalAttendance,
+                    'late' => $lateAttendance,
+                    'on_time' => $totalAttendance - $lateAttendance,
+                    'late_rate' => round($lateRate, 1)
+                ];
+            }
+        }
+        
+        // Sort by late rate descending (most late first)
+        usort($lateLeaderboard, function($a, $b) {
+            return $b['late_rate'] <=> $a['late_rate'];
+        });
+        
+        return array_slice($lateLeaderboard, 0, 5); // Top 5 most late
+    }
+    
+    private function getAttendanceTrends()
+    {
+        $data = [];
+        $startDate = Carbon::now()->subDays(30);
+        
+        for ($i = 0; $i < 30; $i++) {
+            $date = $startDate->copy()->addDays($i);
+            
+            $employeeAttendance = Attendance::whereDate('timestamp', $date)
+                ->where('type', 'checkin')
+                ->distinct('user_id')
+                ->count('user_id');
+            
+            $onTimeCount = Attendance::whereDate('timestamp', $date)
+                ->where('type', 'checkin')
+                ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425')
+                ->distinct('user_id')
+                ->count('user_id');
+            
+            $data[] = [
+                'date' => $date->format('Y-m-d'),
+                'employees' => $employeeAttendance,
+                'on_time' => $onTimeCount,
+                'late' => $employeeAttendance - $onTimeCount
+            ];
+        }
+        
+        return $data;
+    }
+    
+    private function getLeaveAnalytics()
+    {
+        $currentMonth = Carbon::now();
+        
+        // Leave statistics by type
+        $leaveByType = Leave::whereYear('start_date', $currentMonth->year)
+            ->whereMonth('start_date', $currentMonth->month)
+            ->selectRaw('leave_type, COUNT(*) as count')
+            ->groupBy('leave_type')
+            ->get();
+        
+        // Leave statistics by status
+        $leaveByStatus = Leave::whereYear('start_date', $currentMonth->year)
+            ->whereMonth('start_date', $currentMonth->month)
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->get();
+        
+        // Most frequent leave takers
+        $frequentLeavers = Leave::whereYear('start_date', $currentMonth->year)
+            ->whereMonth('start_date', $currentMonth->month)
+            ->with('user:id,name')
+            ->selectRaw('user_id, COUNT(*) as leave_count')
+            ->groupBy('user_id')
+            ->orderBy('leave_count', 'desc')
+            ->take(5)
+            ->get();
+        
+        return [
+            'by_type' => $leaveByType,
+            'by_status' => $leaveByStatus,
+            'frequent_leavers' => $frequentLeavers
         ];
     }
 }

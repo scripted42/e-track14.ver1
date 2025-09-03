@@ -87,6 +87,7 @@ class LeaveController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'required|string|max:1000',
             'notes' => 'nullable|string|max:500',
+            'evidence' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120', // 5MB max
         ]);
 
         if ($validator->fails()) {
@@ -101,6 +102,15 @@ class LeaveController extends Controller
             $endDate = \Carbon\Carbon::parse($request->end_date);
             $duration = $startDate->diffInDays($endDate) + 1;
 
+            // Handle evidence upload
+            $evidencePath = null;
+            $evidenceOriginalName = null;
+            if ($request->hasFile('evidence')) {
+                $file = $request->file('evidence');
+                $evidenceOriginalName = $file->getClientOriginalName();
+                $evidencePath = $file->store('evidence', 'public');
+            }
+
             // Create leave request
             $leave = Leave::create([
                 'user_id' => auth()->id(),
@@ -110,6 +120,8 @@ class LeaveController extends Controller
                 'duration_days' => $duration,
                 'reason' => $request->reason,
                 'notes' => $request->notes,
+                'evidence_path' => $evidencePath,
+                'evidence_original_name' => $evidenceOriginalName,
                 'status' => 'menunggu',
             ]);
 
@@ -136,6 +148,33 @@ class LeaveController extends Controller
         $leave->load(['user:id,name,email', 'user.role:id,role_name', 'approver:id,name']);
         
         return view('admin.leaves.show', compact('leave'));
+    }
+
+    public function viewEvidence(Leave $leave)
+    {
+        // Check if user has permission to view evidence
+        $user = auth()->user();
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum') && $leave->user_id !== $user->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        if (!$leave->evidence_path) {
+            abort(404, 'Evidence not found');
+        }
+
+        $filePath = storage_path('app/public/' . $leave->evidence_path);
+        
+        if (!file_exists($filePath)) {
+            abort(404, 'Evidence file not found');
+        }
+
+        $mimeType = mime_content_type($filePath);
+        $fileName = $leave->evidence_original_name ?: 'evidence';
+
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"'
+        ]);
     }
 
     public function approve(Request $request, Leave $leave)

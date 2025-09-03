@@ -74,6 +74,7 @@
             text-decoration: none;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             font-weight: 500;
             font-size: 0.875rem;
             border: none;
@@ -139,6 +140,10 @@
             color: var(--sidebar-text-muted);
             border: none;
             background: none;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
         }
         
         .sidebar .submenu .nav-link:hover {
@@ -210,6 +215,98 @@
         
         .navbar .dropdown-toggle:hover {
             color: var(--primary-color);
+        }
+        
+        /* Notification Styles */
+        .notification-dropdown {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .notification-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s ease;
+        }
+        
+        .notification-item:hover {
+            background-color: #f8fafc;
+        }
+        
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Badge umum - tetap rounded-pill */
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.25em 0.6em;
+            border-radius: 0.375rem;
+        }
+        
+        /* Badge notifikasi - bulat sempurna */
+        .notification-badge,
+        .sidebar .nav-link .badge {
+            font-size: 0.6rem;
+            min-width: 16px;
+            height: 16px;
+            line-height: 1;
+            border-radius: 50% !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        /* Header notification badge - lebih bulat */
+        .notification-badge {
+            min-width: 20px;
+            height: 20px;
+            top: -5px !important;
+            right: -5px !important;
+        }
+        
+        /* Sidebar notification badge */
+        .sidebar .nav-link .nav-text {
+            flex: 1;
+        }
+        
+        .sidebar .nav-link .badge {
+            margin-left: auto;
+            margin-right: 8px;
+            font-size: 0.6rem;
+            min-width: 16px;
+            height: 16px;
+            line-height: 1;
+            border-radius: 50% !important;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Submenu badge positioning - rata kanan */
+        .submenu .nav-link .badge {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            min-width: 16px;
+            height: 16px;
+            border-radius: 50% !important;
+        }
+        
+        .notification-dropdown .dropdown-header {
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 16px;
+        }
+        
+        .notification-dropdown .dropdown-header h6 {
+            color: #374151;
+            font-weight: 600;
         }
         
         .content {
@@ -426,7 +523,7 @@
                 <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" 
                    href="{{ route('admin.dashboard') }}">
                     <i class="fas fa-tachometer-alt"></i>
-                    Dashboard
+                    <span class="nav-text">Dashboard</span>
                 </a>
             </li>
             
@@ -435,7 +532,7 @@
                 <a class="nav-link {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') ? 'active' : '' }}" 
                    href="#" onclick="toggleSubmenu(this)">
                     <i class="fas fa-clock"></i>
-                    Absensi
+                    <span class="nav-text">Absensi</span>
                 </a>
                 <ul class="submenu {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') ? 'show' : '' }}">
                     <li class="nav-item">
@@ -470,37 +567,42 @@
                 </a>
                 <ul class="submenu {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'show' : '' }}">
                     @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.students.index') }}">
-                            <i class="fas fa-user-graduate"></i>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.students.index') }}">
+                    <i class="fas fa-user-graduate"></i>
                             Manajemen Siswa
-                        </a>
-                    </li>
+                </a>
+            </li>
                     @endif
                     @if(auth()->user()->hasRole('Admin'))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.classrooms.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.classrooms.index') }}">
-                            <i class="fas fa-chalkboard"></i>
-                            Manajemen Kelas
-                        </a>
-                    </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.classrooms.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.classrooms.index') }}">
+                    <i class="fas fa-chalkboard"></i>
+                    Manajemen Kelas
+                </a>
+            </li>
                     @endif
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.leaves.index') }}">
-                            <i class="fas fa-calendar-times"></i>
-                            Manajemen Izin
-                        </a>
-                    </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.leaves.*') ? 'active' : '' }} position-relative" 
+                   href="{{ route('admin.leaves.index') }}">
+                    <i class="fas fa-calendar-times"></i>
+                    <span class="nav-text">Manajemen Izin</span>
+                    @if((auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah')) && isset($pendingLeaveNotifications) && $pendingLeaveNotifications->count() > 0)
+                    <span class="badge bg-danger">
+                        {{ $pendingLeaveNotifications->count() }}
+                    </span>
+                    @endif
+                </a>
+            </li>
                     @if(auth()->user()->hasRole('Admin'))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.users.index') }}">
-                            <i class="fas fa-users"></i>
-                            Manajemen Staff
-                        </a>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.users.index') }}">
+                    <i class="fas fa-users"></i>
+                    Manajemen Staff
+                </a>
                     </li>
                     @endif
                 </ul>
@@ -578,6 +680,66 @@
                 </button>
                 
                 <div class="d-flex align-items-center ms-auto">
+                    <!-- Notification Bell -->
+                    @if((auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah')) && isset($pendingLeaveNotifications) && $pendingLeaveNotifications->count() > 0)
+                    <div class="dropdown me-3">
+                        <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell fa-lg text-muted"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge bg-danger notification-badge">
+                                {{ $pendingLeaveNotifications->count() }}
+                                <span class="visually-hidden">pending notifications</span>
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 350px;">
+                            <li class="dropdown-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-bell me-2"></i>
+                                    Notifikasi Izin Pending
+                                </h6>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            @foreach($pendingLeaveNotifications->take(5) as $notification)
+                            <li>
+                                <a class="dropdown-item notification-item" href="{{ route('admin.leaves.index') }}">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-shrink-0">
+                                            <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" 
+                                                 style="width: 35px; height: 35px; font-size: 0.8rem;">
+                                                {{ substr($notification->user->name, 0, 1) }}
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-2">
+                                            <div class="fw-bold text-dark">{{ $notification->user->name }}</div>
+                                            <div class="text-muted small">
+                                                {{ $notification->user->role->role_name ?? 'User' }}
+                                            </div>
+                                            <div class="text-muted small">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                {{ $notification->leave_type }} - 
+                                                {{ \Carbon\Carbon::parse($notification->start_date)->format('d M Y') }}
+                                            </div>
+                                            <div class="text-muted small">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                            @endforeach
+                            @if($pendingLeaveNotifications->count() > 5)
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-center text-primary" href="{{ route('admin.leaves.index') }}">
+                                    <i class="fas fa-eye me-1"></i>
+                                    Lihat Semua ({{ $pendingLeaveNotifications->count() }})
+                                </a>
+                            </li>
+                            @endif
+                        </ul>
+                    </div>
+                    @endif
+                    
                     <div class="dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" 
                            href="#" role="button" data-bs-toggle="dropdown">

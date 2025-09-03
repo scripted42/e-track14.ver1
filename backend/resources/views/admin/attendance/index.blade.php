@@ -242,11 +242,11 @@
                         <div>
                             <h4 class="mb-0">{{ $stats['not_attended_today'] }}</h4>
                             <p class="mb-0">Belum Absen Hari Ini</p>
-                        </div>
+                </div>
                         <div class="align-self-center">
                             <i class="fas fa-user-times fa-2x opacity-75"></i>
-                        </div>
-                    </div>
+            </div>
+        </div>
                 </div>
             </div>
         </div>
@@ -334,6 +334,7 @@
                             <th>Check-in</th>
                             <th>Check-out</th>
                             <th>Status</th>
+                            <th>Evidence</th>
                             <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -368,9 +369,9 @@
                                         <div>
                                             <span class="fw-medium text-danger">{{ $record['checkout']['time'] }}</span>
                                             <br>
-                                            <small class="text-muted">
+                                        <small class="text-muted">
                                                 <i class="fas fa-map-marker-alt"></i> Lokasi tercatat
-                                            </small>
+                                        </small>
                                         </div>
                                     @else
                                         <span class="text-muted">-</span>
@@ -405,6 +406,21 @@
                                             </span>
                                         @endif
                                     </div>
+                                </td>
+                                <td>
+                                    @if(isset($record['leave']) && $record['leave']['evidence_path'])
+                                        <a href="{{ route('admin.leaves.evidence', $record['leave']['id']) }}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           target="_blank" 
+                                           title="Lihat Evidence">
+                                            <i class="fas fa-file-alt me-1"></i>
+                                            Evidence
+                                        </a>
+                                    @else
+                                        <span class="text-muted">
+                                            <i class="fas fa-minus me-1"></i>Tidak ada
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">

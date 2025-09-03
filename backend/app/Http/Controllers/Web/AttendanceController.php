@@ -241,6 +241,8 @@ class AttendanceController extends Controller
                                 'type' => $leave->leave_type,
                                 'reason' => $leave->reason,
                                 'status' => $leave->status,
+                                'evidence_path' => $leave->evidence_path,
+                                'evidence_original_name' => $leave->evidence_original_name,
                                 'start_date' => $leave->start_date->format('Y-m-d'),
                                 'end_date' => $leave->end_date->format('Y-m-d'),
                             ],
