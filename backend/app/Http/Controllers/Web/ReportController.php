@@ -40,7 +40,7 @@ class ReportController extends Controller
         }
         
         $employeeStats = [
-            'total_employees' => User::whereIn('role_id', [2, 3])->count(),
+            'total_employees' => User::whereIn('role_id', [2, 3, 4, 5])->count(), // Kepala Sekolah, Waka Kurikulum, Guru, Pegawai
             'monthly_attendance' => $employeeQuery->distinct('user_id')->count(),
             'today_attendance' => Attendance::whereDate('timestamp', today())
                 ->distinct('user_id')
@@ -141,7 +141,7 @@ class ReportController extends Controller
             ];
         });
         
-        $users = User::whereIn('role_id', [2, 3])->orderBy('name')->get(['id', 'name']);
+        $users = User::whereIn('role_id', [2, 3, 4, 5])->orderBy('name')->get(['id', 'name']); // Kepala Sekolah, Waka Kurikulum, Guru, Pegawai
         
         return view('admin.reports.attendance', compact(
             'attendance',
@@ -420,7 +420,7 @@ class ReportController extends Controller
                 ->distinct('user_id')
                 ->count();
             
-            $totalEmployees = User::whereIn('role_id', [2, 3])->count();
+            $totalEmployees = User::whereIn('role_id', [2, 3, 4, 5])->count(); // Kepala Sekolah, Waka Kurikulum, Guru, Pegawai
             $employeeRate = $totalEmployees > 0 ? round(($employeeAttendance / $totalEmployees) * 100, 1) : 0;
             $monthlyEmployeeData[] = $employeeRate;
             

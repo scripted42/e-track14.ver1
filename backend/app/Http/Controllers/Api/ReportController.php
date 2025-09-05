@@ -265,7 +265,7 @@ class ReportController extends Controller
             ->get();
 
         // Active users count
-        $activeUsers = User::whereIn('role_id', [2, 3]) // Guru and Pegawai
+        $activeUsers = User::whereIn('role_id', [2, 3, 4, 5]) // Kepala Sekolah, Waka Kurikulum, Guru, Pegawai
             ->count();
 
         // Total students count

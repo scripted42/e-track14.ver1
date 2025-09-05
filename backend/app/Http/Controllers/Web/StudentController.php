@@ -69,7 +69,44 @@ class StudentController extends Controller
             $classes = Student::distinct()->pluck('class_name')->filter()->sort()->values();
         }
         
-        return view('admin.students.index', compact('students', 'classes'));
+        // Calculate summary statistics from ALL students (not just paginated)
+        $allStudents = Student::query();
+        
+        // Apply same filters for statistics
+        if ($user->hasRole('Guru')) {
+            $myClassIds = $user->classRooms()->pluck('id');
+            if ($myClassIds->count() > 0) {
+                $allStudents->whereIn('class_room_id', $myClassIds);
+            } else {
+                $allStudents->where('id', 0);
+            }
+        }
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $allStudents->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nisn', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($request->filled('class_filter')) {
+            $allStudents->where('class_name', $request->class_filter);
+        }
+        
+        if ($request->filled('status_filter')) {
+            $allStudents->where('status', $request->status_filter);
+        }
+        
+        $allStudentsData = $allStudents->get();
+        
+        $stats = [
+            'total_students' => $allStudentsData->count(),
+            'active_students' => $allStudentsData->where('status', 'Aktif')->count(),
+            'inactive_students' => $allStudentsData->where('status', 'Non-Aktif')->count(),
+        ];
+        
+        return view('admin.students.index', compact('students', 'classes', 'stats'));
     }
 
     public function create()

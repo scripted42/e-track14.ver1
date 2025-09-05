@@ -42,7 +42,43 @@ class ClassRoomController extends Controller
 
         $classRooms = $query->orderBy('level')->orderBy('name')->paginate(15);
         
-        return view('admin.classrooms.index', compact('classRooms'));
+        // Calculate summary statistics from ALL classrooms (not just paginated)
+        $allClassRooms = ClassRoom::query();
+        
+        // Apply same filters for statistics
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $allClassRooms->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('level', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($request->filled('level')) {
+            $allClassRooms->where('level', $request->level);
+        }
+        
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $allClassRooms->where('is_active', true);
+            } elseif ($request->status === 'inactive') {
+                $allClassRooms->where('is_active', false);
+            }
+        }
+        
+        $allClassRoomsData = $allClassRooms->with(['students', 'walikelas'])->get();
+        
+        $stats = [
+            'total_classrooms' => $allClassRoomsData->count(),
+            'active_classrooms' => $allClassRoomsData->where('is_active', true)->count(),
+            'total_students' => $allClassRoomsData->sum(function($class) {
+                return $class->students->count();
+            }),
+            'classrooms_with_walikelas' => $allClassRoomsData->where('walikelas_id', '!=', null)->count(),
+        ];
+        
+        return view('admin.classrooms.index', compact('classRooms', 'stats'));
     }
 
     /**

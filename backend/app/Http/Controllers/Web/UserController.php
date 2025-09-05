@@ -15,10 +15,64 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('role')->paginate(15);
-        return view('admin.users.index', compact('users'));
+        // Build base query for filtering
+        $query = User::with('role');
+        
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        
+        // Apply role filter
+        if ($request->filled('role')) {
+            $query->whereHas('role', function($q) use ($request) {
+                $q->where('role_name', $request->role);
+            });
+        }
+        
+        // Apply status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Apply sorting
+        $sortBy = $request->get('sort_by', 'name');
+        switch ($sortBy) {
+            case 'email':
+                $query->orderBy('email');
+                break;
+            case 'role':
+                $query->orderBy('role_id');
+                break;
+            case 'created_at':
+                $query->orderBy('created_at', 'desc');
+                break;
+            default:
+                $query->orderBy('name');
+                break;
+        }
+        
+        // Get paginated results
+        $users = $query->paginate(15);
+        
+        // Calculate summary statistics from ALL users (not just paginated)
+        $allUsers = User::with('role')->get();
+        $stats = [
+            'total_users' => $allUsers->count(),
+            'admin_count' => $allUsers->where('role.role_name', 'Admin')->count(),
+            'kepala_sekolah_count' => $allUsers->where('role.role_name', 'Kepala Sekolah')->count(),
+            'waka_kurikulum_count' => $allUsers->where('role.role_name', 'Waka Kurikulum')->count(),
+            'teacher_count' => $allUsers->where('role.role_name', 'Guru')->count(),
+            'employee_count' => $allUsers->where('role.role_name', 'Pegawai')->count(),
+        ];
+        
+        return view('admin.users.index', compact('users', 'stats'));
     }
 
     public function create()

@@ -163,6 +163,7 @@
             font-size: 0.875rem;
         }
         
+        
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
             .sidebar {
@@ -527,23 +528,19 @@
                 </a>
             </li>
             
-            <!-- Absensi Submenu -->
-            <li class="nav-item has-submenu {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') ? 'open' : '' }}">
-                <a class="nav-link {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') ? 'active' : '' }}" 
+            <!-- Manajemen Submenu -->
+            <li class="nav-item has-submenu {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') || request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'open' : '' }}">
+                <a class="nav-link {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') || request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'active' : '' }}" 
                    href="#" onclick="toggleSubmenu(this)">
-                    <i class="fas fa-clock"></i>
-                    <span class="nav-text">Absensi</span>
+                    <i class="fas fa-cogs"></i>
+                    <span class="nav-text">Manajemen</span>
                 </a>
-                <ul class="submenu {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') ? 'show' : '' }}">
+                <ul class="submenu {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') || request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'show' : '' }}">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.attendance.index') ? 'active' : '' }}" 
                            href="{{ route('admin.attendance.index') }}">
                             <i class="fas fa-users"></i>
-                            @if(auth()->user()->hasRole('Admin'))
-                                Absensi Pegawai
-                            @else
-                                Manajemen Kehadiran
-                            @endif
+                            <span class="nav-text">Manajemen Absensi Pegawai</span>
                         </a>
                     </li>
                     @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
@@ -551,58 +548,51 @@
                         <a class="nav-link {{ request()->routeIs('admin.student-attendance.*') ? 'active' : '' }}" 
                            href="{{ route('admin.student-attendance.index') }}">
                             <i class="fas fa-user-graduate"></i>
-                            Absensi Siswa
+                            <span class="nav-text">Manajemen Absensi Siswa</span>
                         </a>
                     </li>
                     @endif
-                </ul>
-            </li>
-            
-            <!-- Manajemen Submenu -->
-            <li class="nav-item has-submenu {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'open' : '' }}">
-                <a class="nav-link {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'active' : '' }}" 
-                   href="#" onclick="toggleSubmenu(this)">
-                    <i class="fas fa-cogs"></i>
-                    Manajemen
-                </a>
-                <ul class="submenu {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'show' : '' }}">
+                    
                     @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}" 
-                   href="{{ route('admin.students.index') }}">
-                    <i class="fas fa-user-graduate"></i>
-                            Manajemen Siswa
-                </a>
-            </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.students.index') }}">
+                            <i class="fas fa-user-graduate"></i>
+                            <span class="nav-text">Manajemen Siswa</span>
+                        </a>
+                    </li>
                     @endif
+                    
                     @if(auth()->user()->hasRole('Admin'))
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.classrooms.*') ? 'active' : '' }}" 
-                   href="{{ route('admin.classrooms.index') }}">
-                    <i class="fas fa-chalkboard"></i>
-                    Manajemen Kelas
-                </a>
-            </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.classrooms.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.classrooms.index') }}">
+                            <i class="fas fa-chalkboard"></i>
+                            <span class="nav-text">Manajemen Kelas</span>
+                        </a>
+                    </li>
                     @endif
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.leaves.*') ? 'active' : '' }} position-relative" 
-                   href="{{ route('admin.leaves.index') }}">
-                    <i class="fas fa-calendar-times"></i>
-                    <span class="nav-text">Manajemen Izin</span>
-                    @if((auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah')) && isset($pendingLeaveNotifications) && $pendingLeaveNotifications->count() > 0)
-                    <span class="badge bg-danger">
-                        {{ $pendingLeaveNotifications->count() }}
-                    </span>
-                    @endif
-                </a>
-            </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.leaves.*') ? 'active' : '' }} position-relative" 
+                           href="{{ route('admin.leaves.index') }}">
+                            <i class="fas fa-calendar-times"></i>
+                            <span class="nav-text">Manajemen Izin</span>
+                            @if((auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah')) && isset($pendingLeaveNotifications) && $pendingLeaveNotifications->count() > 0)
+                            <span class="badge bg-danger">
+                                {{ $pendingLeaveNotifications->count() }}
+                            </span>
+                            @endif
+                        </a>
+                    </li>
+                    
                     @if(auth()->user()->hasRole('Admin'))
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
-                   href="{{ route('admin.users.index') }}">
-                    <i class="fas fa-users"></i>
-                    Manajemen Staff
-                </a>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.users.index') }}">
+                            <i class="fas fa-users"></i>
+                            <span class="nav-text">Manajemen Staff</span>
+                        </a>
                     </li>
                     @endif
                 </ul>
@@ -814,29 +804,17 @@
             }
         }
         
+        
         // Initialize submenu state on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Check if any submenu should be open based on current route
             const currentRoute = window.location.pathname;
             
-            // Check for Absensi submenu (excluding QR routes)
-            if ((currentRoute.includes('/admin/attendance') || currentRoute.includes('/admin/student-attendance')) && !currentRoute.includes('/admin/attendance/qr')) {
-                const absensiNavItem = document.querySelector('.nav-item.has-submenu:first-of-type');
-                const absensiSubmenu = absensiNavItem?.querySelector('.submenu');
-                
-                if (absensiNavItem && !absensiNavItem.classList.contains('open')) {
-                    absensiNavItem.classList.add('open');
-                    if (absensiSubmenu && !absensiSubmenu.classList.contains('show')) {
-                        absensiSubmenu.classList.add('show');
-                    }
-                }
-            }
-            
-            // Check for Manajemen submenu
-            if (currentRoute.includes('/admin/students') || currentRoute.includes('/admin/classrooms') || 
+            // Check for Manajemen submenu (main category)
+            if (currentRoute.includes('/admin/attendance') || currentRoute.includes('/admin/student-attendance') || 
+                currentRoute.includes('/admin/students') || currentRoute.includes('/admin/classrooms') || 
                 currentRoute.includes('/admin/leaves') || currentRoute.includes('/admin/users')) {
-                const manajemenNavItems = document.querySelectorAll('.nav-item.has-submenu');
-                const manajemenNavItem = manajemenNavItems[1]; // Second submenu is Manajemen
+                const manajemenNavItem = document.querySelector('.nav-item.has-submenu:first-of-type');
                 const manajemenSubmenu = manajemenNavItem?.querySelector('.submenu');
                 
                 if (manajemenNavItem && !manajemenNavItem.classList.contains('open')) {

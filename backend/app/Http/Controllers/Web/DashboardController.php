@@ -43,7 +43,7 @@ class DashboardController extends Controller
         
         // Employee/Teacher attendance today
         $todayAttendance = Attendance::whereDate('timestamp', $today)->count();
-        $totalEmployees = User::whereIn('role_id', [2, 3, 5, 6])->count(); // All staff
+        $totalEmployees = User::whereIn('role_id', [2, 3, 4, 5])->count(); // Kepala Sekolah, Waka Kurikulum, Guru, Pegawai
         
         // Employee attendance breakdown
         $onTimeToday = Attendance::whereDate('timestamp', $today)
@@ -292,10 +292,10 @@ class DashboardController extends Controller
         
         // All teachers attendance today
         $teachersAttendanceToday = Attendance::whereHas('user', function($query) {
-            $query->where('role_id', 2); // Guru
+            $query->where('role_id', 4); // Guru
         })->whereDate('timestamp', $today)->count();
         
-        $totalTeachers = User::where('role_id', 2)->count();
+        $totalTeachers = User::where('role_id', 4)->count();
         
         // All students attendance today
         $studentsAttendanceToday = StudentAttendance::whereDate('created_at', $today)->count();
@@ -307,7 +307,7 @@ class DashboardController extends Controller
         // Recent teacher activities
         $recentTeacherAttendance = Attendance::with('user:id,name')
             ->whereHas('user', function($query) {
-                $query->where('role_id', 2);
+                $query->where('role_id', 4); // Guru
             })
             ->whereDate('timestamp', $today)
             ->orderBy('timestamp', 'desc')
@@ -334,7 +334,7 @@ class DashboardController extends Controller
         
         // Overall school statistics
         $todayEmployeeAttendance = Attendance::whereDate('timestamp', $today)->count();
-        $totalEmployees = User::whereIn('role_id', [2, 3, 5, 6])->count(); // All staff
+        $totalEmployees = User::whereIn('role_id', [2, 3, 4, 5])->count(); // Kepala Sekolah, Waka Kurikulum, Guru, Pegawai
         
         $todayStudentAttendance = StudentAttendance::whereDate('created_at', $today)->count();
         $totalStudents = Student::count();
@@ -544,10 +544,10 @@ class DashboardController extends Controller
         $today = Carbon::today();
         
         $departments = [
-            'Guru' => 2,
-            'Pegawai' => 3,
-            'Waka Kurikulum' => 5,
-            'Kepala Sekolah' => 6
+            'Kepala Sekolah' => 2,
+            'Waka Kurikulum' => 3,
+            'Guru' => 4,
+            'Pegawai' => 5
         ];
         
         $stats = [];
@@ -616,7 +616,7 @@ class DashboardController extends Controller
         $currentMonth = Carbon::now();
         
         // Get all employees with their attendance stats this month
-        $employees = User::whereIn('role_id', [2, 3, 5, 6])
+        $employees = User::whereIn('role_id', [2, 3, 4, 5]) // Kepala Sekolah, Waka Kurikulum, Guru, Pegawai
             ->with(['role:id,role_name'])
             ->get();
         

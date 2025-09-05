@@ -297,21 +297,70 @@ class StudentAttendanceController extends Controller
 
     public function export(Request $request)
     {
+        $user = auth()->user();
+        
+        // Build base query (same as index method)
         $query = StudentAttendance::with(['student:id,name,nisn,class_room_id', 'student.classRoom:id,name', 'teacher:id,name']);
-
-        // Apply same filters as index
-        if ($request->filled('student_id')) {
-            $query->where('student_id', $request->student_id);
+        
+        // For non-admin users, only show students from their classes
+        if (!$user->hasRole('Admin')) {
+            if ($user->hasRole('Guru')) {
+                // Get classes taught by this guru
+                $classIds = $user->classRooms()->pluck('id');
+                if ($classIds->isEmpty()) {
+                    // If guru is not a walikelas, show no students
+                    $query->whereRaw('1 = 0');
+                } else {
+                    $query->whereHas('student', function($q) use ($classIds) {
+                        $q->whereIn('class_room_id', $classIds);
+                    });
+                }
+            } else {
+                // For other roles, show all students
+                // No additional filtering needed
+            }
         }
 
-        if ($request->filled('class_room_id')) {
-            $query->whereHas('student', function($q) use ($request) {
-                $q->where('class_room_id', $request->class_room_id);
+        // Apply same filters as index method
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('student', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
             });
         }
 
+        // Apply period filter
+        if ($request->filled('period')) {
+            $period = $request->period;
+            $today = Carbon::today();
+            
+            switch ($period) {
+                case 'today':
+                    $query->whereDate('created_at', $today);
+                    break;
+                case 'yesterday':
+                    $query->whereDate('created_at', $today->subDay());
+                    break;
+                case 'this_week':
+                    $query->whereBetween('created_at', [
+                        $today->startOfWeek(),
+                        $today->endOfWeek()
+                    ]);
+                    break;
+                case 'this_month':
+                    $query->whereMonth('created_at', $today->month)
+                          ->whereYear('created_at', $today->year);
+                    break;
+                case 'custom':
+                    if ($request->filled('date')) {
+                        $query->whereDate('created_at', $request->date);
+                    }
+                    break;
+            }
+        }
+
+        // Apply status filter
         if ($request->filled('status')) {
-            // Handle status filtering based on time for students
             $status = $request->status;
             if ($status === 'on-time') {
                 // On-Time: ≤ 06:30 (390 minutes)
@@ -325,15 +374,124 @@ class StudentAttendanceController extends Controller
             }
         }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+        // Apply class filter
+        if ($request->filled('class_room_id')) {
+            $query->whereHas('student', function($q) use ($request) {
+                $q->where('class_room_id', $request->class_room_id);
+            });
         }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+        // Get all student attendance records
+        $allAttendance = $query->orderBy('created_at', 'desc')->get();
+
+        // Group by student and date to create daily summary (same as index)
+        $groupedAttendance = $allAttendance->groupBy(function ($item) {
+            return $item->student_id . '_' . $item->created_at->format('Y-m-d');
+        });
+
+        $attendanceSummary = collect();
+        
+        foreach ($groupedAttendance as $key => $records) {
+            $studentRecord = $records->first();
+            $attendance = $records->first(); // Student attendance only has one record per day
+            
+            // Determine status based on attendance time (not database status)
+            $status = null;
+            if ($attendance) {
+                $attendanceHour = (int) $attendance->created_at->format('H');
+                $attendanceMinute = (int) $attendance->created_at->format('i');
+                $attendanceTime = $attendanceHour * 60 + $attendanceMinute; // Convert to minutes
+                
+                // Student rule: On-Time if ≤ 06:30 (390 minutes), Late if > 06:30
+                $deadlineMinutes = 6 * 60 + 30; // 06:30 = 390 minutes
+                
+                if ($attendanceTime <= $deadlineMinutes) {
+                    $status = 'On-Time';
+                } else {
+                    $status = 'Terlambat';
+                }
+            }
+            
+            $attendanceSummary->push([
+                'student' => $studentRecord->student,
+                'date' => $studentRecord->created_at->format('Y-m-d'),
+                'attendance' => $attendance ? [
+                    'time' => $attendance->created_at->format('H:i:s'),
+                    'status' => $status,
+                    'original_status' => $attendance->status,
+                    'teacher' => $attendance->teacher,
+                ] : null,
+                'timestamp' => $attendance ? $attendance->created_at : $studentRecord->created_at, // For sorting
+            ]);
         }
 
-        $attendance = $query->orderBy('created_at', 'desc')->get();
+        // Apply final filters to the combined data (same as index)
+        if ($request->filled('period')) {
+            $period = $request->period;
+            $today = Carbon::today();
+            
+            switch ($period) {
+                case 'today':
+                    $attendanceSummary = $attendanceSummary->filter(function ($item) use ($today) {
+                        return $item['date'] === $today->format('Y-m-d');
+                    });
+                    break;
+                case 'yesterday':
+                    $yesterday = $today->subDay();
+                    $attendanceSummary = $attendanceSummary->filter(function ($item) use ($yesterday) {
+                        return $item['date'] === $yesterday->format('Y-m-d');
+                    });
+                    break;
+                case 'this_week':
+                    $startWeek = $today->startOfWeek();
+                    $endWeek = $today->endOfWeek();
+                    $attendanceSummary = $attendanceSummary->filter(function ($item) use ($startWeek, $endWeek) {
+                        $itemDate = Carbon::parse($item['date']);
+                        return $itemDate->between($startWeek, $endWeek);
+                    });
+                    break;
+                case 'this_month':
+                    $attendanceSummary = $attendanceSummary->filter(function ($item) use ($today) {
+                        $itemDate = Carbon::parse($item['date']);
+                        return $itemDate->month === $today->month && $itemDate->year === $today->year;
+                    });
+                    break;
+                case 'custom':
+                    if ($request->filled('date')) {
+                        $customDate = $request->date;
+                        $attendanceSummary = $attendanceSummary->filter(function ($item) use ($customDate) {
+                            return $item['date'] === $customDate;
+                        });
+                    }
+                    break;
+            }
+        }
+
+        // Apply status filter to final result
+        if ($request->filled('status')) {
+            $status = $request->status;
+            $attendanceSummary = $attendanceSummary->filter(function ($item) use ($status) {
+                if ($status === 'on-time') {
+                    return isset($item['attendance']) && $item['attendance']['status'] === 'On-Time';
+                } elseif ($status === 'terlambat') {
+                    return isset($item['attendance']) && $item['attendance']['status'] === 'Terlambat';
+                } elseif (in_array($status, ['izin', 'sakit', 'alpha'])) {
+                    return isset($item['attendance']) && $item['attendance']['original_status'] === $status;
+                }
+                return true;
+            });
+        }
+
+        // Apply class filter to final result
+        if ($request->filled('class_room_id')) {
+            $classRoomId = $request->class_room_id;
+            $attendanceSummary = $attendanceSummary->filter(function ($item) use ($classRoomId) {
+                return $item['student']->class_room_id == $classRoomId;
+            });
+        }
+
+        // Sort by timestamp desc
+        $attendanceSummary = $attendanceSummary->sortByDesc('timestamp');
 
         $filename = 'student_attendance_' . date('Y-m-d_H-i-s') . '.csv';
 
@@ -342,7 +500,7 @@ class StudentAttendanceController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function () use ($attendance) {
+        $callback = function () use ($attendanceSummary) {
             $file = fopen('php://output', 'w');
 
             // CSV headers
@@ -357,15 +515,19 @@ class StudentAttendanceController extends Controller
             ]);
 
             // CSV data
-            foreach ($attendance as $record) {
+            foreach ($attendanceSummary as $item) {
+                $student = $item['student'];
+                $date = $item['date'];
+                $attendance = $item['attendance'];
+                
                 fputcsv($file, [
-                    $record->student->name,
-                    $record->student->nisn,
-                    $record->student->classRoom ? $record->student->classRoom->name : 'N/A',
-                    ucfirst($record->status),
-                    $record->created_at->format('Y-m-d'),
-                    $record->created_at->format('H:i:s'),
-                    $record->teacher ? $record->teacher->name : 'N/A'
+                    $student->name,
+                    $student->nisn,
+                    $student->classRoom ? $student->classRoom->name : 'N/A',
+                    $attendance ? $attendance['status'] : 'Tidak Hadir',
+                    $date,
+                    $attendance ? $attendance['time'] : '00:00:00',
+                    $attendance && $attendance['teacher'] ? $attendance['teacher']->name : 'N/A'
                 ]);
             }
 
