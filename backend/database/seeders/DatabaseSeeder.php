@@ -111,15 +111,47 @@ class DatabaseSeeder extends Seeder
 
         $rolePermissions = [
             'Admin' => $permissions,
-            'Kepala Sekolah' => ['attendance.view_all','leave.approve','leave.reject','report.view_all'],
-            'Waka Kurikulum' => ['attendance.view_all','leave.approve','leave.reject','report.view_all'],
+            'Kepala Sekolah' => ['attendance.view_all','leave.approve','leave.reject','report.view_all','student.manage'],
+            // Waka - Divisional
+            'Waka Kesiswaan' => ['report.view_all','student.manage'],
+            'Waka Kurikulum' => ['report.view_all'],
+            'Waka Kehumasan' => ['report.view_all'],
+            'Waka Sarpras' => ['report.view_all'],
+            // Bendahara
+            'Bendahara 1' => ['report.view'],
+            'Bendahara 2' => ['report.view'],
+            // Tata Usaha & Subordinates
+            'Tata Usaha' => ['report.view'],
+            'Koordinator TU' => ['report.view'],
+            'Staff TU' => ['report.view'],
+            'Keamanan' => ['report.view'],
+            'Kebersihan' => ['report.view'],
+            // Academic roles
             'Guru' => ['report.view'],
             'Pegawai' => ['report.view'],
+            // Staff divisions
+            'Staff Kesiswaan' => ['report.view'],
+            'Staff Kurikulum' => ['report.view'],
+            'Staff Kehumasan' => ['report.view'],
+            'Staff Sarpras' => ['report.view'],
         ];
 
         foreach ($rolePermissions as $roleName => $perms) {
-            $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
-            $role->syncPermissions($perms);
+            $role = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
+            if (!$role) {
+                // roles table adalah tabel lama (memiliki kolom role_name non-nullable), isi keduanya
+                \Illuminate\Support\Facades\DB::table('roles')->insert([
+                    'name' => $roleName,
+                    'guard_name' => 'web',
+                    'role_name' => $roleName,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $role = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
+            }
+            if ($role) {
+                $role->syncPermissions($perms);
+            }
         }
     }
 }

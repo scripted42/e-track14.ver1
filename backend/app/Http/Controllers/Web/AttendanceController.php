@@ -24,8 +24,8 @@ class AttendanceController extends Controller
                 $q->whereNotIn('role_id', [6]); // Exclude Kepala Sekolah
             });
         
-        // For non-admin-like users, only show their own attendance
-        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
+        // Untuk peran di luar kesiswaan (bukan Admin/Kepala Sekolah/Waka Kesiswaan), tampilkan data diri sendiri saja
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kesiswaan')) {
             $query->where('user_id', $user->id);
         }
 
@@ -104,7 +104,7 @@ class AttendanceController extends Controller
         $leaveQuery = \App\Models\Leave::with(['user:id,name,email,role_id', 'user.role:id,role_name', 'approver:id,name']);
         
         // Apply same filters for leaves (non-admin-like sees own only)
-        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kesiswaan')) {
             $leaveQuery->where('user_id', $user->id);
         }
         
@@ -286,7 +286,7 @@ class AttendanceController extends Controller
         $stats['leave_rejected'] = $attendanceSummary->where('leave.status', 'ditolak')->count();
         
         // Calculate staff who have NOT attended today (tanpa hard-coded role_id)
-        if ($user->hasRole('Admin') || $user->hasRole('Kepala Sekolah') || $user->hasRole('Waka Kurikulum')) {
+        if ($user->hasRole('Admin') || $user->hasRole('Kepala Sekolah') || $user->hasRole('Waka Kesiswaan')) {
             $totalStaff = User::whereHas('roles', function($q) {
                 $q->whereIn('name', ['Guru', 'Pegawai', 'Waka Kurikulum', 'Kepala Sekolah']);
             })->count();
@@ -344,7 +344,7 @@ class AttendanceController extends Controller
         }
 
         // Enforce final role-based visibility (defense-in-depth) AFTER period filter
-        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kesiswaan')) {
             $attendanceSummary = $attendanceSummary->filter(function ($item) use ($user) {
                 return isset($item['user']) && ($item['user']->id === $user->id);
             })->values();

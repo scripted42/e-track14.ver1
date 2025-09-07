@@ -18,32 +18,41 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $roleId = $user->role_id;
         
-        // Route to appropriate dashboard based on role
-        switch ($roleId) {
-            case 1: // Admin
-                return $this->adminDashboard();
-            case 2: // Guru
-                return $this->guruDashboard();
-            case 3: // Pegawai
-                return $this->pegawaiDashboard();
-            case 5: // Waka Kurikulum
-                return $this->wakaKurikulumDashboard();
-            case 6: // Kepala Sekolah
-                return $this->kepalaSekolahDashboard();
-            default:
-                return $this->adminDashboard(); // Default fallback
+        if ($user->hasRole('Admin')) {
+            return $this->adminDashboard();
         }
+        if ($user->hasRole('Kepala Sekolah')) {
+            return $this->kepalaSekolahDashboard();
+        }
+        if ($user->hasRole('Guru')) {
+            return $this->guruDashboard();
+        }
+        if ($user->hasRole('Waka Kurikulum')) {
+            return $this->wakaKurikulumDashboard();
+        }
+        // Default: gunakan admin style dashboard ringkas
+        return $this->adminDashboard();
     }
     
     private function adminDashboard()
     {
         $today = Carbon::today();
         
-        // Overall statistics for admin
-        $todayEmployeeAttendance = Attendance::whereDate('timestamp', $today)->count();
-        $totalEmployees = User::whereIn('role_id', [2, 3, 4, 5])->count();
+        // Overall statistics for admin (berbasis Spatie roles)
+        $employeeRoles = [
+            'Guru','Pegawai','Waka Kurikulum','Waka Kesiswaan','Waka Kehumasan','Waka Sarpras',
+            'Staff Kesiswaan','Staff Kurikulum','Staff Kehumasan','Staff Sarpras',
+            'Bendahara 1','Bendahara 2','Tata Usaha','Koordinator TU','Staff TU','Keamanan','Kebersihan'
+        ];
+        $todayEmployeeAttendance = Attendance::whereDate('timestamp', $today)
+            ->whereHas('user.roles', function($q) use ($employeeRoles) {
+                $q->whereIn('name', $employeeRoles);
+            })
+            ->count();
+        $totalEmployees = User::whereHas('roles', function($q) use ($employeeRoles) {
+                $q->whereIn('name', $employeeRoles);
+            })->count();
         
         $todayStudentAttendance = StudentAttendance::whereDate('created_at', $today)->count();
         $totalStudents = Student::count();
@@ -54,6 +63,9 @@ class DashboardController extends Controller
         // Recent activities
         $recentAttendance = Attendance::with('user:id,name')
             ->whereDate('timestamp', $today)
+            ->whereHas('user.roles', function($q) use ($employeeRoles) {
+                $q->whereIn('name', $employeeRoles);
+            })
             ->orderBy('timestamp', 'desc')
             ->take(10)
             ->get();
@@ -288,13 +300,20 @@ class DashboardController extends Controller
     {
         $today = Carbon::today();
         
-        // Overall school statistics
+        // Overall school statistics (berbasis Spatie roles)
+        $employeeRoles = [
+            'Guru','Pegawai','Waka Kurikulum','Waka Kesiswaan','Waka Kehumasan','Waka Sarpras',
+            'Staff Kesiswaan','Staff Kurikulum','Staff Kehumasan','Staff Sarpras',
+            'Bendahara 1','Bendahara 2','Tata Usaha','Koordinator TU','Staff TU','Keamanan','Kebersihan'
+        ];
         $todayEmployeeAttendance = Attendance::whereDate('timestamp', $today)
-            ->whereHas('user', function($q) {
-                $q->whereNotIn('role_id', [6]); // Exclude Kepala Sekolah
+            ->whereHas('user.roles', function($q) use ($employeeRoles) {
+                $q->whereIn('name', $employeeRoles);
             })
             ->count();
-        $totalEmployees = User::whereIn('role_id', [2, 3, 5])->count(); // Waka Kurikulum, Guru, Pegawai (exclude Kepala Sekolah)
+        $totalEmployees = User::whereHas('roles', function($q) use ($employeeRoles) {
+                $q->whereIn('name', $employeeRoles);
+            })->count();
         
         $todayStudentAttendance = StudentAttendance::whereDate('created_at', $today)->count();
         $totalStudents = Student::count();
@@ -308,8 +327,8 @@ class DashboardController extends Controller
         // Recent activities
         $recentAttendance = Attendance::with('user:id,name')
             ->whereDate('timestamp', $today)
-            ->whereHas('user', function($q) {
-                $q->whereNotIn('role_id', [6]); // Exclude Kepala Sekolah
+            ->whereHas('user.roles', function($q) use ($employeeRoles) {
+                $q->whereIn('name', $employeeRoles);
             })
             ->orderBy('timestamp', 'desc')
             ->take(10)

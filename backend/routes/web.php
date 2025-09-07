@@ -112,8 +112,8 @@ Route::prefix('admin')->group(function () {
             Route::post('/{leave}/reject', [LeaveController::class, 'reject'])->name('reject')->middleware('permission:leave.reject');
         });
         
-        // Student Management - enforce permissions
-        Route::prefix('students')->name('admin.students.')->middleware('role_or_permission:Admin|student.manage|report.view|report.view_all')->group(function () {
+        // Student Management - enforce permissions (only Admin, Kepala, Waka Kesiswaan, Guru, Staff Kesiswaan)
+        Route::prefix('students')->name('admin.students.')->middleware('role_or_permission:Admin|student.manage|report.view|report.view_all|Waka Kesiswaan|Staff Kesiswaan|Guru')->group(function () {
             Route::get('/', [StudentController::class, 'index'])->name('index');
             Route::get('/create', [StudentController::class, 'create'])->name('create');
             Route::post('/', [StudentController::class, 'store'])->name('store');

@@ -693,7 +693,7 @@
             </li>
             
             <!-- Manajemen Siswa (ISO 21001:2018) -->
-            @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
+            @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kesiswaan') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Staff Kesiswaan'))
             <li class="nav-item has-submenu {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.student-attendance.*') ? 'open' : '' }}">
                 <a class="nav-link {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.student-attendance.*') ? 'active' : '' }}" 
                    href="#" onclick="toggleSubmenu(this)">
@@ -717,7 +717,7 @@
                         </a>
                     </li>
                     @endif
-                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
+                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kesiswaan') || auth()->user()->hasRole('Staff Kesiswaan'))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.students.promotion.*') ? 'active' : '' }}" 
                            href="{{ route('admin.students.promotion.index') }}">
@@ -787,7 +787,7 @@
             
             
             <!-- Laporan & Analitik (ISO 21001:2018) -->
-            @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum') || auth()->user()->hasRole('Guru'))
+            @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kesiswaan') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Staff Kesiswaan'))
             <li class="nav-item has-submenu {{ request()->routeIs('admin.reports.*') ? 'open' : '' }}">
                 <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" 
                    href="#" onclick="toggleSubmenu(this)">

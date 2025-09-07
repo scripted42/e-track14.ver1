@@ -15,8 +15,8 @@ class LeaveController extends Controller
     {
         $user = auth()->user();
         
-        // For non-admin users, only show their own leaves
-        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
+        // Untuk peran di luar kesiswaan (bukan Admin/Kepala Sekolah/Waka Kesiswaan), tampilkan data diri sendiri
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kesiswaan')) {
             $query = Leave::with(['user:id,name,email', 'user.role:id,role_name', 'approver:id,name'])
                 ->where('user_id', $user->id)
                 ->orderBy('created_at', 'desc');
@@ -34,7 +34,7 @@ class LeaveController extends Controller
             $query->where('leave_type', $request->leave_type);
         }
 
-        if ($request->filled('user_id') && ($user->hasRole('Admin') || $user->hasRole('Kepala Sekolah') || $user->hasRole('Waka Kurikulum'))) {
+        if ($request->filled('user_id') && ($user->hasRole('Admin') || $user->hasRole('Kepala Sekolah') || $user->hasRole('Waka Kesiswaan'))) {
             $query->where('user_id', $request->user_id);
         }
 
@@ -64,7 +64,7 @@ class LeaveController extends Controller
         $approvedTodayQuery = Leave::where('status', 'disetujui')->whereDate('approved_at', today());
         $thisMonthQuery = Leave::whereYear('start_date', now()->year)->whereMonth('start_date', now()->month);
 
-        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kesiswaan')) {
             $pendingQuery->where('user_id', $user->id);
             $approvedTodayQuery->where('user_id', $user->id);
             $thisMonthQuery->where('user_id', $user->id);
