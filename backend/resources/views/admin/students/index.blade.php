@@ -109,6 +109,10 @@
                         <option value="">Semua Status</option>
                         <option value="Aktif" {{ request('status_filter') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
                         <option value="Non-Aktif" {{ request('status_filter') == 'Non-Aktif' ? 'selected' : '' }}>Non-Aktif</option>
+                        <option value="Lulus" {{ request('status_filter') == 'Lulus' ? 'selected' : '' }}>Lulus</option>
+                        <option value="Pindah" {{ request('status_filter') == 'Pindah' ? 'selected' : '' }}>Pindah</option>
+                        <option value="Drop Out" {{ request('status_filter') == 'Drop Out' ? 'selected' : '' }}>Drop Out</option>
+                        <option value="Tidak Naik Kelas" {{ request('status_filter') == 'Tidak Naik Kelas' ? 'selected' : '' }}>Tidak Naik Kelas</option>
                     </select>
                 </div>
                 
@@ -212,7 +216,11 @@
                                 <td>{{ $student->name }}</td>
                                 <td>{{ $student->class_name }}</td>
                                 <td>
-                                    <span class="badge {{ $student->status === 'Aktif' ? 'bg-success' : 'bg-secondary' }}">
+                                    <span class="badge 
+                                        {{ $student->status === 'Aktif' ? 'bg-success' : '' }}
+                                        {{ $student->status === 'Lulus' ? 'bg-info' : '' }}
+                                        {{ in_array($student->status, ['Non-Aktif','Pindah','Drop Out','Tidak Naik Kelas']) ? 'bg-secondary' : '' }}
+                                    ">
                                         {{ $student->status }}
                                     </span>
                                 </td>

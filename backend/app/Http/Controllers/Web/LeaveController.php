@@ -59,14 +59,27 @@ class LeaveController extends Controller
         $statuses = ['menunggu', 'disetujui', 'ditolak'];
         $leaveTypes = ['izin', 'sakit', 'cuti', 'dinas_luar'];
 
-        // Statistics
+        // Statistics (respect role: non-admin sees only own data)
+        $pendingQuery = Leave::where('status', 'menunggu');
+        $approvedTodayQuery = Leave::where('status', 'disetujui')->whereDate('approved_at', today());
+        $thisMonthQuery = Leave::whereYear('start_date', now()->year)->whereMonth('start_date', now()->month);
+
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
+            $pendingQuery->where('user_id', $user->id);
+            $approvedTodayQuery->where('user_id', $user->id);
+            $thisMonthQuery->where('user_id', $user->id);
+        }
+
         $stats = [
-            'pending' => Leave::where('status', 'menunggu')->count(),
-            'approved_today' => Leave::where('status', 'disetujui')
+            'pending' => $pendingQuery->count(),
+            'approved_today' => $approvedTodayQuery->count(),
+            'this_month' => $thisMonthQuery->count(),
+            // Optional: rejected today only for display symmetry
+            'rejected_today' => Leave::where('status', 'ditolak')
+                ->when((!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')), function($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
                 ->whereDate('approved_at', today())
-                ->count(),
-            'this_month' => Leave::whereYear('start_date', now()->year)
-                ->whereMonth('start_date', now()->month)
                 ->count(),
         ];
 

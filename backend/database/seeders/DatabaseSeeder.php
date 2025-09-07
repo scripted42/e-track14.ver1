@@ -90,5 +90,36 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ],
         ]);
+
+        // Seed Spatie roles & permissions
+        $permissions = [
+            'attendance.view_all',
+            'attendance.manage',
+            'leave.approve',
+            'leave.reject',
+            'leave.view_all',
+            'report.view',
+            'report.view_all',
+            'student.manage',
+            'staff.manage',
+            'settings.manage',
+        ];
+
+        foreach ($permissions as $perm) {
+            \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
+        }
+
+        $rolePermissions = [
+            'Admin' => $permissions,
+            'Kepala Sekolah' => ['attendance.view_all','leave.approve','leave.reject','report.view_all'],
+            'Waka Kurikulum' => ['attendance.view_all','leave.approve','leave.reject','report.view_all'],
+            'Guru' => ['report.view'],
+            'Pegawai' => ['report.view'],
+        ];
+
+        foreach ($rolePermissions as $roleName => $perms) {
+            $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+            $role->syncPermissions($perms);
+        }
     }
 }

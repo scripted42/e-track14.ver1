@@ -121,7 +121,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h1 class="h3 mb-0">Laporan Siswa Saya</h1>
-            <p class="text-muted mb-0">Data Siswa yang Diampu - {{ \Carbon\Carbon::now()->format('d F Y') }}</p>
+            <p class="text-muted mb-0">Data Siswa Kelas Binaan - {{ \Carbon\Carbon::now()->format('d F Y') }}</p>
         </div>
         <div class="d-flex gap-2">
             <button type="button" class="btn btn-primary" onclick="exportReport('excel')">
@@ -141,7 +141,7 @@
                     <i class="fas fa-chalkboard-teacher fa-2x me-3 text-info"></i>
                     <div>
                         <h5 class="mb-1">Guru: {{ auth()->user()->name }}</h5>
-                        <p class="mb-0">Kelas yang Diampu: {{ $myClasses->count() }} kelas | Total Siswa: {{ $myStats['total_students'] }} siswa</p>
+                        <p class="mb-0">Jumlah Kelas Dibina: {{ $myClasses->count() }} | Total Siswa: {{ $myStats['total_students'] }} siswa</p>
                     </div>
                 </div>
             </div>
@@ -194,7 +194,7 @@
             <div class="detail-card">
                 <div class="detail-header">
                     <h5 class="mb-0">
-                        <i class="fas fa-school me-2"></i>Kelas yang Diampu
+                        <i class="fas fa-school me-2"></i>Daftar Kelas Dibina
                     </h5>
                 </div>
                 <div class="detail-body">
@@ -246,8 +246,8 @@
                     @else
                         <div class="text-center text-muted py-4">
                             <i class="fas fa-school fa-3x mb-3"></i>
-                            <h5>Belum ada kelas yang diampu</h5>
-                            <p>Hubungi admin untuk mengatur kelas yang diampu</p>
+                            <h5>Belum ada kelas binaan</h5>
+                            <p>Hubungi admin untuk mengatur kelas yang dibina</p>
                         </div>
                     @endif
                 </div>
@@ -342,8 +342,8 @@
                     @else
                         <div class="text-center text-muted py-4">
                             <i class="fas fa-user-graduate fa-3x mb-3"></i>
-                            <h5>Belum ada siswa yang diampu</h5>
-                            <p>Hubungi admin untuk mengatur kelas yang diampu</p>
+                            <h5>Belum ada siswa dalam kelas binaan</h5>
+                            <p>Hubungi admin untuk mengatur kelas yang dibina</p>
                         </div>
                     @endif
                 </div>
@@ -419,7 +419,7 @@
                                 <i class="fas fa-chalkboard-teacher fa-2x text-success me-3"></i>
                                 <div class="text-start">
                                     <h6 class="mb-1">Guru: {{ auth()->user()->name }}</h6>
-                                    <small class="text-muted">{{ $myStats['classes_count'] }} kelas diampu</small>
+                                    <small class="text-muted">{{ $myStats['classes_count'] }} kelas dibina</small>
                                 </div>
                             </div>
                         </div>

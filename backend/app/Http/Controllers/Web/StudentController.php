@@ -103,7 +103,7 @@ class StudentController extends Controller
         $stats = [
             'total_students' => $allStudentsData->count(),
             'active_students' => $allStudentsData->where('status', 'Aktif')->count(),
-            'inactive_students' => $allStudentsData->where('status', 'Non-Aktif')->count(),
+            'inactive_students' => $allStudentsData->whereIn('status', ['Non-Aktif', 'Lulus', 'Pindah', 'Drop Out', 'Tidak Naik Kelas'])->count(),
         ];
         
         return view('admin.students.index', compact('students', 'classes', 'stats'));
@@ -171,7 +171,7 @@ class StudentController extends Controller
             'class_name' => 'required|string|max:100',
             'address' => 'nullable|string',
             'card_qr_code' => 'required|string|unique:students,card_qr_code',
-            'status' => 'required|in:Aktif,Non-Aktif',
+            'status' => 'required|in:Aktif,Non-Aktif,Lulus,Pindah,Drop Out,Tidak Naik Kelas',
         ]);
 
         $data = $request->only(['nisn', 'name', 'class_name', 'address', 'card_qr_code', 'status']);
@@ -220,7 +220,7 @@ class StudentController extends Controller
             'class_name' => 'required|string|max:100',
             'address' => 'nullable|string',
             'card_qr_code' => 'required|string|unique:students,card_qr_code,' . $student->id,
-            'status' => 'required|in:Aktif,Non-Aktif',
+            'status' => 'required|in:Aktif,Non-Aktif,Lulus,Pindah,Drop Out,Tidak Naik Kelas',
         ]);
 
         $data = $request->only(['nisn', 'name', 'class_name', 'address', 'card_qr_code', 'status']);
@@ -591,7 +591,17 @@ class StudentController extends Controller
         $classIds = $myClasses->pluck('id');
         
         if ($classIds->isEmpty()) {
-            return view('admin.students.my-class', compact('myClasses'))
+            $students = collect();
+            $attendanceStats = [
+                'total_students' => 0,
+                'present_today' => 0,
+                'late_today' => 0,
+                'absent_today' => 0,
+                'this_month_attendance' => 0,
+                'attendance_rate_today' => 0,
+                'classes_count' => 0,
+            ];
+            return view('admin.students.my-class', compact('myClasses', 'students', 'attendanceStats'))
                 ->with('message', 'Anda belum ditugaskan sebagai walikelas.');
         }
         

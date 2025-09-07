@@ -281,6 +281,9 @@
             </h5>
         </div>
         <div class="card-body p-0">
+            <div class="p-2 text-end">
+                <small class="text-muted">Realtime: halaman ini otomatis menyegarkan tiap 20 detik</small>
+            </div>
             @if(isset($attendance) && $attendance->count())
                 <!-- Total Records Info -->
                 <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
@@ -515,5 +518,15 @@ function showDetail(studentId, date) {
             `;
         });
 }
+// Auto-refresh setiap 20 detik untuk realtime monitoring (khusus Kepala Sekolah/Admin)
+setInterval(function() {
+    // Hanya refresh jika pengguna berada di tab aktif
+    if (document.visibilityState === 'visible') {
+        const url = new URL(window.location.href);
+        // Pertahankan query string (filter)
+        window.location.replace(url.toString());
+    }
+}, 20000);
+
 </script>
 @endpush

@@ -826,22 +826,7 @@
                     </li>
                     @endif
                     
-                    @if(auth()->user()->hasRole('Kepala Sekolah'))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.reports.comprehensive') ? 'active' : '' }}" 
-                           href="{{ route('admin.reports.comprehensive') }}">
-                            <i class="fas fa-chart-bar text-purple"></i>
-                            <span class="nav-text">Laporan Komprehensif</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.reports.strategic') ? 'active' : '' }}" 
-                           href="{{ route('admin.reports.strategic') }}">
-                            <i class="fas fa-chart-line text-purple"></i>
-                            <span class="nav-text">Laporan Strategis</span>
-                        </a>
-                    </li>
-                    @endif
+                    {{-- Disembunyikan sesuai permintaan: Laporan Komprehensif & Strategis --}}
                     
                     @if(auth()->user()->hasRole('Guru'))
                     <li class="nav-item">
@@ -901,7 +886,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="alert('Manajemen Role & Izin - Segera Hadir!')">
+                        <a class="nav-link {{ request()->routeIs('admin.roles-permissions.*') ? 'active' : '' }}" href="{{ route('admin.roles-permissions.index') }}">
                             <i class="fas fa-key text-secondary"></i>
                             <span class="nav-text">Role & Izin</span>
                         </a>

@@ -8,6 +8,7 @@ use App\Models\StudentAttendance;
 use App\Models\Leave;
 use App\Models\User;
 use App\Models\Student;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,9 +49,11 @@ class ReportController extends Controller
             })
             ->distinct('user_id')
             ->count();
+        $settings = Setting::getSettings();
+        $checkinEnd = \Carbon\Carbon::createFromFormat('H:i:s', strlen($settings->checkin_end ?? '07:05:00') === 5 ? (($settings->checkin_end ?? '07:05') . ':00') : ($settings->checkin_end ?? '07:05:00'));
         $lateToday = Attendance::whereDate('timestamp', today())
             ->where('type', 'checkin')
-            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425')
+            ->whereTime('timestamp', '>', $checkinEnd->format('H:i:s'))
             ->whereHas('user', function($q) {
                 $q->whereNotIn('role_id', [6]); // Exclude Kepala Sekolah
             })
@@ -168,6 +171,12 @@ class ReportController extends Controller
         $startDate = Carbon::parse($startDate);
         $endDate = Carbon::parse($endDate)->endOfDay();
         
+        // Load settings for on-time threshold
+        $settings = \App\Models\Setting::getSettings();
+        $checkinEnd = Carbon::createFromFormat('H:i:s', strlen($settings->checkin_end ?? '07:05:00') === 5
+            ? (($settings->checkin_end ?? '07:05') . ':00')
+            : ($settings->checkin_end ?? '07:05:00'));
+        
         // Build query to get attendance data grouped by user and date
         $query = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name'])
             ->whereBetween('timestamp', [$startDate, $endDate]);
@@ -205,7 +214,9 @@ class ReportController extends Controller
             
             if ($record->type === 'checkin') {
                 $groupedData[$key]['checkin_time'] = Carbon::parse($record->timestamp)->format('H:i');
-                $groupedData[$key]['checkin_status'] = $record->status;
+                // Tentukan status berdasarkan ambang checkinEnd (On-Time jika <= checkinEnd; Terlambat jika > checkinEnd)
+                $checkinTimeStr = Carbon::parse($record->timestamp)->format('H:i:s');
+                $groupedData[$key]['checkin_status'] = ($checkinTimeStr <= $checkinEnd->format('H:i:s')) ? 'hadir' : 'terlambat';
                 $groupedData[$key]['timestamp'] = $record->timestamp; // Keep latest timestamp for sorting
             } elseif ($record->type === 'checkout') {
                 $groupedData[$key]['checkout_time'] = Carbon::parse($record->timestamp)->format('H:i');
@@ -248,12 +259,12 @@ class ReportController extends Controller
         $totalStaff = User::whereIn('role_id', [2, 3, 5])->count(); // Guru, Pegawai, Waka Kurikulum (exclude Kepala Sekolah)
         $presentToday = Attendance::whereDate('timestamp', today())
             ->where('type', 'checkin')
-            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425')
+            ->whereTime('timestamp', '<=', $checkinEnd->format('H:i:s'))
             ->distinct('user_id')
             ->count();
         $lateToday = Attendance::whereDate('timestamp', today())
             ->where('type', 'checkin')
-            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425')
+            ->whereTime('timestamp', '>', $checkinEnd->format('H:i:s'))
             ->distinct('user_id')
             ->count();
         $absentToday = $totalStaff - $presentToday - $lateToday;
@@ -515,7 +526,7 @@ class ReportController extends Controller
             $monthlyStudentData[] = $studentRate;
         }
         
-        // Get class attendance data
+        // Get class attendance data (stacked: ontime/late/absent within range)
         $classAttendanceData = [];
         $classLabels = [];
         
@@ -526,17 +537,34 @@ class ReportController extends Controller
             
         foreach ($classes as $class) {
             $classLabels[] = $class->class_name;
+            $classStudents = max(1, Student::where('class_name', $class->class_name)->count());
             
-            $classStudents = Student::where('class_name', $class->class_name)->count();
-            $classAttendance = StudentAttendance::whereHas('student', function($query) use ($class) {
-                $query->where('class_name', $class->class_name);
-            })
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->where('status', 'hadir')
-            ->count();
+            $ontime = StudentAttendance::whereHas('student', function($query) use ($class) {
+                    $query->where('class_name', $class->class_name);
+                })
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->where('status', 'hadir')
+                ->whereRaw('(HOUR(created_at) * 60 + MINUTE(created_at)) <= 390')
+                ->count();
             
-            $attendanceRate = $classStudents > 0 ? round(($classAttendance / $classStudents) * 100, 1) : 0;
-            $classAttendanceData[] = $attendanceRate;
+            $late = StudentAttendance::whereHas('student', function($query) use ($class) {
+                    $query->where('class_name', $class->class_name);
+                })
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->where(function($q){
+                    $q->where('status', 'terlambat')
+                      ->orWhereRaw('(HOUR(created_at) * 60 + MINUTE(created_at)) > 390');
+                })
+                ->count();
+            
+            $present = $ontime + $late;
+            $absent = max(0, $classStudents - $present);
+            
+            $classAttendanceData[] = [
+                'ontime' => round(($ontime / $classStudents) * 100, 1),
+                'late' => round(($late / $classStudents) * 100, 1),
+                'absent' => round(($absent / $classStudents) * 100, 1),
+            ];
         }
         
         return [
@@ -1017,7 +1045,7 @@ class ReportController extends Controller
         
         $onTimeEmployees = Attendance::whereBetween('timestamp', [$startDate, $endDate])
             ->where('type', 'checkin')
-            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425')
+            ->whereTime('timestamp', '<=', $checkinEnd->format('H:i:s'))
             ->whereHas('user', function($q) {
                 $q->whereNotIn('role_id', [6]);
             })
@@ -1146,7 +1174,7 @@ class ReportController extends Controller
         $totalEmployees = User::whereIn('role_id', [2, 3, 5])->count();
         $lateEmployees = Attendance::whereBetween('timestamp', [$startDate, $endDate])
             ->where('type', 'checkin')
-            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425')
+            ->whereTime('timestamp', '>', $checkinEnd->format('H:i:s'))
             ->whereHas('user', function($q) {
                 $q->whereNotIn('role_id', [6]);
             })

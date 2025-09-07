@@ -9,6 +9,7 @@ use App\Models\Attendance;
 use App\Models\StudentAttendance;
 use App\Models\Leave;
 use App\Models\AttendanceQr;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -674,6 +675,8 @@ class DashboardController extends Controller
         $data = [];
         $startDate = Carbon::now()->subDays(30);
         
+        $settings = Setting::getSettings();
+        $checkinEnd = Carbon::createFromFormat('H:i:s', strlen($settings->checkin_end ?? '07:05:00') === 5 ? (($settings->checkin_end ?? '07:05') . ':00') : ($settings->checkin_end ?? '07:05:00'));
         for ($i = 0; $i < 30; $i++) {
             $date = $startDate->copy()->addDays($i);
             
@@ -684,7 +687,7 @@ class DashboardController extends Controller
             
             $onTimeCount = Attendance::whereDate('timestamp', $date)
                 ->where('type', 'checkin')
-                ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425')
+                ->whereTime('timestamp', '<=', $checkinEnd->format('H:i:s'))
                 ->distinct('user_id')
                 ->count('user_id');
             
@@ -751,9 +754,11 @@ class DashboardController extends Controller
         $attendanceRate = $totalEmployees > 0 ? round(($presentToday / $totalEmployees) * 100, 1) : 0;
         
         // Calculate punctuality rate
+        $settings = Setting::getSettings();
+        $checkinEnd = Carbon::createFromFormat('H:i:s', strlen($settings->checkin_end ?? '07:05:00') === 5 ? (($settings->checkin_end ?? '07:05') . ':00') : ($settings->checkin_end ?? '07:05:00'));
         $onTimeToday = Attendance::whereDate('timestamp', $today)
             ->where('type', 'checkin')
-            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425')
+            ->whereTime('timestamp', '<=', $checkinEnd->format('H:i:s'))
             ->whereHas('user', function($q) {
                 $q->whereNotIn('role_id', [6]);
             })

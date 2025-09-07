@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\AttendanceQr;
 use App\Models\User;
 use App\Models\AuditLog;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,8 +24,8 @@ class AttendanceController extends Controller
                 $q->whereNotIn('role_id', [6]); // Exclude Kepala Sekolah
             });
         
-        // For non-admin users, only show their own attendance
-        if (!$user->hasRole('Admin')) {
+        // For non-admin-like users, only show their own attendance
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
             $query->where('user_id', $user->id);
         }
 
@@ -66,17 +67,25 @@ class AttendanceController extends Controller
             }
         }
 
+        // Load settings
+        $settings = Setting::getSettings();
+        // Ambang on-time ditentukan oleh checkin_end (contoh: 07:05)
+        $checkinEndBase = ($settings->checkin_end ?? '07:05:00');
+        $checkinOnTimeLimit = Carbon::createFromFormat('H:i:s', strlen($checkinEndBase) === 5 ? ($checkinEndBase . ':00') : $checkinEndBase);
+        $checkoutStart = Carbon::createFromFormat('H:i:s', strlen($settings->checkout_start ?? '15:00:00') === 5 ? (($settings->checkout_start ?? '15:00') . ':00') : ($settings->checkout_start ?? '15:00:00'));
+        $checkoutEnd = Carbon::createFromFormat('H:i:s', strlen($settings->checkout_end ?? '17:00:00') === 5 ? (($settings->checkout_end ?? '17:00') . ':00') : ($settings->checkout_end ?? '17:00:00'));
+
         // Apply status filter
         if ($request->filled('status')) {
             $status = $request->status;
             if ($status === 'on-time') {
-                // For check-in: time <= 07:05 (425 minutes)
+                // On-Time berdasarkan settings: checkin <= (checkin_start + 5 menit)
                 $query->where('type', 'checkin')
-                      ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425');
+                      ->whereTime('timestamp', '<=', $checkinOnTimeLimit->format('H:i:s'));
             } elseif ($status === 'terlambat') {
-                // For check-in: time > 07:05 (425 minutes)
+                // Terlambat jika checkin > ambang on-time
                 $query->where('type', 'checkin')
-                      ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425');
+                      ->whereTime('timestamp', '>', $checkinOnTimeLimit->format('H:i:s'));
             } else {
                 // For other statuses (izin, sakit, alpha), use original logic
                 $query->where('status', $status);
@@ -94,8 +103,8 @@ class AttendanceController extends Controller
         // Get leave records for the same period with optimized query
         $leaveQuery = \App\Models\Leave::with(['user:id,name,email,role_id', 'user.role:id,role_name', 'approver:id,name']);
         
-        // Apply same filters for leaves
-        if (!$user->hasRole('Admin')) {
+        // Apply same filters for leaves (non-admin-like sees own only)
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
             $leaveQuery->where('user_id', $user->id);
         }
         
@@ -176,15 +185,10 @@ class AttendanceController extends Controller
             $checkin = $records->where('type', 'checkin')->first();
             $checkout = $records->where('type', 'checkout')->first();
             
-            // Determine check-in status based on time
+            // Determine check-in status based on settings
             $checkinStatus = null;
             if ($checkin) {
-                $hour = (int) $checkin->timestamp->format('H');
-                $minute = (int) $checkin->timestamp->format('i');
-                $timeMinutes = $hour * 60 + $minute;
-                
-                // Staff rule: On-Time if ≤ 07:05 (425 minutes), Late if > 07:05
-                if ($timeMinutes <= 425) {
+                if ($checkin->timestamp->format('H:i:s') <= $checkinOnTimeLimit->format('H:i:s')) {
                     $checkinStatus = 'On-Time';
                 } else {
                     $checkinStatus = 'Terlambat';
@@ -194,12 +198,10 @@ class AttendanceController extends Controller
             // Determine check-out status
             $checkoutStatus = null;
             if ($checkout) {
-                $checkoutTime = $checkout->timestamp->format('H:i');
-                $checkoutHour = (int) $checkout->timestamp->format('H');
-                
-                if ($checkoutHour < 15) {
+                $checkoutTime = $checkout->timestamp->format('H:i:s');
+                if ($checkoutTime < $checkoutStart->format('H:i:s')) {
                     $checkoutStatus = 'Pulang Lebih Awal';
-                } elseif ($checkoutHour >= 15 && $checkoutHour <= 17) {
+                } elseif ($checkoutTime >= $checkoutStart->format('H:i:s') && $checkoutTime <= $checkoutEnd->format('H:i:s')) {
                     $checkoutStatus = 'On-Time';
                 } else {
                     $checkoutStatus = 'Lembur';
@@ -229,6 +231,8 @@ class AttendanceController extends Controller
                 'type' => 'attendance'
             ]);
         }
+
+        
         
                         // Add leave records to summary
                 foreach ($allLeaves as $leave) {
@@ -276,15 +280,26 @@ class AttendanceController extends Controller
         $stats['late_today'] = $todayAttendance->where('checkin.status', 'Terlambat')->count();
         $stats['alpha_today'] = $todayAttendance->where('checkin', null)->where('leave', null)->count();
 
-        // Count leave statistics
+        // Count leave statistics (global)
         $stats['leave_pending'] = $attendanceSummary->where('leave.status', 'menunggu')->count();
         $stats['leave_approved'] = $attendanceSummary->where('leave.status', 'disetujui')->count();
         $stats['leave_rejected'] = $attendanceSummary->where('leave.status', 'ditolak')->count();
         
-        // Calculate staff who have NOT attended today (no checkin and no leave)
-        $totalStaff = User::whereIn('role_id', [2, 3, 4, 5])->count(); // Guru, Pegawai, Kepala Sekolah, Waka Kurikulum
-        $attendedOrOnLeave = $stats['present_today'] + $stats['leave_approved'] + $stats['leave_pending'];
-        $stats['not_attended_today'] = max(0, $totalStaff - $attendedOrOnLeave); // Ensure no negative values
+        // Calculate staff who have NOT attended today (tanpa hard-coded role_id)
+        if ($user->hasRole('Admin') || $user->hasRole('Kepala Sekolah') || $user->hasRole('Waka Kurikulum')) {
+            $totalStaff = User::whereHas('roles', function($q) {
+                $q->whereIn('name', ['Guru', 'Pegawai', 'Waka Kurikulum', 'Kepala Sekolah']);
+            })->count();
+            // Hitung hanya untuk HARI INI
+            $leaveApprovedToday = $todayAttendance->where('leave.status', 'disetujui')->count();
+            $attendedOrOnLeaveToday = $stats['present_today'] + $leaveApprovedToday;
+            $stats['not_attended_today'] = max(0, $totalStaff - $attendedOrOnLeaveToday);
+        } else {
+            // Untuk non-admin: 1 jika belum checkin dan tidak ada leave disetujui hari ini, selain itu 0
+            $hasCheckinToday = $todayAttendance->where('checkin', '!=', null)->count() > 0;
+            $hasApprovedLeaveToday = $todayAttendance->where('leave.status', 'disetujui')->count() > 0;
+            $stats['not_attended_today'] = (!$hasCheckinToday && !$hasApprovedLeaveToday) ? 1 : 0;
+        }
 
         // Apply final filters to the combined data
         if ($request->filled('period')) {
@@ -326,6 +341,13 @@ class AttendanceController extends Controller
                     }
                     break;
             }
+        }
+
+        // Enforce final role-based visibility (defense-in-depth) AFTER period filter
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
+            $attendanceSummary = $attendanceSummary->filter(function ($item) use ($user) {
+                return isset($item['user']) && ($item['user']->id === $user->id);
+            })->values();
         }
 
         // Apply status filter to final result
@@ -571,8 +593,15 @@ class AttendanceController extends Controller
                 $q->whereNotIn('role_id', [6]); // Exclude Kepala Sekolah
             });
         
-        // For non-admin users, only show their own attendance
-        if (!$user->hasRole('Admin')) {
+        // Load settings for on-time and checkout windows
+        $settings = Setting::getSettings();
+        $checkinEndBase = ($settings->checkin_end ?? '07:05:00');
+        $checkinOnTimeLimit = Carbon::createFromFormat('H:i:s', strlen($checkinEndBase) === 5 ? ($checkinEndBase . ':00') : $checkinEndBase);
+        $checkoutStart = Carbon::createFromFormat('H:i:s', strlen($settings->checkout_start ?? '15:00:00') === 5 ? (($settings->checkout_start ?? '15:00') . ':00') : ($settings->checkout_start ?? '15:00:00'));
+        $checkoutEnd = Carbon::createFromFormat('H:i:s', strlen($settings->checkout_end ?? '17:00:00') === 5 ? (($settings->checkout_end ?? '17:00') . ':00') : ($settings->checkout_end ?? '17:00:00'));
+        
+        // For non-admin-like users, only show their own attendance
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
             $query->where('user_id', $user->id);
         }
 
@@ -618,13 +647,11 @@ class AttendanceController extends Controller
         if ($request->filled('status')) {
             $status = $request->status;
             if ($status === 'on-time') {
-                // For check-in: time <= 07:05 (425 minutes)
                 $query->where('type', 'checkin')
-                      ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) <= 425');
+                      ->whereTime('timestamp', '<=', $checkinOnTimeLimit->format('H:i:s'));
             } elseif ($status === 'terlambat') {
-                // For check-in: time > 07:05 (425 minutes)
                 $query->where('type', 'checkin')
-                      ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425');
+                      ->whereTime('timestamp', '>', $checkinOnTimeLimit->format('H:i:s'));
             } else {
                 // For other statuses (izin, sakit, alpha), use original logic
                 $query->where('status', $status);
@@ -642,8 +669,8 @@ class AttendanceController extends Controller
         // Get leave records for the same period with optimized query
         $leaveQuery = \App\Models\Leave::with(['user:id,name,email,role_id', 'user.role:id,role_name', 'approver:id,name']);
         
-        // Apply same filters for leaves
-        if (!$user->hasRole('Admin')) {
+        // Apply same filters for leaves (non-admin-like sees own only)
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
             $leaveQuery->where('user_id', $user->id);
         }
         
@@ -724,15 +751,10 @@ class AttendanceController extends Controller
             $checkin = $records->where('type', 'checkin')->first();
             $checkout = $records->where('type', 'checkout')->first();
             
-            // Determine check-in status based on time
+            // Determine check-in status based on time (export uses same logic)
             $checkinStatus = null;
             if ($checkin) {
-                $hour = (int) $checkin->timestamp->format('H');
-                $minute = (int) $checkin->timestamp->format('i');
-                $timeMinutes = $hour * 60 + $minute;
-                
-                // Staff rule: On-Time if ≤ 07:05 (425 minutes), Late if > 07:05
-                if ($timeMinutes <= 425) {
+                if ($checkin->timestamp->format('H:i:s') <= $checkinOnTimeLimit->format('H:i:s')) {
                     $checkinStatus = 'On-Time';
                 } else {
                     $checkinStatus = 'Terlambat';
@@ -742,12 +764,10 @@ class AttendanceController extends Controller
             // Determine check-out status
             $checkoutStatus = null;
             if ($checkout) {
-                $checkoutTime = $checkout->timestamp->format('H:i');
-                $checkoutHour = (int) $checkout->timestamp->format('H');
-                
-                if ($checkoutHour < 15) {
+                $checkoutTime = $checkout->timestamp->format('H:i:s');
+                if ($checkoutTime < $checkoutStart->format('H:i:s')) {
                     $checkoutStatus = 'Pulang Lebih Awal';
-                } elseif ($checkoutHour >= 15 && $checkoutHour <= 17) {
+                } elseif ($checkoutTime >= $checkoutStart->format('H:i:s') && $checkoutTime <= $checkoutEnd->format('H:i:s')) {
                     $checkoutStatus = 'On-Time';
                 } else {
                     $checkoutStatus = 'Lembur';
@@ -977,8 +997,8 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
         
-        // Check permissions
-        if (!$user->hasRole('Admin') && $user->id != $userId) {
+        // Check permissions (Admin/Kepala/Waka can view others)
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum') && $user->id != $userId) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -1000,27 +1020,25 @@ class AttendanceController extends Controller
         $checkin = $attendance->where('type', 'checkin')->first();
         $checkout = $attendance->where('type', 'checkout')->first();
 
-        // Calculate status
+        // Calculate status (respect settings)
+        $settings = Setting::getSettings();
+        $checkinBase = ($settings->checkin_start ?? '07:00:00');
+        $checkinOnTimeLimit = \Carbon\Carbon::createFromFormat('H:i:s', strlen($checkinBase) === 5 ? ($checkinBase . ':00') : $checkinBase)
+            ->addMinutes(5);
+        $checkoutStart = \Carbon\Carbon::createFromFormat('H:i:s', strlen($settings->checkout_start ?? '15:00:00') === 5 ? (($settings->checkout_start ?? '15:00') . ':00') : ($settings->checkout_start ?? '15:00:00'));
+        $checkoutEnd = \Carbon\Carbon::createFromFormat('H:i:s', strlen($settings->checkout_end ?? '17:00:00') === 5 ? (($settings->checkout_end ?? '17:00') . ':00') : ($settings->checkout_end ?? '17:00:00'));
         $checkinStatus = null;
         if ($checkin) {
-            $hour = (int) $checkin->timestamp->format('H');
-            $minute = (int) $checkin->timestamp->format('i');
-            $timeMinutes = $hour * 60 + $minute;
-            
-            if ($timeMinutes <= 425) {
-                $checkinStatus = 'On-Time';
-            } else {
-                $checkinStatus = 'Terlambat';
-            }
+            $checkinTime = $checkin->timestamp->format('H:i:s');
+            $checkinStatus = ($checkinTime <= $checkinOnTimeLimit->format('H:i:s')) ? 'On-Time' : 'Terlambat';
         }
 
         $checkoutStatus = null;
         if ($checkout) {
-            $checkoutHour = (int) $checkout->timestamp->format('H');
-            
-            if ($checkoutHour < 15) {
+            $checkoutTime = $checkout->timestamp->format('H:i:s');
+            if ($checkoutTime < $checkoutStart->format('H:i:s')) {
                 $checkoutStatus = 'Pulang Lebih Awal';
-            } elseif ($checkoutHour >= 15 && $checkoutHour <= 17) {
+            } elseif ($checkoutTime >= $checkoutStart->format('H:i:s') && $checkoutTime <= $checkoutEnd->format('H:i:s')) {
                 $checkoutStatus = 'On-Time';
             } else {
                 $checkoutStatus = 'Lembur';
@@ -1126,21 +1144,23 @@ class AttendanceController extends Controller
         // Debug logging
         \Log::info('Monitor method called for date: ' . $today->format('Y-m-d'));
         
-        // Staff attendance statistics
-        $totalStaff = User::whereIn('role_id', [2, 3, 4, 5])->count(); // Kepala Sekolah, Waka Kurikulum, Guru, Pegawai
+        // Staff attendance statistics (respect settings)
+        $totalStaff = User::whereHas('roles', function($q) {
+            $q->whereIn('name', ['Guru', 'Pegawai', 'Waka Kurikulum', 'Kepala Sekolah']);
+        })->count();
         $presentToday = Attendance::whereDate('timestamp', $today)
             ->where('type', 'checkin')
-            ->whereHas('user', function($q) {
-                $q->whereIn('role_id', [2, 3, 4, 5]);
+            ->whereHas('user.roles', function($q) {
+                $q->whereIn('name', ['Guru', 'Pegawai', 'Waka Kurikulum', 'Kepala Sekolah']);
             })
             ->distinct('user_id')
             ->count();
         
         $lateToday = Attendance::whereDate('timestamp', $today)
             ->where('type', 'checkin')
-            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425') // After 07:05
-            ->whereHas('user', function($q) {
-                $q->whereIn('role_id', [2, 3, 4, 5]);
+            ->whereTime('timestamp', '>', $checkinOnTimeLimit->format('H:i:s'))
+            ->whereHas('user.roles', function($q) {
+                $q->whereIn('name', ['Guru', 'Pegawai', 'Waka Kurikulum', 'Kepala Sekolah']);
             })
             ->distinct('user_id')
             ->count();
@@ -1152,7 +1172,7 @@ class AttendanceController extends Controller
         $lateStaff = Attendance::with(['user:id,name,role_id', 'user.role:id,role_name'])
             ->whereDate('timestamp', $today)
             ->where('type', 'checkin')
-            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425') // After 07:05
+            ->whereTime('timestamp', '>', $checkinOnTimeLimit->format('H:i:s')) // After checkin_end
             ->whereHas('user', function($q) {
                 $q->whereIn('role_id', [2, 3, 4, 5]);
             })
@@ -1169,7 +1189,9 @@ class AttendanceController extends Controller
                 return $attendance;
             });
         
-        $absentStaff = User::whereIn('role_id', [2, 3, 4, 5])
+        $absentStaff = User::whereHas('roles', function($q) {
+                $q->whereIn('name', ['Guru', 'Pegawai', 'Waka Kurikulum', 'Kepala Sekolah']);
+            })
             ->whereDoesntHave('attendance', function($query) use ($today) {
                 $query->whereDate('timestamp', $today)
                       ->where('type', 'checkin');
@@ -1247,18 +1269,20 @@ class AttendanceController extends Controller
         // Department-wise attendance
         $departmentStats = [];
         $departments = [
-            'Kepala Sekolah' => 2,
-            'Waka Kurikulum' => 3,
-            'Guru' => 4,
-            'Pegawai' => 5
+            'Kepala Sekolah' => 'Kepala Sekolah',
+            'Waka Kurikulum' => 'Waka Kurikulum',
+            'Guru' => 'Guru',
+            'Pegawai' => 'Pegawai'
         ];
         
         foreach ($departments as $deptName => $roleId) {
-            $deptTotal = User::where('role_id', $roleId)->count();
+            $deptTotal = User::whereHas('roles', function($q) use ($roleId) {
+                    $q->where('name', $roleId);
+                })->count();
             $deptPresent = Attendance::whereDate('timestamp', $today)
                 ->where('type', 'checkin')
-                ->whereHas('user', function($q) use ($roleId) {
-                    $q->where('role_id', $roleId);
+                ->whereHas('user.roles', function($q) use ($roleId) {
+                    $q->where('name', $roleId);
                 })
                 ->distinct('user_id')
                 ->count();

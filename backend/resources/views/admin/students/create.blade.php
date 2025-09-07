@@ -86,6 +86,10 @@
                             <select name="status" class="form-control" required>
                                 <option value="Aktif" {{ old('status') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
                                 <option value="Non-Aktif" {{ old('status') == 'Non-Aktif' ? 'selected' : '' }}>Non-Aktif</option>
+                                <option value="Lulus" {{ old('status') == 'Lulus' ? 'selected' : '' }}>Lulus</option>
+                                <option value="Pindah" {{ old('status') == 'Pindah' ? 'selected' : '' }}>Pindah</option>
+                                <option value="Drop Out" {{ old('status') == 'Drop Out' ? 'selected' : '' }}>Drop Out</option>
+                                <option value="Tidak Naik Kelas" {{ old('status') == 'Tidak Naik Kelas' ? 'selected' : '' }}>Tidak Naik Kelas</option>
                             </select>
                             @error('status')
                                 <div class="text-danger small">{{ $message }}</div>

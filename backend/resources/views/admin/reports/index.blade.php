@@ -1277,26 +1277,35 @@ function initializeCharts() {
         });
     }
 
-    // Monthly Comparison Chart (Bar Chart)
+    // Monthly Comparison Chart (Line Chart)
     const monthlyComparisonCtx = document.getElementById('monthlyComparisonChart');
     if (monthlyComparisonCtx) {
         new Chart(monthlyComparisonCtx, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: chartData.monthly_comparison.labels,
-                datasets: [{
-                    label: 'Pegawai',
-                    data: chartData.monthly_comparison.employee_data,
-                    backgroundColor: 'rgba(0, 123, 255, 0.8)',
-                    borderColor: '#007bff',
-                    borderWidth: 1
-                }, {
-                    label: 'Siswa',
-                    data: chartData.monthly_comparison.student_data,
-                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
-                    borderColor: '#28a745',
-                    borderWidth: 1
-                }]
+                datasets: [
+                    {
+                        label: 'Pegawai',
+                        data: chartData.monthly_comparison.employee_data,
+                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                        borderColor: '#007bff',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 3
+                    },
+                    {
+                        label: 'Siswa',
+                        data: chartData.monthly_comparison.student_data,
+                        backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                        borderColor: '#28a745',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 3
+                    }
+                ]
             },
             options: {
                 responsive: true,
@@ -1324,51 +1333,57 @@ function initializeCharts() {
         });
     }
 
-    // Class Attendance Chart (Horizontal Bar Chart)
+    // Class Attendance Chart (Stacked Horizontal Bar Chart)
     const classAttendanceCtx = document.getElementById('classAttendanceChart');
     if (classAttendanceCtx) {
         new Chart(classAttendanceCtx, {
             type: 'bar',
             data: {
                 labels: chartData.class_attendance.labels,
-                datasets: [{
-                    label: 'Tingkat Kehadiran (%)',
-                    data: chartData.class_attendance.data,
-                    backgroundColor: [
-                        'rgba(0, 123, 255, 0.8)',
-                        'rgba(40, 167, 69, 0.8)',
-                        'rgba(255, 193, 7, 0.8)',
-                        'rgba(220, 53, 69, 0.8)',
-                        'rgba(108, 117, 125, 0.8)',
-                        'rgba(23, 162, 184, 0.8)',
-                        'rgba(111, 66, 193, 0.8)',
-                        'rgba(253, 126, 20, 0.8)',
-                        'rgba(32, 201, 151, 0.8)',
-                        'rgba(233, 84, 81, 0.8)',
-                        'rgba(102, 16, 242, 0.8)',
-                        'rgba(255, 159, 67, 0.8)'
-                    ],
-                    borderWidth: 1
-                }]
+                datasets: [
+                    {
+                        label: 'On-Time',
+                        data: chartData.class_attendance.data.map(v => v.ontime || 0),
+                        backgroundColor: 'rgba(40, 167, 69, 0.8)'
+                    },
+                    {
+                        label: 'Terlambat',
+                        data: chartData.class_attendance.data.map(v => v.late || 0),
+                        backgroundColor: 'rgba(255, 193, 7, 0.8)'
+                    },
+                    {
+                        label: 'Tidak Hadir',
+                        data: chartData.class_attendance.data.map(v => v.absent || 0),
+                        backgroundColor: 'rgba(220, 53, 69, 0.8)'
+                    }
+                ]
             },
             options: {
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.x;
+                                return `${context.dataset.label}: ${value}%`;
+                            }
+                        }
                     }
                 },
                 scales: {
                     x: {
                         beginAtZero: true,
                         max: 100,
+                        stacked: true,
                         grid: {
                             color: 'rgba(0, 0, 0, 0.1)'
                         }
                     },
                     y: {
+                        stacked: true,
                         grid: {
                             color: 'rgba(0, 0, 0, 0.1)'
                         }

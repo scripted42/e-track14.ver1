@@ -121,6 +121,11 @@ class UserController extends Controller
         }
 
         $user = User::create($data);
+        // Assign Spatie role name based on selected role_id
+        $spatieRole = \Spatie\Permission\Models\Role::where('name', optional(\App\Models\Role::find($request->role_id))->role_name)->first();
+        if ($spatieRole) {
+            $user->syncRoles([$spatieRole->name]);
+        }
 
         // Update class room walikelas if user is walikelas
         if ($request->has('is_walikelas') && $request->class_room_id) {
@@ -203,6 +208,11 @@ class UserController extends Controller
         }
 
         $user->update($data);
+        // Sync Spatie role if changed
+        $newRoleName = optional(\App\Models\Role::find($request->role_id))->role_name;
+        if ($newRoleName) {
+            $user->syncRoles([$newRoleName]);
+        }
 
         // Handle walikelas assignment
         if ($request->has('is_walikelas') && $request->class_room_id) {
