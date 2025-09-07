@@ -74,6 +74,12 @@ Route::prefix('admin')->group(function () {
                 'update' => 'admin.classrooms.update',
                 'destroy' => 'admin.classrooms.destroy',
             ]);
+            
+            // Walikelas Management Routes
+            Route::post('/classrooms/{classroom}/assign-walikelas', [ClassRoomController::class, 'assignWalikelas'])->name('admin.classrooms.assign-walikelas');
+            Route::delete('/classrooms/{classroom}/remove-walikelas', [ClassRoomController::class, 'removeWalikelas'])->name('admin.classrooms.remove-walikelas');
+            Route::post('/classrooms/transfer-walikelas', [ClassRoomController::class, 'transferWalikelas'])->name('admin.classrooms.transfer-walikelas');
+            Route::get('/classrooms/available-teachers', [ClassRoomController::class, 'getAvailableTeachers'])->name('admin.classrooms.available-teachers');
         });
         
         // Attendance Management - accessible by all authenticated users

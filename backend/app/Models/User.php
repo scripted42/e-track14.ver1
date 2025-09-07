@@ -136,4 +136,20 @@ class User extends Authenticatable
     {
         return $this->isAdmin() || $this->isVicePrincipal() || $this->isKepalaSekolah();
     }
+
+    public function isWalikelas()
+    {
+        return $this->classRooms()->exists();
+    }
+
+    public function getWalikelasClass()
+    {
+        return $this->classRooms()->first();
+    }
+
+    public function getWalikelasStudents()
+    {
+        $class = $this->getWalikelasClass();
+        return $class ? $class->students : collect();
+    }
 }

@@ -78,7 +78,15 @@ class ClassRoomController extends Controller
             'classrooms_with_walikelas' => $allClassRoomsData->where('walikelas_id', '!=', null)->count(),
         ];
         
-        return view('admin.classrooms.index', compact('classRooms', 'stats'));
+        // Get available teachers for modal
+        $availableTeachers = User::whereHas('role', function($query) {
+            $query->where('role_name', 'Guru');
+        })
+        ->whereDoesntHave('classRooms')
+        ->select('id', 'name', 'email')
+        ->get();
+        
+        return view('admin.classrooms.index', compact('classRooms', 'stats', 'availableTeachers'));
     }
 
     /**
@@ -218,5 +226,131 @@ class ClassRoomController extends Controller
 
         return redirect()->route('admin.classrooms.index')
             ->with('success', 'Kelas berhasil dihapus.');
+    }
+
+    /**
+     * Assign walikelas to classroom
+     */
+    public function assignWalikelas(Request $request, ClassRoom $classroom)
+    {
+        $request->validate([
+            'walikelas_id' => 'required|exists:users,id',
+        ]);
+
+        // Check if teacher is already walikelas of another class
+        $existingClass = ClassRoom::where('walikelas_id', $request->walikelas_id)
+            ->where('id', '!=', $classroom->id)
+            ->first();
+        
+        if ($existingClass) {
+            return redirect()->back()
+                ->withErrors(['walikelas_id' => 'Guru ini sudah menjadi walikelas di kelas ' . $existingClass->name . '.'])
+                ->withInput();
+        }
+
+        // Check if teacher has role 'Guru'
+        $teacher = User::find($request->walikelas_id);
+        if (!$teacher->hasRole('Guru')) {
+            return redirect()->back()
+                ->withErrors(['walikelas_id' => 'User yang dipilih bukan guru.'])
+                ->withInput();
+        }
+
+        $oldWalikelasId = $classroom->walikelas_id;
+
+        // Update classroom
+        $classroom->update(['walikelas_id' => $request->walikelas_id]);
+
+        // Handle user assignments
+        if ($oldWalikelasId) {
+            User::where('id', $oldWalikelasId)->update(['class_room_id' => null]);
+        }
+        
+        User::where('id', $request->walikelas_id)->update(['class_room_id' => $classroom->id]);
+
+        return redirect()->back()
+            ->with('success', 'Wali kelas berhasil ditugaskan ke kelas ' . $classroom->name . '.');
+    }
+
+    /**
+     * Remove walikelas from classroom
+     */
+    public function removeWalikelas(ClassRoom $classroom)
+    {
+        if (!$classroom->walikelas_id) {
+            return redirect()->back()
+                ->with('error', 'Kelas ini tidak memiliki wali kelas.');
+        }
+
+        $walikelasId = $classroom->walikelas_id;
+        
+        // Update classroom
+        $classroom->update(['walikelas_id' => null]);
+        
+        // Update user
+        User::where('id', $walikelasId)->update(['class_room_id' => null]);
+
+        return redirect()->back()
+            ->with('success', 'Wali kelas berhasil dihapus dari kelas ' . $classroom->name . '.');
+    }
+
+    /**
+     * Transfer walikelas from one class to another
+     */
+    public function transferWalikelas(Request $request)
+    {
+        $request->validate([
+            'from_classroom_id' => 'required|exists:class_rooms,id',
+            'to_classroom_id' => 'required|exists:class_rooms,id',
+            'walikelas_id' => 'required|exists:users,id',
+        ]);
+
+        $fromClassroom = ClassRoom::find($request->from_classroom_id);
+        $toClassroom = ClassRoom::find($request->to_classroom_id);
+        $walikelas = User::find($request->walikelas_id);
+
+        // Validate that walikelas is currently assigned to from_classroom
+        if ($fromClassroom->walikelas_id != $request->walikelas_id) {
+            return redirect()->back()
+                ->withErrors(['walikelas_id' => 'Guru yang dipilih bukan wali kelas dari kelas ' . $fromClassroom->name . '.'])
+                ->withInput();
+        }
+
+        // Check if to_classroom already has a walikelas
+        if ($toClassroom->walikelas_id) {
+            return redirect()->back()
+                ->withErrors(['to_classroom_id' => 'Kelas ' . $toClassroom->name . ' sudah memiliki wali kelas.'])
+                ->withInput();
+        }
+
+        // Perform transfer
+        $fromClassroom->update(['walikelas_id' => null]);
+        $toClassroom->update(['walikelas_id' => $request->walikelas_id]);
+        $walikelas->update(['class_room_id' => $request->to_classroom_id]);
+
+        return redirect()->back()
+            ->with('success', 'Wali kelas ' . $walikelas->name . ' berhasil dipindahkan dari kelas ' . $fromClassroom->name . ' ke kelas ' . $toClassroom->name . '.');
+    }
+
+    /**
+     * Get available teachers for walikelas assignment
+     */
+    public function getAvailableTeachers()
+    {
+        try {
+            $teachers = User::whereHas('role', function($query) {
+                $query->where('role_name', 'Guru');
+            })
+            ->whereDoesntHave('classRooms')
+            ->select('id', 'name', 'email')
+            ->get();
+
+            \Log::info('Available teachers found: ' . $teachers->count());
+            
+            return response()->json($teachers);
+        } catch (\Exception $e) {
+            \Log::error('Error in getAvailableTeachers: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to load teachers'], 500);
+        }
     }
 }
