@@ -281,10 +281,24 @@
             </h5>
         </div>
         <div class="card-body p-0">
+            @if(isset($attendance) && $attendance->count())
+                <!-- Total Records Info -->
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Menampilkan {{ $attendance->firstItem() ?? 0 }} - {{ $attendance->lastItem() ?? 0 }} dari {{ $attendance->total() }} total absensi
+                    </div>
+                    <div class="text-muted">
+                        Halaman {{ $attendance->currentPage() }} dari {{ $attendance->lastPage() }}
+                    </div>
+                </div>
+            @endif
+            
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
+                            <th width="50" class="text-center">No</th>
                             <th>Nama Siswa</th>
                             <th>NISN</th>
                             <th>Kelas</th>
@@ -296,8 +310,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($attendance as $record)
+                        @forelse($attendance as $index => $record)
                             <tr>
+                                <td class="text-center">
+                                    {{ $attendance->firstItem() + $index }}
+                                </td>
                                 <td>
                                     <div class="fw-semibold">{{ $record['student']->name }}</div>
                                     <small class="text-muted">{{ $record['student']->classRoom ? $record['student']->classRoom->name : 'N/A' }}</small>
@@ -364,10 +381,22 @@
         </div>
     </div>
 
-    <!-- Pagination -->
+    <!-- Enhanced Pagination -->
     @if($attendance->hasPages())
-        <div class="d-flex justify-content-center mt-4">
-            {{ $attendance->links('pagination::bootstrap-4') }}
+        <div class="mt-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted">
+                    <small>
+                        <i class="fas fa-list me-1"></i>
+                        Total: {{ $attendance->total() }} absensi | 
+                        Per halaman: {{ $attendance->perPage() }} | 
+                        Halaman {{ $attendance->currentPage() }} dari {{ $attendance->lastPage() }}
+                    </small>
+                </div>
+                <div>
+                    {{ $attendance->appends(request()->query())->links('pagination::bootstrap-4') }}
+                </div>
+            </div>
         </div>
     @endif
 </div>

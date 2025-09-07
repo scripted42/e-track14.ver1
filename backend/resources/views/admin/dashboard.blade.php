@@ -55,9 +55,9 @@
             <div class="stat-icon" style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e;">
                     <i class="fas fa-clock"></i>
                 </div>
-                <div class="stat-number text-success">{{ $onTimeToday ?? 0 }}</div>
-                <div class="stat-label">Pegawai On-Time</div>
-                <small class="text-muted">{{ $lateToday ?? 0 }} Terlambat, {{ $absentToday ?? 0 }} Absen</small>
+                <div class="stat-number text-success">{{ $todayEmployeeAttendance ?? 0 }}</div>
+                <div class="stat-label">Pegawai Hadir Hari Ini</div>
+                <small class="text-muted">dari {{ $totalEmployees ?? 0 }} total pegawai</small>
             </div>
         </div>
         
@@ -66,9 +66,9 @@
                 <div class="stat-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6;">
                     <i class="fas fa-user-graduate"></i>
                 </div>
-                <div class="stat-number text-primary">{{ $studentsOnTime ?? 0 }}</div>
-                <div class="stat-label">Siswa On-Time</div>
-                <small class="text-muted">{{ $studentsLate ?? 0 }} Terlambat, {{ $studentsAbsent ?? 0 }} Absen</small>
+                <div class="stat-number text-primary">{{ $todayStudentAttendance ?? 0 }}</div>
+                <div class="stat-label">Siswa Hadir Hari Ini</div>
+                <small class="text-muted">dari {{ $totalStudents ?? 0 }} total siswa</small>
             </div>
         </div>
         
@@ -79,7 +79,7 @@
                 </div>
                 <div class="stat-number text-warning">{{ $pendingLeaves ?? 0 }}</div>
                 <div class="stat-label">Izin Menunggu</div>
-                <small class="text-muted">{{ $approvedLeavesToday ?? 0 }} Disetujui, {{ $rejectedLeavesToday ?? 0 }} Ditolak</small>
+                <small class="text-muted">perlu persetujuan</small>
             </div>
         </div>
         

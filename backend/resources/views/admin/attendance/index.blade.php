@@ -324,10 +324,24 @@
             </h5>
         </div>
         <div class="card-body p-0">
+            @if(isset($attendance) && $attendance->count())
+                <!-- Total Records Info -->
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Menampilkan {{ $attendance->firstItem() ?? 0 }} - {{ $attendance->lastItem() ?? 0 }} dari {{ $attendance->total() }} total kehadiran
+                    </div>
+                    <div class="text-muted">
+                        Halaman {{ $attendance->currentPage() }} dari {{ $attendance->lastPage() }}
+                    </div>
+                </div>
+            @endif
+            
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
+                            <th width="50" class="text-center">No</th>
                             <th>Nama</th>
                             <th>Role</th>
                             <th>Tanggal</th>
@@ -339,11 +353,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($attendance as $record)
+                        @forelse($attendance as $index => $record)
                             <tr>
+                                <td class="text-center">
+                                    {{ $attendance->firstItem() + $index }}
+                                </td>
                                 <td>
-                                    <div class="fw-semibold">{{ $record['user']->name }}</div>
-                                    <small class="text-muted">{{ $record['user']->email }}</small>
+                                    <div class="fw-semibold">{{ $record['user']->name ?? 'N/A' }}</div>
+                                    <small class="text-muted">{{ $record['user']->email ?? 'N/A' }}</small>
                                 </td>
                                 <td>
                                     <span class="badge bg-secondary">{{ $record['user']->role ? $record['user']->role->role_name : 'No Role' }}</span>
@@ -434,13 +451,13 @@
                                             <button type="button" 
                                                     class="action-btn btn btn-success" 
                                                     title="Setujui Izin"
-                                                    onclick="approveLeave('{{ $record['leave']['id'] ?? '' }}', '{{ $record['user']->name }}')">
+                                                    onclick="approveLeave('{{ $record['leave']['id'] ?? '' }}', '{{ $record['user']->name ?? 'N/A' }}')">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                             <button type="button" 
                                                     class="action-btn btn btn-danger" 
                                                     title="Tolak Izin"
-                                                    onclick="rejectLeave('{{ $record['leave']['id'] ?? '' }}', '{{ $record['user']->name }}')">
+                                                    onclick="rejectLeave('{{ $record['leave']['id'] ?? '' }}', '{{ $record['user']->name ?? 'N/A' }}')">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         @endif
@@ -464,10 +481,22 @@
         </div>
     </div>
 
-    <!-- Pagination -->
+    <!-- Enhanced Pagination -->
     @if($attendance->hasPages())
-        <div class="d-flex justify-content-center mt-4">
-            {{ $attendance->links('pagination::bootstrap-4') }}
+        <div class="mt-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted">
+                    <small>
+                        <i class="fas fa-list me-1"></i>
+                        Total: {{ $attendance->total() }} kehadiran | 
+                        Per halaman: {{ $attendance->perPage() }} | 
+                        Halaman {{ $attendance->currentPage() }} dari {{ $attendance->lastPage() }}
+                    </small>
+                </div>
+                <div>
+                    {{ $attendance->appends(request()->query())->links('pagination::bootstrap-4') }}
+                </div>
+            </div>
         </div>
     @endif
 </div>
@@ -542,8 +571,8 @@ function showDetail(userId, date) {
                     <div class="col-md-6">
                         <h6><i class="fas fa-user me-2"></i>Informasi Pegawai</h6>
                         <table class="table table-sm">
-                            <tr><td><strong>Nama:</strong></td><td>${data.user.name}</td></tr>
-                            <tr><td><strong>Email:</strong></td><td>${data.user.email}</td></tr>
+                            <tr><td><strong>Nama:</strong></td><td>${data.user.name || 'N/A'}</td></tr>
+                            <tr><td><strong>Email:</strong></td><td>${data.user.email || 'N/A'}</td></tr>
                             <tr><td><strong>Role:</strong></td><td>${data.user.role ? data.user.role.role_name : 'No Role'}</td></tr>
                             <tr><td><strong>Tanggal:</strong></td><td>${new Date(data.date).toLocaleDateString('id-ID')}</td></tr>
                         </table>

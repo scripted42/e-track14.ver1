@@ -33,6 +33,98 @@
             background-color: #f9fafb;
         }
         
+        /* Fix icon sizes globally */
+        .fas, .far, .fab {
+            font-size: inherit;
+        }
+        
+        .btn i.fas, .btn i.far, .btn i.fab {
+            font-size: 0.875rem;
+        }
+        
+        .btn-sm i.fas, .btn-sm i.far, .btn-sm i.fab {
+            font-size: 0.75rem;
+        }
+        
+        /* Fix SVG icon sizes */
+        svg {
+            width: 1em;
+            height: 1em;
+            vertical-align: middle;
+        }
+        
+        .btn svg {
+            width: 0.875rem;
+            height: 0.875rem;
+        }
+        
+        .btn-sm svg {
+            width: 0.75rem;
+            height: 0.75rem;
+        }
+        
+        /* Fix large icons in empty states */
+        .fa-3x {
+            font-size: 3rem !important;
+        }
+        
+        .fa-2x {
+            font-size: 2rem !important;
+        }
+        
+        .fa-lg {
+            font-size: 1.33333em !important;
+        }
+        
+        /* Pagination styling */
+        .pagination {
+            margin: 0;
+            gap: 0.25rem;
+        }
+        
+        .pagination .page-link {
+            border: 1px solid #dee2e6;
+            color: #6c757d;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 0.375rem;
+            margin: 0 0.125rem;
+            transition: all 0.15s ease-in-out;
+        }
+        
+        .pagination .page-link:hover {
+            color: #495057;
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+        }
+        
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            background-color: #fff;
+            border-color: #dee2e6;
+            cursor: not-allowed;
+        }
+        
+        .pagination-info {
+            font-size: 0.875rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .pagination-wrapper {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem 1.5rem;
+            margin-top: 1rem;
+        }
+        
         .sidebar {
             position: fixed;
             top: 0;
@@ -504,6 +596,77 @@
                 min-width: 2rem;
             }
         }
+        
+        /* ISO 21001:2018 Color Scheme */
+        .text-purple {
+            color: #6f42c1 !important;
+        }
+        
+        .nav-link .text-primary {
+            color: #0d6efd !important;
+        }
+        
+        .nav-link .text-success {
+            color: #198754 !important;
+        }
+        
+        .nav-link .text-info {
+            color: #0dcaf0 !important;
+        }
+        
+        .nav-link .text-warning {
+            color: #ffc107 !important;
+        }
+        
+        .nav-link .text-secondary {
+            color: #6c757d !important;
+        }
+        
+        /* ISO Menu Categories */
+        .nav-item.has-submenu > .nav-link {
+            font-weight: 600;
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item.has-submenu > .nav-link:hover {
+            border-left-color: rgba(255,255,255,0.5);
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .nav-item.has-submenu.open > .nav-link {
+            border-left-color: #fff;
+            background-color: rgba(255,255,255,0.15);
+        }
+        
+        /* Submenu Styling */
+        .submenu {
+            background-color: rgba(0,0,0,0.1);
+            border-left: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .submenu .nav-link {
+            padding-left: 2rem;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .submenu .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+        
+        /* ISO Compliance Indicators */
+        .nav-text {
+            font-weight: 500;
+        }
+        
+        .nav-item.has-submenu .nav-text {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
     </style>
     
     @stack('styles')
@@ -520,63 +683,88 @@
         </div>
         
         <ul class="nav flex-column">
+            <!-- Dashboard - Ringkasan Eksekutif -->
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" 
+                <a class="nav-link {{ request()->routeIs('admin.dashboard') || request()->routeIs('admin.attendance.monitor') ? 'active' : '' }}" 
                    href="{{ route('admin.dashboard') }}">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span class="nav-text">Dashboard</span>
+                    <i class="fas fa-tachometer-alt text-primary"></i>
+                    <span class="nav-text">Dashboard Utama</span>
                 </a>
             </li>
             
-            <!-- Manajemen Submenu -->
-            <li class="nav-item has-submenu {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') || request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'open' : '' }}">
-                <a class="nav-link {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') || request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'active' : '' }}" 
+            <!-- Manajemen Siswa (ISO 21001:2018) -->
+            @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
+            <li class="nav-item has-submenu {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.student-attendance.*') ? 'open' : '' }}">
+                <a class="nav-link {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.student-attendance.*') ? 'active' : '' }}" 
                    href="#" onclick="toggleSubmenu(this)">
-                    <i class="fas fa-cogs"></i>
-                    <span class="nav-text">Manajemen</span>
+                    <i class="fas fa-user-graduate text-success"></i>
+                    <span class="nav-text">Manajemen Siswa</span>
                 </a>
-                <ul class="submenu {{ request()->routeIs('admin.attendance.*') || request()->routeIs('admin.student-attendance.*') || request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.users.*') ? 'show' : '' }}">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.attendance.index') ? 'active' : '' }}" 
-                           href="{{ route('admin.attendance.index') }}">
-                            <i class="fas fa-users"></i>
-                            <span class="nav-text">Manajemen Absensi Pegawai</span>
-                        </a>
-                    </li>
-                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.student-attendance.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.student-attendance.index') }}">
-                            <i class="fas fa-user-graduate"></i>
-                            <span class="nav-text">Manajemen Absensi Siswa</span>
-                        </a>
-                    </li>
-                    @endif
-                    
-                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
+                <ul class="submenu {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.student-attendance.*') ? 'show' : '' }}">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}" 
                            href="{{ route('admin.students.index') }}">
-                            <i class="fas fa-user-graduate"></i>
-                            <span class="nav-text">Manajemen Siswa</span>
+                            <i class="fas fa-users text-success"></i>
+                            <span class="nav-text">Data Siswa</span>
                         </a>
                     </li>
-                    @endif
-                    
                     @if(auth()->user()->hasRole('Admin'))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.classrooms.*') ? 'active' : '' }}" 
                            href="{{ route('admin.classrooms.index') }}">
-                            <i class="fas fa-chalkboard"></i>
+                            <i class="fas fa-chalkboard text-success"></i>
                             <span class="nav-text">Manajemen Kelas</span>
                         </a>
                     </li>
                     @endif
-                    
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.student-attendance.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.student-attendance.index') }}">
+                            <i class="fas fa-calendar-check text-success"></i>
+                            <span class="nav-text">Absensi Siswa</span>
+                        </a>
+                    </li>
+                    @if(auth()->user()->hasRole('Guru'))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.students.my-class') ? 'active' : '' }}" 
+                           href="{{ route('admin.students.my-class') }}">
+                            <i class="fas fa-chalkboard-teacher text-success"></i>
+                            <span class="nav-text">Kelas Saya</span>
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </li>
+            @endif
+            
+            <!-- Manajemen Staff (ISO 21001:2018) -->
+            <li class="nav-item has-submenu {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.leaves.*') ? 'open' : '' }}">
+                <a class="nav-link {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.leaves.*') ? 'active' : '' }}" 
+                   href="#" onclick="toggleSubmenu(this)">
+                    <i class="fas fa-user-tie text-info"></i>
+                    <span class="nav-text">Manajemen Staff</span>
+                </a>
+                <ul class="submenu {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.leaves.*') ? 'show' : '' }}">
+                    @if(auth()->user()->hasRole('Admin'))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.users.index') }}">
+                            <i class="fas fa-users text-info"></i>
+                            <span class="nav-text">Data Staff</span>
+                        </a>
+                    </li>
+                    @endif
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.attendance.index') ? 'active' : '' }}" 
+                           href="{{ route('admin.attendance.index') }}">
+                            <i class="fas fa-calendar-check text-info"></i>
+                            <span class="nav-text">Absensi Staff</span>
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.leaves.*') ? 'active' : '' }} position-relative" 
                            href="{{ route('admin.leaves.index') }}">
-                            <i class="fas fa-calendar-times"></i>
+                            <i class="fas fa-calendar-times text-info"></i>
                             <span class="nav-text">Manajemen Izin</span>
                             @if((auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah')) && isset($pendingLeaveNotifications) && $pendingLeaveNotifications->count() > 0)
                             <span class="badge bg-danger">
@@ -585,76 +773,137 @@
                             @endif
                         </a>
                     </li>
-                    
-                    @if(auth()->user()->hasRole('Admin'))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.users.index') }}">
-                            <i class="fas fa-users"></i>
-                            <span class="nav-text">Manajemen Staff</span>
-                        </a>
-                    </li>
-                    @endif
                 </ul>
             </li>
             
-            @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
+            
+            <!-- Laporan & Analitik (ISO 21001:2018) -->
+            @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum') || auth()->user()->hasRole('Guru'))
             <li class="nav-item has-submenu {{ request()->routeIs('admin.reports.*') ? 'open' : '' }}">
                 <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" 
                    href="#" onclick="toggleSubmenu(this)">
-                    <i class="fas fa-chart-bar"></i>
-                    Laporan
+                    <i class="fas fa-chart-line text-purple"></i>
+                    <span class="nav-text">Laporan & Analitik</span>
                 </a>
                 <ul class="submenu {{ request()->routeIs('admin.reports.*') ? 'show' : '' }}">
+                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.reports.index') ? 'active' : '' }}" 
                            href="{{ route('admin.reports.index') }}">
-                            <i class="fas fa-tachometer-alt"></i>
-                            Dashboard Laporan
+                            <i class="fas fa-tachometer-alt text-purple"></i>
+                            <span class="nav-text">Dashboard Laporan</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.reports.attendance') ? 'active' : '' }}" 
                            href="{{ route('admin.reports.attendance') }}">
-                            <i class="fas fa-users"></i>
-                            Kehadiran Pegawai
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.reports.leaves') ? 'active' : '' }}" 
-                           href="{{ route('admin.reports.leaves') }}">
-                            <i class="fas fa-calendar-times"></i>
-                            Izin & Cuti
+                            <i class="fas fa-users text-purple"></i>
+                            <span class="nav-text">Laporan Absensi Staff</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.reports.students') ? 'active' : '' }}" 
                            href="{{ route('admin.reports.students') }}">
-                            <i class="fas fa-user-graduate"></i>
-                            Kehadiran Siswa
+                            <i class="fas fa-user-graduate text-purple"></i>
+                            <span class="nav-text">Laporan Absensi Siswa</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.leaves') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.leaves') }}">
+                            <i class="fas fa-calendar-times text-purple"></i>
+                            <span class="nav-text">Laporan Izin & Cuti</span>
+                        </a>
+                    </li>
+                    @endif
+                    
+                    @if(auth()->user()->hasRole('Kepala Sekolah'))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.comprehensive') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.comprehensive') }}">
+                            <i class="fas fa-chart-bar text-purple"></i>
+                            <span class="nav-text">Laporan Komprehensif</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.strategic') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.strategic') }}">
+                            <i class="fas fa-chart-line text-purple"></i>
+                            <span class="nav-text">Laporan Strategis</span>
+                        </a>
+                    </li>
+                    @endif
+                    
+                    @if(auth()->user()->hasRole('Guru'))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.my-students') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.my-students') }}">
+                            <i class="fas fa-user-graduate text-purple"></i>
+                            <span class="nav-text">Laporan Siswa Saya</span>
+                        </a>
+                    </li>
+                    @endif
+                    
+                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="alert('Laporan Kepatuhan - Segera Hadir!')">
+                            <i class="fas fa-clipboard-check text-purple"></i>
+                            <span class="nav-text">Laporan Kepatuhan</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="alert('Pusat Export Data - Segera Hadir!')">
+                            <i class="fas fa-download text-purple"></i>
+                            <span class="nav-text">Pusat Export Data</span>
+                        </a>
+                    </li>
+                    @endif
                 </ul>
             </li>
             @endif
             
+            <!-- Administrasi Sistem (ISO 21001:2018) -->
             @if(auth()->user()->hasRole('Admin'))
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.attendance.qr') ? 'active' : '' }}" 
-                   href="{{ route('admin.attendance.qr') }}">
-                    <i class="fas fa-qrcode"></i>
-                    Kelola QR Code
+            <li class="nav-item has-submenu {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.audit.*') || request()->routeIs('admin.attendance.qr') ? 'open' : '' }}">
+                <a class="nav-link {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.audit.*') || request()->routeIs('admin.attendance.qr') ? 'active' : '' }}" 
+                   href="#" onclick="toggleSubmenu(this)">
+                    <i class="fas fa-cogs text-secondary"></i>
+                    <span class="nav-text">Administrasi Sistem</span>
                 </a>
-            </li>
-            @endif
-            
-            @if(auth()->user()->hasRole('Admin'))
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
-                   href="{{ route('admin.settings.index') }}">
-                    <i class="fas fa-cog"></i>
-                    Pengaturan
-                </a>
+                <ul class="submenu {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.audit.*') || request()->routeIs('admin.attendance.qr') ? 'show' : '' }}">
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.settings.index') }}">
+                            <i class="fas fa-cog text-secondary"></i>
+                            <span class="nav-text">Pengaturan Sistem</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.attendance.qr') ? 'active' : '' }}" 
+                           href="{{ route('admin.attendance.qr') }}">
+                            <i class="fas fa-qrcode text-secondary"></i>
+                            <span class="nav-text">Kelola QR Code</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="alert('Manajemen Pengguna - Segera Hadir!')">
+                            <i class="fas fa-user-shield text-secondary"></i>
+                            <span class="nav-text">Manajemen Pengguna</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="alert('Manajemen Role & Izin - Segera Hadir!')">
+                            <i class="fas fa-key text-secondary"></i>
+                            <span class="nav-text">Role & Izin</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="alert('Log Audit - Segera Hadir!')">
+                            <i class="fas fa-history text-secondary"></i>
+                            <span class="nav-text">Log Audit</span>
+                        </a>
+                    </li>
+                </ul>
             </li>
             @endif
         </ul>
@@ -805,36 +1054,73 @@
         }
         
         
-        // Initialize submenu state on page load
+        // Initialize submenu state on page load (ISO 21001:2018 Structure)
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if any submenu should be open based on current route
             const currentRoute = window.location.pathname;
             
-            // Check for Manajemen submenu (main category)
-            if (currentRoute.includes('/admin/attendance') || currentRoute.includes('/admin/student-attendance') || 
-                currentRoute.includes('/admin/students') || currentRoute.includes('/admin/classrooms') || 
-                currentRoute.includes('/admin/leaves') || currentRoute.includes('/admin/users')) {
-                const manajemenNavItem = document.querySelector('.nav-item.has-submenu:first-of-type');
-                const manajemenSubmenu = manajemenNavItem?.querySelector('.submenu');
+            // Student Management submenu
+            if (currentRoute.includes('/admin/students') || currentRoute.includes('/admin/classrooms') || 
+                currentRoute.includes('/admin/student-attendance')) {
+                const studentNavItem = document.querySelector('.nav-item.has-submenu:nth-of-type(2)');
+                const studentSubmenu = studentNavItem?.querySelector('.submenu');
                 
-                if (manajemenNavItem && !manajemenNavItem.classList.contains('open')) {
-                    manajemenNavItem.classList.add('open');
-                    if (manajemenSubmenu && !manajemenSubmenu.classList.contains('show')) {
-                        manajemenSubmenu.classList.add('show');
+                if (studentNavItem && !studentNavItem.classList.contains('open')) {
+                    studentNavItem.classList.add('open');
+                    if (studentSubmenu && !studentSubmenu.classList.contains('show')) {
+                        studentSubmenu.classList.add('show');
                     }
                 }
             }
             
-            // Check for Reports submenu
-            if (currentRoute.includes('/admin/reports')) {
-                const reportNavItems = document.querySelectorAll('.nav-item.has-submenu');
-                const reportNavItem = reportNavItems[reportNavItems.length - 1]; // Last submenu is Reports
-                const reportSubmenu = reportNavItem?.querySelector('.submenu');
+            // Staff Management submenu
+            if (currentRoute.includes('/admin/users') || currentRoute.includes('/admin/attendance') || 
+                currentRoute.includes('/admin/leaves')) {
+                const staffNavItem = document.querySelector('.nav-item.has-submenu:nth-of-type(3)');
+                const staffSubmenu = staffNavItem?.querySelector('.submenu');
                 
-                if (reportNavItem && !reportNavItem.classList.contains('open')) {
-                    reportNavItem.classList.add('open');
-                    if (reportSubmenu && !reportSubmenu.classList.contains('show')) {
-                        reportSubmenu.classList.add('show');
+                if (staffNavItem && !staffNavItem.classList.contains('open')) {
+                    staffNavItem.classList.add('open');
+                    if (staffSubmenu && !staffSubmenu.classList.contains('show')) {
+                        staffSubmenu.classList.add('show');
+                    }
+                }
+            }
+            
+            // Attendance Monitoring submenu
+            if (currentRoute.includes('/admin/attendance/qr') || currentRoute.includes('/admin/attendance/monitor')) {
+                const monitoringNavItem = document.querySelector('.nav-item.has-submenu:nth-of-type(4)');
+                const monitoringSubmenu = monitoringNavItem?.querySelector('.submenu');
+                
+                if (monitoringNavItem && !monitoringNavItem.classList.contains('open')) {
+                    monitoringNavItem.classList.add('open');
+                    if (monitoringSubmenu && !monitoringSubmenu.classList.contains('show')) {
+                        monitoringSubmenu.classList.add('show');
+                    }
+                }
+            }
+            
+            // Reports & Analytics submenu
+            if (currentRoute.includes('/admin/reports')) {
+                const reportsNavItem = document.querySelector('.nav-item.has-submenu:nth-of-type(5)');
+                const reportsSubmenu = reportsNavItem?.querySelector('.submenu');
+                
+                if (reportsNavItem && !reportsNavItem.classList.contains('open')) {
+                    reportsNavItem.classList.add('open');
+                    if (reportsSubmenu && !reportsSubmenu.classList.contains('show')) {
+                        reportsSubmenu.classList.add('show');
+                    }
+                }
+            }
+            
+            // System Administration submenu
+            if (currentRoute.includes('/admin/settings') || currentRoute.includes('/admin/audit')) {
+                const adminNavItem = document.querySelector('.nav-item.has-submenu:nth-of-type(6)');
+                const adminSubmenu = adminNavItem?.querySelector('.submenu');
+                
+                if (adminNavItem && !adminNavItem.classList.contains('open')) {
+                    adminNavItem.classList.add('open');
+                    if (adminSubmenu && !adminSubmenu.classList.contains('show')) {
+                        adminSubmenu.classList.add('show');
                     }
                 }
             }

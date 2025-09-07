@@ -85,6 +85,7 @@ Route::prefix('admin')->group(function () {
             Route::get('/detail/{userId}/{date}', [AttendanceController::class, 'detail'])->name('detail');
             Route::post('/leave/{leaveId}/approve', [AttendanceController::class, 'approveLeave'])->name('leave.approve')->middleware('role:Admin,Kepala Sekolah,Waka Kurikulum');
             Route::post('/leave/{leaveId}/reject', [AttendanceController::class, 'rejectLeave'])->name('leave.reject')->middleware('role:Admin,Kepala Sekolah,Waka Kurikulum');
+            Route::get('/monitor', [AttendanceController::class, 'monitor'])->name('monitor');
         });
         
         // Student Attendance Management - accessible by Admin, Guru, Kepala Sekolah, Waka Kurikulum
@@ -110,9 +111,9 @@ Route::prefix('admin')->group(function () {
             Route::get('/create', [StudentController::class, 'create'])->name('create');
             Route::post('/', [StudentController::class, 'store'])->name('store');
             Route::get('/import', [StudentController::class, 'showImport'])->name('import');
+            Route::get('/import/template', [StudentController::class, 'downloadTemplate'])->name('import.template');
             Route::post('/import/preview', [StudentController::class, 'previewImport'])->name('import.preview');
             Route::post('/import/process', [StudentController::class, 'processImport'])->name('import.process');
-            Route::get('/template/download', [StudentController::class, 'downloadTemplate'])->name('template.download');
             Route::get('/attendance', [StudentController::class, 'attendance'])->name('attendance');
             Route::get('/{student}', [StudentController::class, 'show'])->name('show');
             Route::get('/{student}/edit', [StudentController::class, 'edit'])->name('edit');
@@ -128,6 +129,37 @@ Route::prefix('admin')->group(function () {
             Route::get('/leaves', [ReportController::class, 'leaves'])->name('leaves');
             Route::get('/students', [ReportController::class, 'students'])->name('students');
             Route::get('/export/{type}', [ReportController::class, 'export'])->name('export');
+            
+            // Export routes
+            Route::get('/attendance/export/excel', [ReportController::class, 'attendanceExportExcel'])->name('attendance.export.excel');
+            Route::get('/attendance/export/pdf', [ReportController::class, 'attendanceExportPdf'])->name('attendance.export.pdf');
+            Route::get('/leaves/export/excel', [ReportController::class, 'leavesExportExcel'])->name('leaves.export.excel');
+            Route::get('/leaves/export/pdf', [ReportController::class, 'leavesExportPdf'])->name('leaves.export.pdf');
+            Route::get('/students/export/excel', [ReportController::class, 'studentsExportExcel'])->name('students.export.excel');
+            Route::get('/students/export/pdf', [ReportController::class, 'studentsExportPdf'])->name('students.export.pdf');
+        });
+        
+        // Additional routes for Kepala Sekolah
+        Route::middleware('role:Kepala Sekolah')->group(function () {
+            // Strategic reports for Kepala Sekolah
+            Route::get('/reports/strategic', [ReportController::class, 'strategic'])->name('admin.reports.strategic');
+            
+            // Enhanced leave management for Kepala Sekolah
+            Route::post('/leaves/{leave}/approve', [LeaveController::class, 'approve'])->name('admin.leaves.approve');
+            Route::post('/leaves/{leave}/reject', [LeaveController::class, 'reject'])->name('admin.leaves.reject');
+        });
+        
+        // Additional routes for Guru
+        Route::middleware('role:Guru')->group(function () {
+            // Class-specific reports for Guru
+            Route::get('/reports/class/{classId}', [ReportController::class, 'classReport'])->name('admin.reports.class');
+            Route::get('/reports/my-students', [ReportController::class, 'myStudentsReport'])->name('admin.reports.my-students');
+            Route::get('/reports/my-students/export/excel', [ReportController::class, 'myStudentsExportExcel'])->name('admin.reports.my-students.excel');
+            Route::get('/reports/my-students/export/pdf', [ReportController::class, 'myStudentsExportPdf'])->name('admin.reports.my-students.pdf');
+            
+            // Enhanced student management for Guru
+            Route::get('/students/class/{classId}', [StudentController::class, 'classStudents'])->name('admin.students.class');
+            Route::get('/students/my-class', [StudentController::class, 'myClassStudents'])->name('admin.students.my-class');
         });
         
         // Settings - Admin only

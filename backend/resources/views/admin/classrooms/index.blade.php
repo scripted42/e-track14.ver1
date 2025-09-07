@@ -166,10 +166,22 @@
             @endif
             
             @if(isset($classRooms) && $classRooms->count())
+                <!-- Total Records Info -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Menampilkan {{ $classRooms->firstItem() ?? 0 }} - {{ $classRooms->lastItem() ?? 0 }} dari {{ $classRooms->total() }} total kelas
+                    </div>
+                    <div class="text-muted">
+                        Halaman {{ $classRooms->currentPage() }} dari {{ $classRooms->lastPage() }}
+                    </div>
+                </div>
+                
                 <div class="table-responsive">
                     <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
+                                <th width="50" class="text-center">No</th>
                                 <th>Nama Kelas</th>
                                 <th>Tingkat</th>
                                 <th>Walikelas</th>
@@ -179,8 +191,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($classRooms as $classroom)
+                            @foreach($classRooms as $index => $classroom)
                             <tr>
+                                <td class="text-center">
+                                    {{ $classRooms->firstItem() + $index }}
+                                </td>
                                 <td>
                                     <div class="fw-semibold">{{ $classroom->name }}</div>
                                     @if($classroom->description)
@@ -236,7 +251,22 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3 d-flex justify-content-center">{{ $classRooms->links('pagination::bootstrap-4') }}</div>
+                <!-- Enhanced Pagination -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-list me-1"></i>
+                                Total: {{ $classRooms->total() }} kelas | 
+                                Per halaman: {{ $classRooms->perPage() }} | 
+                                Halaman {{ $classRooms->currentPage() }} dari {{ $classRooms->lastPage() }}
+                            </small>
+                        </div>
+                        <div>
+                            {{ $classRooms->appends(request()->query())->links('pagination::bootstrap-4') }}
+                        </div>
+                    </div>
+                </div>
             @else
                 <div class="text-center py-5">
                     <i class="fas fa-chalkboard fa-3x text-muted mb-3"></i>

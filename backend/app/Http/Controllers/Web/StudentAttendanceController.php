@@ -496,12 +496,18 @@ class StudentAttendanceController extends Controller
         $filename = 'student_attendance_' . date('Y-m-d_H-i-s') . '.csv';
 
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0'
         ];
 
         $callback = function () use ($attendanceSummary) {
             $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fwrite($file, "\xEF\xBB\xBF");
 
             // CSV headers
             fputcsv($file, [
@@ -521,8 +527,8 @@ class StudentAttendanceController extends Controller
                 $attendance = $item['attendance'];
                 
                 fputcsv($file, [
-                    $student->name,
-                    $student->nisn,
+                    $student->name ?? 'N/A',
+                    $student->nisn ?? 'N/A',
                     $student->classRoom ? $student->classRoom->name : 'N/A',
                     $attendance ? $attendance['status'] : 'Tidak Hadir',
                     $date,
@@ -542,7 +548,7 @@ class StudentAttendanceController extends Controller
         $user = auth()->user();
         
         // Check permissions
-        if (!$user->hasRole('Admin')) {
+        if (!$user->hasRole('Admin') && !$user->hasRole('Kepala Sekolah') && !$user->hasRole('Waka Kurikulum')) {
             if ($user->hasRole('Guru')) {
                 // Check if guru is walikelas for this student
                 $classIds = $user->classRooms()->pluck('id');

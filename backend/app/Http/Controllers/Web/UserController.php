@@ -255,17 +255,49 @@ class UserController extends Controller
         ]);
 
         try {
-            $import = new StaffImport(true); // Preview mode
-            Excel::import($import, $request->file('file'));
+            \Log::info('Starting preview import...');
+            \Log::info('File info: ', [
+                'name' => $request->file('file')->getClientOriginalName(),
+                'size' => $request->file('file')->getSize(),
+                'mime' => $request->file('file')->getMimeType()
+            ]);
             
-            $previewData = $import->getPreviewData();
+            // Try direct PhpSpreadsheet approach
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+            $spreadsheet = $reader->load($request->file('file')->getPathname());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $data = $worksheet->toArray();
+            
+            \Log::info('Raw spreadsheet data count: ' . count($data));
+            \Log::info('Raw spreadsheet data: ', ['data' => $data]);
+            
+            // Remove header row if exists
+            if (count($data) > 0) {
+                $header = array_shift($data);
+                \Log::info('Header row: ', ['header' => $header]);
+                \Log::info('Data rows count after removing header: ' . count($data));
+            }
+            
+            $previewData = $data;
+            
+            // Validate each row for duplicates and errors
+            $validationResults = $this->validatePreviewData($previewData);
+            
+            // Debug log
+            \Log::info('Preview data count: ' . count($previewData));
+            \Log::info('Preview data sample: ', ['data' => $previewData]);
+            \Log::info('Validation results: ', ['results' => $validationResults]);
             
             return response()->json([
                 'success' => true,
                 'data' => $previewData,
-                'count' => count($previewData)
+                'count' => count($previewData),
+                'validation' => $validationResults
             ]);
         } catch (\Exception $e) {
+            \Log::error('Preview import error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Error reading file: ' . $e->getMessage()
@@ -280,12 +312,49 @@ class UserController extends Controller
         ]);
 
         try {
-            $import = new StaffImport(false); // Import mode
-            Excel::import($import, $request->file('file'));
+            \Log::info('Starting process import...');
+            \Log::info('File info: ', [
+                'name' => $request->file('file')->getClientOriginalName(),
+                'size' => $request->file('file')->getSize(),
+                'mime' => $request->file('file')->getMimeType()
+            ]);
             
-            $successCount = $import->getSuccessCount();
-            $failureCount = $import->getFailureCount();
-            $errors = $import->getErrors();
+            // Use direct PhpSpreadsheet approach
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+            $spreadsheet = $reader->load($request->file('file')->getPathname());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $data = $worksheet->toArray();
+            
+            \Log::info('Raw spreadsheet data count: ' . count($data));
+            
+            // Remove header row if exists
+            if (count($data) > 0) {
+                $header = array_shift($data);
+                \Log::info('Header row: ', ['header' => $header]);
+                \Log::info('Data rows count after removing header: ' . count($data));
+            }
+            
+            $successCount = 0;
+            $failureCount = 0;
+            $errors = [];
+            
+            foreach ($data as $index => $row) {
+                try {
+                    \Log::info('Processing row ' . ($index + 1) . ': ', ['data' => $row]);
+                    $this->createUserFromRow($row);
+                    $successCount++;
+                    \Log::info('Row ' . ($index + 1) . ' processed successfully');
+                } catch (\Exception $e) {
+                    $failureCount++;
+                    $errors[] = [
+                        'row' => $index + 1,
+                        'name' => $row[1] ?? 'Unknown',
+                        'nip' => $row[0] ?? 'Unknown',
+                        'error' => $e->getMessage()
+                    ];
+                    \Log::error('Row ' . ($index + 1) . ' failed: ' . $e->getMessage());
+                }
+            }
             
             $message = "Import selesai! Berhasil: {$successCount}, Gagal: {$failureCount}";
             
@@ -296,12 +365,229 @@ class UserController extends Controller
                 }
             }
             
+            \Log::info('Import completed. Success: ' . $successCount . ', Failure: ' . $failureCount);
+            
             return redirect()->route('admin.users.index')
                 ->with('success', $message);
                 
         } catch (\Exception $e) {
+            \Log::error('Process import error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return redirect()->back()
                 ->with('error', 'Error importing file: ' . $e->getMessage());
         }
+    }
+
+    private function createUserFromRow($row)
+    {
+        \Log::info('Creating user from row: ', ['data' => $row]);
+        
+        // Get role with mapping for common mistakes
+        $roleName = strtolower($row[3]);
+        
+        // Map common role name mistakes
+        $roleMapping = [
+            'petugas' => 'pegawai',
+            'staff' => 'pegawai',
+            'karyawan' => 'pegawai',
+            'employee' => 'pegawai'
+        ];
+        
+        if (isset($roleMapping[$roleName])) {
+            $roleName = $roleMapping[$roleName];
+            \Log::info('Role mapped from ' . $row[3] . ' to ' . $roleName);
+        }
+        
+        $role = \App\Models\Role::where('role_name', $roleName)->first();
+        if (!$role) {
+            throw new \Exception("Peran '{$row[3]}' tidak ditemukan. Peran yang tersedia: Admin, Guru, Pegawai, Siswa, Waka Kurikulum, Kepala Sekolah");
+        }
+
+        // Check for duplicate NIP/NIK
+        if (\App\Models\User::where('nip_nik', $row[0])->exists()) {
+            throw new \Exception("NIP/NIK '{$row[0]}' sudah ada");
+        }
+
+        // Check for duplicate email
+        if (\App\Models\User::where('email', $row[2])->exists()) {
+            throw new \Exception("Email '{$row[2]}' sudah ada");
+        }
+
+        // Prepare user data
+        $userData = [
+            'nip_nik' => $row[0], // NIP/NIK is first column
+            'name' => $row[1], // Nama is second column
+            'email' => $row[2], // Email is third column
+            'role_id' => $role->id,
+            'status' => strtolower($row[4]) === 'aktif' ? 'aktif' : 'non-aktif', // Status is fifth column
+            'address' => $row[5] ?? null, // Alamat is sixth column
+            'password' => \Illuminate\Support\Facades\Hash::make('SMPN14@2024'), // Default password
+            'must_change_password' => true, // Force password change on first login
+        ];
+
+        // Handle photo if provided
+        if (!empty($row[6])) { // Foto is seventh column
+            $userData['photo'] = $row[6];
+        }
+
+        // Create user
+        $user = \App\Models\User::create($userData);
+        \Log::info('User created successfully: ', ['id' => $user->id, 'name' => $user->name]);
+
+        // Handle walikelas assignment
+        if (strtolower($row[3]) === 'guru' && // Peran is fourth column
+            strtolower($row[7]) === 'ya' && // Walikelas is eighth column
+            !empty($row[8])) { // Kelas is ninth column
+            
+            $classRoom = \App\Models\ClassRoom::where('name', $row[8])->first();
+            if ($classRoom) {
+                // Check if class already has walikelas
+                if ($classRoom->walikelas_id) {
+                    throw new \Exception("Kelas '{$row[8]}' sudah memiliki walikelas");
+                }
+                
+                // Assign user as walikelas
+                $classRoom->update(['walikelas_id' => $user->id]);
+                \Log::info('User assigned as walikelas for class: ' . $row[8]);
+            } else {
+                throw new \Exception("Kelas '{$row[8]}' tidak ditemukan");
+            }
+        }
+    }
+
+    private function validatePreviewData($data)
+    {
+        $validationResults = [
+            'valid' => [],
+            'invalid' => [],
+            'duplicates' => [],
+            'summary' => [
+                'total' => count($data),
+                'valid_count' => 0,
+                'invalid_count' => 0,
+                'duplicate_count' => 0
+            ]
+        ];
+
+        foreach ($data as $index => $row) {
+            $rowNumber = $index + 1;
+            $errors = [];
+            $warnings = [];
+
+            // Check if row has minimum required data
+            if (count($row) < 4) {
+                $errors[] = "Data tidak lengkap (minimal 4 kolom)";
+                $validationResults['invalid'][] = [
+                    'row' => $rowNumber,
+                    'data' => $row,
+                    'errors' => $errors,
+                    'warnings' => $warnings
+                ];
+                $validationResults['summary']['invalid_count']++;
+                continue;
+            }
+
+            $nipNik = $row[0] ?? '';
+            $name = $row[1] ?? '';
+            $email = $row[2] ?? '';
+            $role = $row[3] ?? '';
+
+            // Validate NIP/NIK
+            if (empty($nipNik)) {
+                $errors[] = "NIP/NIK tidak boleh kosong";
+            } else {
+                // Check for duplicate NIP/NIK in database
+                $existingUser = \App\Models\User::where('nip_nik', $nipNik)->first();
+                if ($existingUser) {
+                    $warnings[] = "NIP/NIK '{$nipNik}' sudah ada di database (User: {$existingUser->name})";
+                    $validationResults['duplicates'][] = [
+                        'row' => $rowNumber,
+                        'data' => $row,
+                        'type' => 'nip_nik',
+                        'existing_user' => $existingUser->name,
+                        'existing_email' => $existingUser->email
+                    ];
+                }
+            }
+
+            // Validate Name
+            if (empty($name)) {
+                $errors[] = "Nama tidak boleh kosong";
+            }
+
+            // Validate Email
+            if (empty($email)) {
+                $errors[] = "Email tidak boleh kosong";
+            } else {
+                // Check for duplicate email in database
+                $existingUser = \App\Models\User::where('email', $email)->first();
+                if ($existingUser) {
+                    $warnings[] = "Email '{$email}' sudah ada di database (User: {$existingUser->name})";
+                    $validationResults['duplicates'][] = [
+                        'row' => $rowNumber,
+                        'data' => $row,
+                        'type' => 'email',
+                        'existing_user' => $existingUser->name,
+                        'existing_nip' => $existingUser->nip_nik
+                    ];
+                }
+            }
+
+            // Validate Role
+            if (empty($role)) {
+                $errors[] = "Peran tidak boleh kosong";
+            } else {
+                // Map common role name mistakes
+                $roleName = strtolower($role);
+                $roleMapping = [
+                    'petugas' => 'pegawai',
+                    'staff' => 'pegawai',
+                    'karyawan' => 'pegawai',
+                    'employee' => 'pegawai'
+                ];
+                
+                if (isset($roleMapping[$roleName])) {
+                    $roleName = $roleMapping[$roleName];
+                }
+                
+                $existingRole = \App\Models\Role::where('role_name', $roleName)->first();
+                if (!$existingRole) {
+                    $errors[] = "Peran '{$role}' tidak ditemukan. Peran yang tersedia: Admin, Guru, Pegawai, Siswa, Waka Kurikulum, Kepala Sekolah";
+                }
+            }
+
+            // Check for duplicates within the same file
+            foreach ($data as $otherIndex => $otherRow) {
+                if ($index !== $otherIndex && count($otherRow) >= 4) {
+                    if (!empty($nipNik) && !empty($otherRow[0]) && $nipNik === $otherRow[0]) {
+                        $warnings[] = "NIP/NIK '{$nipNik}' duplikat dalam file yang sama (Baris " . ($otherIndex + 1) . ")";
+                    }
+                    if (!empty($email) && !empty($otherRow[2]) && $email === $otherRow[2]) {
+                        $warnings[] = "Email '{$email}' duplikat dalam file yang sama (Baris " . ($otherIndex + 1) . ")";
+                    }
+                }
+            }
+
+            // Categorize the row
+            if (count($errors) > 0) {
+                $validationResults['invalid'][] = [
+                    'row' => $rowNumber,
+                    'data' => $row,
+                    'errors' => $errors,
+                    'warnings' => $warnings
+                ];
+                $validationResults['summary']['invalid_count']++;
+            } else {
+                $validationResults['valid'][] = [
+                    'row' => $rowNumber,
+                    'data' => $row,
+                    'warnings' => $warnings
+                ];
+                $validationResults['summary']['valid_count']++;
+            }
+        }
+
+        return $validationResults;
     }
 }

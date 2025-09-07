@@ -182,10 +182,22 @@
             @endif
             
             @if(isset($leaves) && $leaves->count())
+                <!-- Total Records Info -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Menampilkan {{ $leaves->firstItem() ?? 0 }} - {{ $leaves->lastItem() ?? 0 }} dari {{ $leaves->total() }} total pengajuan
+                    </div>
+                    <div class="text-muted">
+                        Halaman {{ $leaves->currentPage() }} dari {{ $leaves->lastPage() }}
+                    </div>
+                </div>
+                
                 <div class="table-responsive">
                     <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
+                                <th width="50" class="text-center">No</th>
                                 <th>Tanggal Pengajuan</th>
                                 <th>Pegawai</th>
                                 <th>Tipe</th>
@@ -197,8 +209,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($leaves as $leave)
+                            @foreach($leaves as $index => $leave)
                             <tr>
+                                <td class="text-center">
+                                    {{ $leaves->firstItem() + $index }}
+                                </td>
                                 <td>
                                     <div class="fw-semibold">
                                         {{ \Carbon\Carbon::parse($leave->created_at)->format('d M Y') }}
@@ -275,7 +290,22 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3 d-flex justify-content-center">{{ $leaves->links('pagination::bootstrap-4') }}</div>
+                <!-- Enhanced Pagination -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-list me-1"></i>
+                                Total: {{ $leaves->total() }} pengajuan | 
+                                Per halaman: {{ $leaves->perPage() }} | 
+                                Halaman {{ $leaves->currentPage() }} dari {{ $leaves->lastPage() }}
+                            </small>
+                        </div>
+                        <div>
+                            {{ $leaves->appends(request()->query())->links('pagination::bootstrap-4') }}
+                        </div>
+                    </div>
+                </div>
             @else
                 <div class="text-center py-5">
                     <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>

@@ -18,7 +18,7 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Maatwebsite\Excel\Concerns\Importable;
 
-class StaffImport implements ToCollection, WithHeadingRow, WithValidation, SkipsOnError, SkipsOnFailure, WithBatchInserts, WithChunkReading
+class StaffImport implements ToCollection, WithValidation, SkipsOnError, SkipsOnFailure, WithBatchInserts, WithChunkReading
 {
     use Importable;
 
@@ -36,7 +36,24 @@ class StaffImport implements ToCollection, WithHeadingRow, WithValidation, Skips
     public function collection(Collection $rows)
     {
         if ($this->previewMode) {
+            \Log::info('Collection received in preview mode, rows count: ' . $rows->count());
+            \Log::info('Collection type: ' . get_class($rows));
+            \Log::info('Collection empty: ' . ($rows->isEmpty() ? 'true' : 'false'));
+            
+            // Debug: Check if rows is actually empty or has data
+            \Log::info('Collection toArray: ', ['data' => $rows->toArray()]);
+            \Log::info('Collection keys: ', ['keys' => $rows->keys()->toArray()]);
+            
+            if ($rows->count() > 0) {
+                \Log::info('First row sample: ', ['data' => $rows->first()->toArray()]);
+                \Log::info('All rows data: ', ['data' => $rows->toArray()]);
+            } else {
+                \Log::info('No rows found in Excel file');
+                \Log::info('This might be due to Excel file structure or format');
+            }
+            
             $this->previewData = $rows->toArray();
+            \Log::info('Preview data set: ', ['count' => count($this->previewData)]);
             return;
         }
 
@@ -59,57 +76,57 @@ class StaffImport implements ToCollection, WithHeadingRow, WithValidation, Skips
     private function createUser($row)
     {
         // Get role
-        $role = Role::where('role_name', strtolower($row['peran']))->first();
+        $role = Role::where('role_name', strtolower($row[3]))->first();
         if (!$role) {
-            throw new \Exception("Peran '{$row['peran']}' tidak ditemukan");
+            throw new \Exception("Peran '{$row[3]}' tidak ditemukan");
         }
 
         // Check for duplicate NIP/NIK
-        if (User::where('nip_nik', $row['nip_nik'])->exists()) {
-            throw new \Exception("NIP/NIK '{$row['nip_nik']}' sudah ada");
+        if (User::where('nip_nik', $row[0])->exists()) {
+            throw new \Exception("NIP/NIK '{$row[0]}' sudah ada");
         }
 
         // Check for duplicate email
-        if (User::where('email', $row['email'])->exists()) {
-            throw new \Exception("Email '{$row['email']}' sudah ada");
+        if (User::where('email', $row[2])->exists()) {
+            throw new \Exception("Email '{$row[2]}' sudah ada");
         }
 
         // Prepare user data
         $userData = [
-            'nip_nik' => $row['nip_nik'],
-            'name' => $row['nama'],
-            'email' => $row['email'],
+            'nip_nik' => $row[0], // NIP/NIK is first column
+            'name' => $row[1], // Nama is second column
+            'email' => $row[2], // Email is third column
             'role_id' => $role->id,
-            'status' => strtolower($row['status']) === 'aktif' ? 'aktif' : 'non-aktif',
-            'address' => $row['alamat'] ?? null,
+            'status' => strtolower($row[4]) === 'aktif' ? 'aktif' : 'non-aktif', // Status is fifth column
+            'address' => $row[5] ?? null, // Alamat is sixth column
             'password' => Hash::make('SMPN14@2024'), // Default password
             'must_change_password' => true, // Force password change on first login
         ];
 
         // Handle photo if provided
-        if (!empty($row['foto'])) {
-            $userData['photo'] = $row['foto'];
+        if (!empty($row[6])) { // Foto is seventh column
+            $userData['photo'] = $row[6];
         }
 
         // Create user
         $user = User::create($userData);
 
         // Handle walikelas assignment
-        if (strtolower($row['peran']) === 'guru' && 
-            strtolower($row['walikelas']) === 'ya' && 
-            !empty($row['kelas'])) {
+        if (strtolower($row[3]) === 'guru' && // Peran is fourth column
+            strtolower($row[7]) === 'ya' && // Walikelas is eighth column
+            !empty($row[8])) { // Kelas is ninth column
             
-            $classRoom = ClassRoom::where('name', $row['kelas'])->first();
+            $classRoom = ClassRoom::where('name', $row[8])->first();
             if ($classRoom) {
                 // Check if class already has walikelas
                 if ($classRoom->walikelas_id) {
-                    throw new \Exception("Kelas '{$row['kelas']}' sudah memiliki walikelas");
+                    throw new \Exception("Kelas '{$row[8]}' sudah memiliki walikelas");
                 }
                 
                 // Assign user as walikelas
                 $classRoom->update(['walikelas_id' => $user->id]);
             } else {
-                throw new \Exception("Kelas '{$row['kelas']}' tidak ditemukan");
+                throw new \Exception("Kelas '{$row[8]}' tidak ditemukan");
             }
         }
     }
@@ -117,30 +134,30 @@ class StaffImport implements ToCollection, WithHeadingRow, WithValidation, Skips
     public function rules(): array
     {
         return [
-            'nip_nik' => 'required|string|max:20',
-            'nama' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'peran' => 'required|string|in:Admin,Guru,Kepala Sekolah',
-            'status' => 'required|string|in:Aktif,Non-Aktif',
-            'alamat' => 'nullable|string',
-            'foto' => 'nullable|string',
-            'walikelas' => 'nullable|string|in:Ya,Tidak',
-            'kelas' => 'nullable|string',
+            '0' => 'required|string|max:20', // NIP/NIK
+            '1' => 'required|string|max:255', // Nama
+            '2' => 'required|email|max:255', // Email
+            '3' => 'required|string|in:Admin,Guru,Kepala Sekolah,Pegawai', // Peran
+            '4' => 'required|string|in:Aktif,Non-Aktif', // Status
+            '5' => 'nullable|string', // Alamat
+            '6' => 'nullable|string', // Foto
+            '7' => 'nullable|string|in:Ya,Tidak', // Walikelas
+            '8' => 'nullable|string', // Kelas
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            'nip_nik.required' => 'NIP/NIK wajib diisi',
-            'nama.required' => 'Nama wajib diisi',
-            'email.required' => 'Email wajib diisi',
-            'email.email' => 'Format email tidak valid',
-            'peran.required' => 'Peran wajib diisi',
-            'peran.in' => 'Peran harus Admin, Guru, atau Kepala Sekolah',
-            'status.required' => 'Status wajib diisi',
-            'status.in' => 'Status harus Aktif atau Non-Aktif',
-            'walikelas.in' => 'Walikelas harus Ya atau Tidak',
+            '0.required' => 'NIP/NIK wajib diisi',
+            '1.required' => 'Nama wajib diisi',
+            '2.required' => 'Email wajib diisi',
+            '2.email' => 'Format email tidak valid',
+            '3.required' => 'Peran wajib diisi',
+            '3.in' => 'Peran harus Admin, Guru, Kepala Sekolah, atau Pegawai',
+            '4.required' => 'Status wajib diisi',
+            '4.in' => 'Status harus Aktif atau Non-Aktif',
+            '7.in' => 'Walikelas harus Ya atau Tidak',
         ];
     }
 

@@ -232,7 +232,6 @@
     margin-bottom: 1rem;
 }
 </style>
-@endpush
 
 @section('content')
 <div class="container-fluid">
@@ -277,7 +276,7 @@
             </div>
             
             <div class="text-center mb-3">
-                <a href="{{ route('admin.students.template.download') }}" class="btn btn-template">
+                <a href="{{ route('admin.students.import.template') }}" class="btn btn-template">
                     <i class="fas fa-download me-2"></i>Download Template Excel
                 </a>
             </div>
@@ -291,7 +290,7 @@
                     <h5>Drag & Drop file Excel di sini</h5>
                     <p class="text-muted mb-3">atau klik untuk memilih file</p>
                     <input type="file" id="fileInput" name="file" accept=".xlsx,.xls" style="display: none;">
-                    <button type="button" class="btn btn-outline-success" onclick="document.getElementById('fileInput').click()">
+                    <button type="button" class="btn btn-outline-success" id="selectFileBtn">
                         <i class="fas fa-folder-open me-2"></i>Pilih File
                     </button>
                 </div>
@@ -369,20 +368,49 @@
 <script>
 let currentStep = 1;
 let previewData = [];
+let validationResults = null;
 let fileData = null;
 
+// Function to attach upload listeners
+function attachUploadListeners() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const previewBtn = document.getElementById('previewBtn');
+    
+    if (!uploadArea) {
+        console.error('Upload area not found');
+        return;
+    }
+    
+    if (!fileInput) {
+        console.error('File input not found');
+        return;
+    }
+    
+    if (!previewBtn) {
+        console.error('Preview button not found');
+        return;
+    }
+
 // File upload handling
-document.getElementById('fileInput').addEventListener('change', function(e) {
+    fileInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
+            // Validate file type
+            if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                file.type === 'application/vnd.ms-excel' ||
+                file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
         fileData = file;
-        document.getElementById('previewBtn').disabled = false;
+                previewBtn.disabled = false;
         updateUploadArea(file.name);
+            } else {
+                alert('Silakan pilih file Excel (.xlsx atau .xls)');
+                this.value = ''; // Clear the input
+            }
     }
 });
 
 // Drag and drop handling
-const uploadArea = document.getElementById('uploadArea');
 uploadArea.addEventListener('dragover', function(e) {
     e.preventDefault();
     uploadArea.classList.add('dragover');
@@ -401,28 +429,126 @@ uploadArea.addEventListener('drop', function(e) {
     if (files.length > 0) {
         const file = files[0];
         if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-            file.type === 'application/vnd.ms-excel') {
+                file.type === 'application/vnd.ms-excel' ||
+                file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
             fileData = file;
-            document.getElementById('fileInput').files = files;
-            document.getElementById('previewBtn').disabled = false;
+                fileInput.files = files;
+                previewBtn.disabled = false;
             updateUploadArea(file.name);
         } else {
             alert('Silakan pilih file Excel (.xlsx atau .xls)');
         }
     }
 });
+    
+    // Initial select file button
+    const selectFileBtn = document.getElementById('selectFileBtn');
+    if (selectFileBtn) {
+        selectFileBtn.addEventListener('click', function() {
+            fileInput.click();
+        });
+    }
+}
+
+// Initialize upload listeners
+attachUploadListeners();
 
 function updateUploadArea(fileName) {
+    const uploadArea = document.getElementById('uploadArea');
+    if (uploadArea) {
+        // Get the file input element before replacing innerHTML
+        const fileInput = document.getElementById('fileInput');
+        console.log('File input before update:', fileInput);
+        
     uploadArea.innerHTML = `
         <div class="upload-icon">
             <i class="fas fa-file-excel text-success"></i>
         </div>
         <h5>File terpilih: ${fileName}</h5>
         <p class="text-muted mb-3">Klik "Preview Data" untuk melanjutkan</p>
-        <button type="button" class="btn btn-outline-success" onclick="document.getElementById('fileInput').click()">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary" id="changeFileBtn">
             <i class="fas fa-folder-open me-2"></i>Ganti File
         </button>
-    `;
+                <button type="button" class="btn btn-outline-danger" id="removeFileBtn">
+                    <i class="fas fa-trash me-2"></i>Hapus File
+                </button>
+            </div>
+        `;
+        
+        // Re-add the file input to the upload area
+        if (fileInput) {
+            uploadArea.appendChild(fileInput);
+            console.log('File input re-added to upload area');
+        } else {
+            console.error('File input not found to re-add');
+        }
+        
+        // Attach event listeners to new buttons
+        const changeFileBtn = document.getElementById('changeFileBtn');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+        
+        if (changeFileBtn) {
+            changeFileBtn.addEventListener('click', changeFile);
+        } else {
+            console.error('Change file button not found');
+        }
+        
+        if (removeFileBtn) {
+            removeFileBtn.addEventListener('click', removeFile);
+        } else {
+            console.error('Remove file button not found');
+        }
+    }
+}
+
+function changeFile() {
+    console.log('Change file clicked');
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.click();
+    } else {
+        console.error('File input not found');
+    }
+}
+
+function removeFile() {
+    console.log('Remove file clicked');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const previewBtn = document.getElementById('previewBtn');
+    
+    if (uploadArea) {
+        uploadArea.innerHTML = `
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt text-muted"></i>
+            </div>
+            <h5>Drag & Drop file Excel di sini</h5>
+            <p class="text-muted mb-3">atau klik untuk memilih file</p>
+            <button type="button" class="btn btn-outline-success" id="selectFileBtn">
+                <i class="fas fa-folder-open me-2"></i>Pilih File
+            </button>
+        `;
+        
+        // Re-add the file input to the upload area
+        if (fileInput) {
+            uploadArea.appendChild(fileInput);
+            console.log('File input re-added to upload area');
+        } else {
+            console.error('File input not found to re-add');
+        }
+        
+        // Re-attach event listeners
+        attachUploadListeners();
+    }
+    
+    if (previewBtn) {
+        previewBtn.disabled = true;
+    }
+    
+    fileData = null;
+    previewData = [];
+    validationResults = null;
 }
 
 // Form submission for preview
@@ -440,20 +566,47 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
 function previewData() {
     const formData = new FormData();
     formData.append('file', fileData);
-    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (csrfToken) {
+        formData.append('_token', csrfToken.getAttribute('content'));
+    } else {
+        console.error('CSRF token not found');
+        return;
+    }
     
     // Show loading
-    document.getElementById('previewBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
-    document.getElementById('previewBtn').disabled = true;
+    const previewBtn = document.getElementById('previewBtn');
+    if (previewBtn) {
+        previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+        previewBtn.disabled = true;
+    } else {
+        console.error('Preview button not found');
+        return;
+    }
     
     fetch('{{ route("admin.students.import.preview") }}', {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Preview response:', data);
+        console.log('Data success:', data.success);
+        console.log('Data count:', data.count);
+        console.log('Data array:', data.data);
+        console.log('Validation results:', data.validation);
+        
         if (data.success) {
             previewData = data.data;
+            validationResults = data.validation || null;
+            console.log('Preview data array set:', previewData);
+            console.log('Validation results set:', validationResults);
             showPreviewStep();
             populatePreviewTable();
         } else {
@@ -462,11 +615,14 @@ function previewData() {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Terjadi kesalahan saat memproses file');
+        alert('Terjadi kesalahan saat memproses file: ' + error.message);
     })
     .finally(() => {
-        document.getElementById('previewBtn').innerHTML = '<i class="fas fa-eye me-2"></i>Preview Data';
-        document.getElementById('previewBtn').disabled = false;
+        const previewBtn = document.getElementById('previewBtn');
+        if (previewBtn) {
+            previewBtn.innerHTML = '<i class="fas fa-eye me-2"></i>Preview Data';
+            previewBtn.disabled = false;
+        }
     });
 }
 
@@ -478,48 +634,117 @@ function showPreviewStep() {
 }
 
 function populatePreviewTable() {
+    console.log('Populating preview table...');
+    console.log('Preview data array length:', previewData.length);
+    console.log('Preview data array:', previewData);
+    console.log('Validation results:', validationResults);
+    
     const tbody = document.getElementById('previewTableBody');
     const summary = document.getElementById('importSummary');
+    
+    if (!tbody) {
+        console.error('Preview table body not found');
+        return;
+    }
     
     tbody.innerHTML = '';
     
     let totalRows = previewData.length;
     let validRows = 0;
     let invalidRows = 0;
+    let duplicateRows = 0;
+    
+    console.log('Total rows to process:', totalRows);
     
     previewData.forEach((row, index) => {
+        console.log('Processing row', index, ':', row);
         const tr = document.createElement('tr');
         
-        // Basic validation
+        // Get validation results for this row
         let isValid = true;
-        let statusBadge = '<span class="badge badge-success">Valid</span>';
+        let statusBadge = '<span class="badge bg-success">Valid</span>';
+        let errors = [];
+        let warnings = [];
         
-        if (!row.nama || !row.kelas) {
+        if (validationResults) {
+            // Check if row is in invalid list
+            const invalidRow = validationResults.invalid.find(r => r.row === index + 1);
+            if (invalidRow) {
+                isValid = false;
+                statusBadge = '<span class="badge bg-danger">Invalid</span>';
+                errors = invalidRow.errors || [];
+                warnings = invalidRow.warnings || [];
+                invalidRows++;
+            } else {
+                // Check if row is in valid list
+                const validRow = validationResults.valid.find(r => r.row === index + 1);
+                if (validRow) {
+                    warnings = validRow.warnings || [];
+                    validRows++;
+                } else {
+                    // Fallback to basic validation
+                    if (!row[1] || !row[2]) {
             isValid = false;
-            statusBadge = '<span class="badge badge-danger">Invalid</span>';
+                        statusBadge = '<span class="badge bg-danger">Invalid</span>';
+                        errors.push('Data tidak lengkap');
+                        invalidRows++;
+                    } else {
+                        validRows++;
+                    }
+                }
+            }
+            
+            // Check for duplicates
+            const duplicateRow = validationResults.duplicates.find(r => r.row === index + 1);
+            if (duplicateRow) {
+                duplicateRows++;
+        if (isValid) {
+                    statusBadge = '<span class="badge bg-warning">Warning</span>';
+                }
+            }
+        } else {
+            // Fallback to basic validation
+            if (!row[1] || !row[2]) {
+                isValid = false;
+                statusBadge = '<span class="badge bg-danger">Invalid</span>';
+                errors.push('Data tidak lengkap');
+            invalidRows++;
+            } else {
+                validRows++;
+            }
         }
         
-        if (isValid) {
-            validRows++;
-        } else {
-            invalidRows++;
+        // Create error/warning tooltip
+        let tooltipContent = '';
+        if (errors.length > 0) {
+            tooltipContent += '<strong>Errors:</strong><br>' + errors.join('<br>');
+        }
+        if (warnings.length > 0) {
+            if (tooltipContent) tooltipContent += '<br><br>';
+            tooltipContent += '<strong>Warnings:</strong><br>' + warnings.join('<br>');
+        }
+        
+        let statusCell = statusBadge;
+        if (tooltipContent) {
+            statusCell = `<span class="badge ${isValid ? 'bg-warning' : 'bg-danger'}" data-bs-toggle="tooltip" data-bs-html="true" title="${tooltipContent}">${isValid ? 'Warning' : 'Invalid'}</span>`;
         }
         
         tr.innerHTML = `
             <td>${index + 1}</td>
-            <td>${row.nisn || '-'}</td>
-            <td>${row.nama || '-'}</td>
-            <td>${row.kelas || '-'}</td>
-            <td>${row.alamat || '-'}</td>
-            <td>${row.status || 'Aktif'}</td>
-            <td>${row.qr_code || 'Auto Generate'}</td>
-            <td>${statusBadge}</td>
+            <td>${row[0] || '-'}</td>
+            <td>${row[1] || '-'}</td>
+            <td>${row[2] || '-'}</td>
+            <td>${row[3] || '-'}</td>
+            <td>${row[5] || 'Aktif'}</td>
+            <td>${row[4] || 'Auto Generate'}</td>
+            <td>${statusCell}</td>
         `;
         
         tbody.appendChild(tr);
     });
     
     // Update summary
+    if (summary) {
     summary.innerHTML = `
         <div class="summary-item">
             <span class="summary-label">Total Data:</span>
@@ -533,7 +758,21 @@ function populatePreviewTable() {
             <span class="summary-label">Data Invalid:</span>
             <span class="summary-value text-danger">${invalidRows}</span>
         </div>
-    `;
+            <div class="summary-item">
+                <span class="summary-label">Duplicates:</span>
+                <span class="summary-value text-warning">${duplicateRows}</span>
+            </div>
+        `;
+    }
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    console.log('Preview table populated successfully');
+    console.log('Total rows:', totalRows, 'Valid:', validRows, 'Invalid:', invalidRows, 'Duplicates:', duplicateRows);
 }
 
 function backToUpload() {

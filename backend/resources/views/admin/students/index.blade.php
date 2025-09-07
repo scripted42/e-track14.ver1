@@ -10,12 +10,14 @@
             <p class="text-muted mb-0">Manajemen data siswa</p>
         </div>
         <div>
+            @if(auth()->user()->hasRole('Admin'))
             <a href="{{ route('admin.students.import') }}" class="btn btn-success me-2">
                 <i class="fas fa-file-import me-2"></i>Import Excel
             </a>
             <a href="{{ route('admin.students.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>Tambah Siswa
             </a>
+            @endif
         </div>
     </div>
 
@@ -156,10 +158,22 @@
             @endif
             
             @if(isset($students) && $students->count())
+                <!-- Total Records Info -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Menampilkan {{ $students->firstItem() ?? 0 }} - {{ $students->lastItem() ?? 0 }} dari {{ $students->total() }} total siswa
+                    </div>
+                    <div class="text-muted">
+                        Halaman {{ $students->currentPage() }} dari {{ $students->lastPage() }}
+                    </div>
+                </div>
+                
                 <div class="table-responsive">
                     <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
+                                <th width="50" class="text-center">No</th>
                                 <th>NISN</th>
                                 <th>Foto</th>
                                 <th>Nama</th>
@@ -169,8 +183,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($students as $student)
+                            @foreach($students as $index => $student)
                             <tr>
+                                <td class="text-center">
+                                    {{ $students->firstItem() + $index }}
+                                </td>
                                 <td>{{ $student->nisn ?? '-' }}</td>
                                 <td>
                                     <div class="photo-container" style="position: relative; width: 40px; height: 40px;">
@@ -204,6 +221,7 @@
                                         <a href="{{ route('admin.students.show', $student) }}" class="btn btn-sm btn-outline-info" title="Lihat Detail">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        @if(auth()->user()->hasRole('Admin'))
                                         <a href="{{ route('admin.students.edit', $student) }}" class="btn btn-sm btn-outline-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
@@ -214,6 +232,7 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -221,7 +240,22 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3 d-flex justify-content-center">{{ $students->links('pagination::bootstrap-4') }}</div>
+                <!-- Enhanced Pagination -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted">
+                            <small>
+                                <i class="fas fa-list me-1"></i>
+                                Total: {{ $students->total() }} siswa | 
+                                Per halaman: {{ $students->perPage() }} | 
+                                Halaman {{ $students->currentPage() }} dari {{ $students->lastPage() }}
+                            </small>
+                        </div>
+                        <div>
+                            {{ $students->appends(request()->query())->links('pagination::bootstrap-4') }}
+                        </div>
+                    </div>
+                </div>
             @else
                 <div class="text-center py-5">
                     <i class="fas fa-user-graduate fa-3x text-muted mb-3"></i>

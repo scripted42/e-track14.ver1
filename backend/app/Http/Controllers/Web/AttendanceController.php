@@ -18,7 +18,10 @@ class AttendanceController extends Controller
         $user = auth()->user();
         
         // Build base query
-        $query = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name']);
+        $query = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name'])
+            ->whereHas('user', function($q) {
+                $q->whereNotIn('role_id', [6]); // Exclude Kepala Sekolah
+            });
         
         // For non-admin users, only show their own attendance
         if (!$user->hasRole('Admin')) {
@@ -563,7 +566,10 @@ class AttendanceController extends Controller
         $user = auth()->user();
         
         // Build base query (same as index method)
-        $query = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name']);
+        $query = Attendance::with(['user:id,name,email,role_id', 'user.role:id,role_name'])
+            ->whereHas('user', function($q) {
+                $q->whereNotIn('role_id', [6]); // Exclude Kepala Sekolah
+            });
         
         // For non-admin users, only show their own attendance
         if (!$user->hasRole('Admin')) {
@@ -876,12 +882,18 @@ class AttendanceController extends Controller
         $filename = 'attendance_' . date('Y-m-d_H-i-s') . '.csv';
 
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0'
         ];
 
         $callback = function () use ($attendanceSummary) {
             $file = fopen('php://output', 'w');
+
+            // Add BOM for UTF-8
+            fwrite($file, "\xEF\xBB\xBF");
 
             // CSV headers
             fputcsv($file, [
@@ -907,8 +919,8 @@ class AttendanceController extends Controller
                     // Export attendance records
                     if ($item['checkin']) {
                         fputcsv($file, [
-                            $user->name,
-                            $user->email,
+                            $user->name ?? 'N/A',
+                            $user->email ?? 'N/A',
                             $user->role ? $user->role->role_name : 'No Role',
                             $date,
                             'Check In',
@@ -923,8 +935,8 @@ class AttendanceController extends Controller
                     
                     if ($item['checkout']) {
                         fputcsv($file, [
-                            $user->name,
-                            $user->email,
+                            $user->name ?? 'N/A',
+                            $user->email ?? 'N/A',
                             $user->role ? $user->role->role_name : 'No Role',
                             $date,
                             'Check Out',
@@ -1099,5 +1111,220 @@ class AttendanceController extends Controller
             'success' => true,
             'message' => 'Leave request rejected successfully'
         ]);
+    }
+
+    /**
+     * Show real-time monitoring dashboard
+     */
+    public function monitor()
+    {
+        $user = auth()->user();
+        
+        // Get today's attendance data
+        $today = Carbon::today();
+        
+        // Debug logging
+        \Log::info('Monitor method called for date: ' . $today->format('Y-m-d'));
+        
+        // Staff attendance statistics
+        $totalStaff = User::whereIn('role_id', [2, 3, 4, 5])->count(); // Kepala Sekolah, Waka Kurikulum, Guru, Pegawai
+        $presentToday = Attendance::whereDate('timestamp', $today)
+            ->where('type', 'checkin')
+            ->whereHas('user', function($q) {
+                $q->whereIn('role_id', [2, 3, 4, 5]);
+            })
+            ->distinct('user_id')
+            ->count();
+        
+        $lateToday = Attendance::whereDate('timestamp', $today)
+            ->where('type', 'checkin')
+            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425') // After 07:05
+            ->whereHas('user', function($q) {
+                $q->whereIn('role_id', [2, 3, 4, 5]);
+            })
+            ->distinct('user_id')
+            ->count();
+        
+        $absentToday = $totalStaff - $presentToday;
+        $attendanceRate = $totalStaff > 0 ? round(($presentToday / $totalStaff) * 100, 1) : 0;
+        
+        // Get detailed data for late and absent staff
+        $lateStaff = Attendance::with(['user:id,name,role_id', 'user.role:id,role_name'])
+            ->whereDate('timestamp', $today)
+            ->where('type', 'checkin')
+            ->whereRaw('(HOUR(timestamp) * 60 + MINUTE(timestamp)) > 425') // After 07:05
+            ->whereHas('user', function($q) {
+                $q->whereIn('role_id', [2, 3, 4, 5]);
+            })
+            ->get()
+            ->map(function($attendance) use ($today) {
+                $checkInTime = \Carbon\Carbon::parse($attendance->timestamp);
+                $deadline = $today->copy()->setTime(7, 5, 0);
+                // Calculate late minutes correctly (positive if late)
+                $attendance->late_minutes = $checkInTime->diffInMinutes($deadline, false);
+                if ($attendance->late_minutes < 0) {
+                    $attendance->late_minutes = abs($attendance->late_minutes);
+                }
+                $attendance->check_in_time = $checkInTime->format('H:i');
+                return $attendance;
+            });
+        
+        $absentStaff = User::whereIn('role_id', [2, 3, 4, 5])
+            ->whereDoesntHave('attendance', function($query) use ($today) {
+                $query->whereDate('timestamp', $today)
+                      ->where('type', 'checkin');
+            })
+            ->with('role:id,role_name')
+            ->get();
+        
+        // Recent attendance activities (last 10)
+        $attendanceActivities = Attendance::with(['user:id,name,role_id', 'user.role:id,role_name'])
+            ->whereDate('timestamp', $today)
+            ->orderBy('timestamp', 'desc')
+            ->get()
+            ->map(function($activity) {
+                // Determine status based on time and type
+                $checkInTime = \Carbon\Carbon::parse($activity->timestamp);
+                $isLate = $checkInTime->hour > 7 || ($checkInTime->hour == 7 && $checkInTime->minute > 0);
+                
+                if ($activity->type === 'checkin') {
+                    $activity->status_text = $isLate ? 'Terlambat' : 'Ontime';
+                    $activity->status_class = $isLate ? 'warning' : 'success';
+                    $activity->status_icon = $isLate ? 'fa-clock' : 'fa-check-circle';
+                } else {
+                    $activity->status_text = 'Check Out';
+                    $activity->status_class = 'info';
+                    $activity->status_icon = 'fa-sign-out-alt';
+                }
+                
+                $activity->activity_type = 'attendance';
+                return $activity;
+            });
+        
+        // Get today's leave activities
+        $leaveActivities = \App\Models\Leave::with(['user:id,name,role_id', 'user.role:id,role_name'])
+            ->whereDate('start_date', $today)
+            ->where('status', 'disetujui')
+            ->get()
+            ->map(function($leave) {
+                $leave->activity_type = 'leave';
+                $leave->status_text = 'Input Izin';
+                $leave->status_class = 'secondary';
+                $leave->status_icon = 'fa-calendar-times';
+                $leave->timestamp = $leave->created_at;
+                return $leave;
+            });
+        
+        // Combine and sort all activities
+        $recentActivities = $attendanceActivities->concat($leaveActivities)
+            ->sortByDesc('timestamp')
+            ->take(10)
+            ->values();
+        
+        // Today's leave requests
+        $todayLeaves = \App\Models\Leave::with(['user:id,name,role_id', 'user.role:id,role_name'])
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->where('status', 'disetujui')
+            ->get();
+        
+        // Hourly attendance distribution
+        $hourlyData = [];
+        for ($hour = 6; $hour <= 18; $hour++) {
+            $count = Attendance::whereDate('timestamp', $today)
+                ->where('type', 'checkin')
+                ->whereRaw('HOUR(timestamp) = ?', [$hour])
+                ->whereHas('user', function($q) {
+                    $q->whereIn('role_id', [2, 3, 4, 5]);
+                })
+                ->count();
+            $hourlyData[] = [
+                'hour' => $hour . ':00',
+                'count' => $count
+            ];
+        }
+        
+        // Department-wise attendance
+        $departmentStats = [];
+        $departments = [
+            'Kepala Sekolah' => 2,
+            'Waka Kurikulum' => 3,
+            'Guru' => 4,
+            'Pegawai' => 5
+        ];
+        
+        foreach ($departments as $deptName => $roleId) {
+            $deptTotal = User::where('role_id', $roleId)->count();
+            $deptPresent = Attendance::whereDate('timestamp', $today)
+                ->where('type', 'checkin')
+                ->whereHas('user', function($q) use ($roleId) {
+                    $q->where('role_id', $roleId);
+                })
+                ->distinct('user_id')
+                ->count();
+            
+            $departmentStats[] = [
+                'department' => $deptName,
+                'total' => $deptTotal,
+                'present' => $deptPresent,
+                'absent' => $deptTotal - $deptPresent,
+                'rate' => $deptTotal > 0 ? round(($deptPresent / $deptTotal) * 100, 1) : 0
+            ];
+        }
+        
+        // Student attendance statistics
+        $totalStudents = \App\Models\Student::count();
+        $presentStudents = \App\Models\StudentAttendance::whereDate('created_at', $today)
+            ->where('status', 'hadir')
+            ->distinct('student_id')
+            ->count();
+        
+        $lateStudents = \App\Models\StudentAttendance::whereDate('created_at', $today)
+            ->where('status', 'terlambat')
+            ->distinct('student_id')
+            ->count();
+        
+        $absentStudents = $totalStudents - $presentStudents;
+        $studentAttendanceRate = $totalStudents > 0 ? round(($presentStudents / $totalStudents) * 100, 1) : 0;
+        
+        // Get detailed data for late and absent students
+        $lateStudentDetails = \App\Models\StudentAttendance::with(['student:id,name,class_room_id', 'student.classRoom:id,name'])
+            ->whereDate('created_at', $today)
+            ->where('status', 'terlambat')
+            ->get()
+            ->map(function($attendance) {
+                $attendance->late_minutes = \Carbon\Carbon::parse($attendance->created_at)
+                    ->diffInMinutes(\Carbon\Carbon::parse($attendance->created_at->format('Y-m-d') . ' 07:00:00'));
+                return $attendance;
+            });
+        
+        $absentStudentDetails = \App\Models\Student::whereDoesntHave('attendance', function($query) use ($today) {
+                $query->whereDate('created_at', $today)
+                      ->where('status', 'hadir');
+            })
+            ->with('classRoom:id,name')
+            ->get();
+        
+        return view('admin.attendance.monitor', compact(
+            'today',
+            'totalStaff',
+            'presentToday',
+            'lateToday',
+            'absentToday',
+            'attendanceRate',
+            'recentActivities',
+            'todayLeaves',
+            'hourlyData',
+            'departmentStats',
+            'lateStaff',
+            'absentStaff',
+            'totalStudents',
+            'presentStudents',
+            'lateStudents',
+            'absentStudents',
+            'studentAttendanceRate',
+            'lateStudentDetails',
+            'absentStudentDetails'
+        ));
     }
 }
