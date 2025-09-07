@@ -1,0 +1,95 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+"""
+Schema awal GraphQL untuk mobile aggregator
+"""
+
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    roles: [String!]! @field(resolver: "App\\GraphQL\\Types\\UserType@roles")
+}
+
+type AttendanceRecord {
+    id: ID!
+    type: String!
+    timestamp: DateTime!
+    status: String
+    latitude: Float
+    longitude: Float
+    accuracy: Float
+}
+
+type AttendanceSummary {
+    date: String!
+    checkin: AttendanceRecord
+    checkout: AttendanceRecord
+}
+
+type Student {
+    id: ID!
+    nisn: String
+    name: String!
+    class_name: String
+}
+
+type StudentScanResult {
+    student: Student!
+    scanned_at: DateTime!
+}
+
+type Leave {
+    id: ID!
+    leave_type: String!
+    status: String!
+    start_date: DateTime!
+    end_date: DateTime!
+    reason: String
+}
+
+type Query {
+    me: User @guard @field(resolver: "App\\GraphQL\\Queries\\Me@resolve")
+    myAttendance(todayOnly: Boolean = false, month: String): [AttendanceSummary!]! @guard @field(resolver: "App\\GraphQL\\Queries\\AttendanceQuery@myAttendance")
+    myLeaves(status: String, month: String): [Leave!]! @guard @field(resolver: "App\\GraphQL\\Queries\\LeaveQuery@myLeaves")
+    myStudents: [Student!]! @guard @field(resolver: "App\\GraphQL\\Queries\\StudentQuery@myStudents")
+}
+
+input CheckinInput {
+    latitude: Float!
+    longitude: Float!
+    accuracy: Float
+    selfie_base64: String!
+    qr_code: String!
+}
+
+input CheckoutInput {
+    latitude: Float!
+    longitude: Float!
+    accuracy: Float
+    qr_code: String!
+}
+
+input StudentScanInput {
+    nisn: String!
+    scanned_at: DateTime!
+}
+
+input StudentScanBatchInput {
+    items: [StudentScanInput!]!
+}
+
+input LeaveInput {
+    leave_type: String!
+    start_date: DateTime!
+    end_date: DateTime!
+    reason: String!
+}
+
+type Mutation {
+    checkin(input: CheckinInput!): AttendanceRecord @guard @field(resolver: "App\\GraphQL\\Mutations\\AttendanceMutations@checkin")
+    checkout(input: CheckoutInput!): AttendanceRecord @guard @field(resolver: "App\\GraphQL\\Mutations\\AttendanceMutations@checkout")
+    submitStudentScanBatch(input: StudentScanBatchInput!): [StudentScanResult!]! @guard @field(resolver: "App\\GraphQL\\Mutations\\StudentMutations@submitScanBatch")
+    requestLeave(input: LeaveInput!): Leave @guard @field(resolver: "App\\GraphQL\\Mutations\\LeaveMutations@requestLeave")
+}
