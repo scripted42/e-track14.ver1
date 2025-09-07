@@ -717,6 +717,15 @@
                         </a>
                     </li>
                     @endif
+                    @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kurikulum'))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.students.promotion.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.students.promotion.index') }}">
+                            <i class="fas fa-graduation-cap text-success"></i>
+                            <span class="nav-text">Kenaikan Kelas & Kelulusan</span>
+                        </a>
+                    </li>
+                    @endif
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.student-attendance.*') ? 'active' : '' }}" 
                            href="{{ route('admin.student-attendance.index') }}">

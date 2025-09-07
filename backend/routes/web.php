@@ -121,11 +121,27 @@ Route::prefix('admin')->group(function () {
             Route::post('/import/preview', [StudentController::class, 'previewImport'])->name('import.preview');
             Route::post('/import/process', [StudentController::class, 'processImport'])->name('import.process');
             Route::get('/attendance', [StudentController::class, 'attendance'])->name('attendance');
-            Route::get('/{student}', [StudentController::class, 'show'])->name('show');
-            Route::get('/{student}/edit', [StudentController::class, 'edit'])->name('edit');
-            Route::put('/{student}', [StudentController::class, 'update'])->name('update');
-            Route::delete('/{student}', [StudentController::class, 'destroy'])->name('destroy');
-            Route::get('/{student}/qr-code', [StudentController::class, 'qrCode'])->name('qr-code');
+            Route::get('/{student}', [StudentController::class, 'show'])->name('show')->whereNumber('student');
+            Route::get('/{student}/edit', [StudentController::class, 'edit'])->name('edit')->whereNumber('student');
+            Route::put('/{student}', [StudentController::class, 'update'])->name('update')->whereNumber('student');
+            Route::delete('/{student}', [StudentController::class, 'destroy'])->name('destroy')->whereNumber('student');
+            Route::get('/{student}/qr-code', [StudentController::class, 'qrCode'])->name('qr-code')->whereNumber('student');
+            
+        });
+        
+        // Student Promotion and Graduation - accessible by Admin, Kepala Sekolah, Waka Kurikulum
+        Route::get('/students/promotion', [\App\Http\Controllers\Web\StudentPromotionController::class, 'index'])
+            ->middleware('role:Admin,Kepala Sekolah,Waka Kurikulum')
+            ->name('admin.students.promotion.index');
+        
+        Route::prefix('students/promotion')->name('admin.students.promotion.')->middleware('role:Admin,Kepala Sekolah,Waka Kurikulum')->group(function () {
+            Route::get('/test', function() { return 'Test route works!'; })->name('test');
+            Route::post('/promote-class', [\App\Http\Controllers\Web\StudentPromotionController::class, 'promoteClass'])->name('promote-class');
+            Route::post('/graduate-class', [\App\Http\Controllers\Web\StudentPromotionController::class, 'graduateClass'])->name('graduate-class');
+            Route::post('/batch-promotion', [\App\Http\Controllers\Web\StudentPromotionController::class, 'batchPromotion'])->name('batch-promotion');
+            Route::patch('/update-status/{student}', [\App\Http\Controllers\Web\StudentPromotionController::class, 'updateStudentStatus'])->name('update-status');
+            Route::get('/students-by-status/{status}', [\App\Http\Controllers\Web\StudentPromotionController::class, 'getStudentsByStatus'])->name('students-by-status');
+            Route::get('/export-graduation', [\App\Http\Controllers\Web\StudentPromotionController::class, 'exportGraduationReport'])->name('export-graduation');
         });
         
         // Reports - accessible by Admin, Kepala Sekolah, Waka Kurikulum
