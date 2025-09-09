@@ -280,9 +280,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 hideTypingIndicator();
                 
                 if (data.success) {
-                    addMessage(data.answer, 'ai');
+                    addMessage(data.response, 'ai');
                 } else {
-                    addMessage(data.answer || 'Maaf, terjadi kesalahan. Silakan coba lagi.', 'ai');
+                    addMessage(data.message || 'Maaf, terjadi kesalahan. Silakan coba lagi.', 'ai');
                 }
             })
             .catch(error => {

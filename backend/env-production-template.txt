@@ -59,3 +59,7 @@ VITE_PUSHER_SCHEME="${PUSHER_SCHEME}"
 
 # Custom settings for E-Track14
 DEFAULT_PASSWORD=ChangeMe123!
+
+# AI Assistant Configuration (OpenRouter + QWEN)
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+OPENROUTER_MODEL=qwen/qwen-2.5-72b-instruct
