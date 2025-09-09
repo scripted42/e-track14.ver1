@@ -15,6 +15,62 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
+    /**
+     * Show current user's profile (accessible by all roles)
+     */
+    public function profile(Request $request)
+    {
+        $user = $request->user()->load(['role', 'classRoom.students']);
+        // Reuse existing detailed view
+        return view('admin.users.show', compact('user'));
+    }
+
+    /**
+     * Update basic profile fields for current user
+     */
+    public function profileUpdate(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'nullable|string',
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $update = [
+            'name' => $request->name,
+            'address' => $request->address,
+        ];
+        if ($request->filled('password')) {
+            $update['password'] = Hash::make($request->password);
+        }
+
+        $user->update($update);
+
+        return redirect()->route('admin.profile')->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Update profile photo for current user
+     */
+    public function profilePhoto(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $photo = $request->file('photo');
+        $ext = strtolower($photo->getClientOriginalExtension());
+        $safeName = preg_replace('/[^a-z0-9\-_.]+/i', '_', pathinfo($photo->getClientOriginalName(), PATHINFO_FILENAME));
+        $filename = time() . '_' . $safeName . '.' . $ext;
+        $photo->storeAs('user-photos', $filename, 'public');
+        $user->update(['photo' => $filename]);
+
+        return redirect()->route('admin.profile')->with('success', 'Foto profil diperbarui.');
+    }
     public function index(Request $request)
     {
         // Build base query for filtering
@@ -432,7 +488,7 @@ class UserController extends Controller
             'role_id' => $role->id,
             'status' => strtolower($row[4]) === 'aktif' ? 'aktif' : 'non-aktif', // Status is fifth column
             'address' => $row[5] ?? null, // Alamat is sixth column
-            'password' => \Illuminate\Support\Facades\Hash::make('SMPN14@2024'), // Default password
+            'password' => \Illuminate\Support\Facades\Hash::make(env('DEFAULT_PASSWORD', 'ChangeMe123!')), // Default password from env
             'must_change_password' => true, // Force password change on first login
         ];
 

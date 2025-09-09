@@ -3,18 +3,19 @@
 @section('title', 'Dashboard Waka Kurikulum')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<!-- Modern Dashboard Header -->
+<div class="dashboard-header mb-5">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="h3 mb-0 text-gray-800">Dashboard Waka Kurikulum</h1>
-            <p class="text-muted">Selamat datang, {{ auth()->user()->name }}</p>
+            <h1 class="dashboard-title mb-2">Dashboard Waka Kurikulum</h1>
+            <p class="dashboard-subtitle">Selamat datang, {{ auth()->user()->name }}</p>
         </div>
-        <div class="text-right">
-            <div class="text-sm text-muted">Hari ini</div>
-            <div class="h5 mb-0 text-primary">{{ now()->format('d F Y') }}</div>
+        <div class="dashboard-date">
+            <i class="fas fa-calendar me-2"></i>
+            {{ now()->format('d F Y') }}
         </div>
     </div>
+</div>
 
     <!-- Statistics Cards -->
     <div class="row mb-4">
@@ -222,7 +223,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@vite(["resources/js/app.js"])
 <script>
 // Weekly Attendance Chart
 const ctx = document.getElementById('weeklyAttendanceChart').getContext('2d');

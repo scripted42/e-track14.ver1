@@ -3,129 +3,86 @@
 @section('title', 'Dashboard Guru')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<!-- Modern Dashboard Header -->
+<div class="dashboard-header mb-5">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="h3 mb-0 text-gray-800">Dashboard Guru</h1>
-            <p class="text-muted">Selamat datang, {{ auth()->user()->name }}</p>
+            <h1 class="dashboard-title mb-2">Dashboard Guru</h1>
+            <p class="dashboard-subtitle">Selamat datang, {{ auth()->user()->name }}</p>
         </div>
-        <div class="text-right">
-            <div class="text-sm text-muted">Hari ini</div>
-            <div class="h5 mb-0 text-primary">{{ now()->format('d F Y') }}</div>
+        <div class="dashboard-date">
+            <i class="fas fa-calendar me-2"></i>
+            {{ now()->format('d F Y') }}
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards - Modern Design -->
+<div class="row mb-5">
+    <!-- My Attendance Today -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stat-card stat-card--primary">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-number">{{ $myAttendanceToday->count() }}/2</div>
+            <div class="stat-label">Kehadiran Hari Ini</div>
+            <small>
+                @if($myAttendanceToday->where('type', 'checkin')->count() > 0)
+                    ✓ Check-in
+                @else
+                    ✗ Check-in
+                @endif
+                @if($myAttendanceToday->where('type', 'checkout')->count() > 0)
+                    ✓ Check-out
+                @else
+                    ⏳ Check-out
+                @endif
+            </small>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <!-- My Attendance Today -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Kehadiran Hari Ini
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $myAttendanceToday->count() }}/2
-                            </div>
-                            <div class="text-xs text-muted">
-                                @if($myAttendanceToday->where('type', 'checkin')->count() > 0)
-                                    <span class="text-success">✓ Check-in</span>
-                                @else
-                                    <span class="text-danger">✗ Check-in</span>
-                                @endif
-                                @if($myAttendanceToday->where('type', 'checkout')->count() > 0)
-                                    <span class="text-success ml-2">✓ Check-out</span>
-                                @else
-                                    <span class="text-warning ml-2">⏳ Check-out</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- My Students (if walikelas) -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stat-card stat-card--success">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
             </div>
+            <div class="stat-number">{{ $myStudents->count() }}</div>
+            <div class="stat-label">Siswa Saya</div>
+            <small>Hadir hari ini: {{ $myStudentsAttendanceToday }}</small>
         </div>
+    </div>
 
-        <!-- My Students (if walikelas) -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Siswa Saya
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $myStudents->count() }}
-                            </div>
-                            <div class="text-xs text-muted">
-                                Hadir hari ini: {{ $myStudentsAttendanceToday }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- My Leave Requests -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stat-card stat-card--warning">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-list"></i>
             </div>
+            <div class="stat-number">{{ $myLeaves->count() }}</div>
+            <div class="stat-label">Izin Saya</div>
+            <small>
+                @if($myLeaves->where('status', 'menunggu')->count() > 0)
+                    {{ $myLeaves->where('status', 'menunggu')->count() }} menunggu
+                @else
+                    Semua disetujui
+                @endif
+            </small>
         </div>
+    </div>
 
-        <!-- My Leave Requests -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Izin Saya
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $myLeaves->count() }}
-                            </div>
-                            <div class="text-xs text-muted">
-                                @if($myLeaves->where('status', 'menunggu')->count() > 0)
-                                    <span class="text-warning">{{ $myLeaves->where('status', 'menunggu')->count() }} menunggu</span>
-                                @else
-                                    <span class="text-success">Semua disetujui</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- This Month Attendance -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stat-card stat-card--info">
+            <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
             </div>
+            <div class="stat-number">{{ $myRecentAttendance->where('timestamp', '>=', now()->startOfMonth())->count() }}</div>
+            <div class="stat-label">Kehadiran Bulan Ini</div>
+            <small>Hari kerja: {{ now()->startOfMonth()->diffInDays(now()) + 1 }}</small>
         </div>
-
-        <!-- This Month Attendance -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Kehadiran Bulan Ini
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $myRecentAttendance->where('timestamp', '>=', now()->startOfMonth())->count() }}
-                            </div>
-                            <div class="text-xs text-muted">
-                                Hari kerja: {{ now()->startOfMonth()->diffInDays(now()) + 1 }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    </div>
     </div>
 
     <div class="row">
@@ -278,7 +235,7 @@
 </div>
 
 @if($myStudents->count() > 0)
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@vite(["resources/js/app.js"])
 <script>
 // My Students Attendance Chart
 const ctx = document.getElementById('myStudentsChart').getContext('2d');

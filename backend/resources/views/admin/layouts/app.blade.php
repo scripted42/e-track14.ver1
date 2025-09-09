@@ -10,8 +10,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Chart.js -->
+    <!-- Chart.js CDN for development -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <!-- Custom JS -->
+    <script src="{{ asset('js/simple-app.js') }}"></script>
     
     <style>
         :root {
@@ -29,8 +33,328 @@
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f9fafb;
+        }
+        
+        /* Modern Dashboard Styles */
+        :root {
+            --primary-color: #3B82F6;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --info-color: #06B6D4;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-sm: 0.375rem;
+            --radius: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+        
+        /* Dashboard Header */
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0;
+        }
+        
+        .dashboard-subtitle {
+            font-size: 1rem;
+            color: var(--gray-600);
+            margin: 0;
+        }
+        
+        .dashboard-date {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        /* Modern Statistics Cards */
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+        }
+        
+        .stat-card--success::before {
+            background: var(--success-color);
+        }
+        
+        .stat-card--primary::before {
+            background: var(--primary-color);
+        }
+        
+        .stat-card--warning::before {
+            background: var(--warning-color);
+        }
+        
+        .stat-card--info::before {
+            background: var(--info-color);
+        }
+        
+        .stat-card .stat-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card--success .stat-icon {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .stat-card--primary .stat-icon {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .stat-card--warning .stat-icon {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .stat-card--info .stat-icon {
+            background-color: rgba(6, 182, 212, 0.1);
+            color: var(--info-color);
+        }
+        
+        .stat-card .stat-number {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card .stat-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-card small {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+        
+        /* Modern Chart Cards */
+        .chart-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+        
+        .chart-card__header {
+            padding: 1.5rem 1.5rem 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .chart-card__title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .chart-card__subtitle {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin: 0 0 1rem 0;
+        }
+        
+        .chart-card__body {
+            padding: 1.5rem;
+        }
+        
+        /* Modern Data Table */
+        .data-table-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+        
+        .data-table-card__header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .data-table-card__title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin: 0;
+        }
+        
+        .data-table-card__body {
+            padding: 0;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th {
+            background-color: var(--gray-50);
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .data-table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            vertical-align: middle;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: var(--gray-50);
+        }
+        
+        .data-table__user {
+            display: flex;
+            align-items: center;
+        }
+        
+        .data-table__avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-right: 0.75rem;
+        }
+        
+        .data-table__name {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+        }
+        
+        .data-table__role {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+        
+        .data-table__empty {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray-500);
+        }
+        
+        .data-table__empty h5 {
+            color: var(--gray-700);
+            margin: 1rem 0 0.5rem 0;
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-badge--success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .status-badge--warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .status-badge--danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-title {
+                font-size: 1.5rem;
+            }
+            
+            .stat-card .stat-number {
+                font-size: 1.875rem;
+            }
+            
+            .data-table-card__header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
         }
         
         /* Fix icon sizes globally */
@@ -692,6 +1016,17 @@
                 </a>
             </li>
             
+            <!-- Chat AI Assistant - Hanya Admin dan Kepala Sekolah -->
+            @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah'))
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.chat-ai.*') ? 'active' : '' }}" 
+                   href="{{ route('admin.chat-ai.index') }}">
+                    <i class="fas fa-robot text-warning"></i>
+                    <span class="nav-text">AI Assistant</span>
+                </a>
+            </li>
+            @endif
+            
             <!-- Manajemen Siswa (ISO 21001:2018) -->
             @if(auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Kepala Sekolah') || auth()->user()->hasRole('Waka Kesiswaan') || auth()->user()->hasRole('Guru') || auth()->user()->hasRole('Staff Kesiswaan'))
             <li class="nav-item has-submenu {{ request()->routeIs('admin.students.*') || request()->routeIs('admin.classrooms.*') || request()->routeIs('admin.student-attendance.*') ? 'open' : '' }}">
@@ -857,49 +1192,59 @@
             @endif
             
             <!-- Administrasi Sistem (ISO 21001:2018) -->
-            @if(auth()->user()->hasRole('Admin'))
-            <li class="nav-item has-submenu {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.audit.*') || request()->routeIs('admin.attendance.qr') ? 'open' : '' }}">
-                <a class="nav-link {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.audit.*') || request()->routeIs('admin.attendance.qr') ? 'active' : '' }}" 
+            <li class="nav-item has-submenu {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.audit.*') || request()->routeIs('admin.attendance.qr') || request()->routeIs('admin.users.*') || request()->routeIs('admin.profile') ? 'open' : '' }}">
+                <a class="nav-link {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.audit.*') || request()->routeIs('admin.attendance.qr') || request()->routeIs('admin.users.*') || request()->routeIs('admin.profile') ? 'active' : '' }}" 
                    href="#" onclick="toggleSubmenu(this)">
                     <i class="fas fa-cogs text-secondary"></i>
                     <span class="nav-text">Administrasi Sistem</span>
                 </a>
-                <ul class="submenu {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.audit.*') || request()->routeIs('admin.attendance.qr') ? 'show' : '' }}">
+                <ul class="submenu {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.audit.*') || request()->routeIs('admin.attendance.qr') || request()->routeIs('admin.users.*') || request()->routeIs('admin.profile') ? 'show' : '' }}">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.settings.index') }}">
-                            <i class="fas fa-cog text-secondary"></i>
-                            <span class="nav-text">Pengaturan Sistem</span>
+                        <a class="nav-link {{ request()->routeIs('admin.profile') ? 'active' : '' }}" href="{{ route('admin.profile') }}">
+                            <i class="fas fa-id-badge text-secondary"></i>
+                            <span class="nav-text">Profil Saya</span>
                         </a>
                     </li>
+                    @if(auth()->user()->hasRole('Admin'))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.settings.index') }}">
+                                <i class="fas fa-cog text-secondary"></i>
+                                <span class="nav-text">Pengaturan Sistem</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.attendance.qr') ? 'active' : '' }}" 
+                               href="{{ route('admin.attendance.qr') }}">
+                                <i class="fas fa-qrcode text-secondary"></i>
+                                <span class="nav-text">Kelola QR Code</span>
+                            </a>
+                        </li>
+                    @endif
+                    @if(auth()->user()->hasRole('Admin'))
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.attendance.qr') ? 'active' : '' }}" 
-                           href="{{ route('admin.attendance.qr') }}">
-                            <i class="fas fa-qrcode text-secondary"></i>
-                            <span class="nav-text">Kelola QR Code</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="alert('Manajemen Pengguna - Segera Hadir!')">
+                        <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
                             <i class="fas fa-user-shield text-secondary"></i>
                             <span class="nav-text">Manajemen Pengguna</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.roles-permissions.*') ? 'active' : '' }}" href="{{ route('admin.roles-permissions.index') }}">
-                            <i class="fas fa-key text-secondary"></i>
-                            <span class="nav-text">Role & Izin</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="alert('Log Audit - Segera Hadir!')">
-                            <i class="fas fa-history text-secondary"></i>
-                            <span class="nav-text">Log Audit</span>
-                        </a>
-                    </li>
+                    @endif
+                    @if(auth()->user()->hasRole('Admin'))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.roles-permissions.*') ? 'active' : '' }}" href="{{ route('admin.roles-permissions.index') }}">
+                                <i class="fas fa-key text-secondary"></i>
+                                <span class="nav-text">Role & Izin</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="alert('Log Audit - Segera Hadir!')">
+                                <i class="fas fa-history text-secondary"></i>
+                                <span class="nav-text">Log Audit</span>
+                            </a>
+                        </li>
+                    @endif
                 </ul>
             </li>
-            @endif
         </ul>
     </nav>
     

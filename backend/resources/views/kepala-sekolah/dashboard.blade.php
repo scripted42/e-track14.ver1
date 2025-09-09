@@ -3,116 +3,69 @@
 @section('title', 'Dashboard Kepala Sekolah')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<!-- Modern Dashboard Header -->
+<div class="dashboard-header mb-5">
+    <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="h3 mb-0 text-gray-800">Dashboard Kepala Sekolah</h1>
-            <p class="text-muted">Selamat datang, {{ auth()->user()->name }}</p>
+            <h1 class="dashboard-title mb-2">Dashboard Kepala Sekolah</h1>
+            <p class="dashboard-subtitle">Selamat datang, {{ auth()->user()->name }}</p>
         </div>
-        <div class="text-right">
-            <div class="text-sm text-muted">Hari ini</div>
-            <div class="h5 mb-0 text-primary">{{ now()->format('d F Y') }}</div>
+        <div class="dashboard-date">
+            <i class="fas fa-calendar me-2"></i>
+            {{ now()->format('d F Y') }}
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards - Modern Design -->
+<div class="row mb-5">
+    <!-- Employee Attendance Today -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stat-card stat-card--primary">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number">{{ $todayEmployeeAttendance }}/{{ $totalEmployees }}</div>
+            <div class="stat-label">Kehadiran Pegawai Hari Ini</div>
+            <small>Persentase: {{ $totalEmployees > 0 ? number_format(($todayEmployeeAttendance / $totalEmployees) * 100, 1) : 0 }}%</small>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <!-- Employee Attendance Today -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Kehadiran Pegawai Hari Ini
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $todayEmployeeAttendance }}/{{ $totalEmployees }}
-                            </div>
-                            <div class="text-xs text-muted">
-                                Persentase: {{ $totalEmployees > 0 ? number_format(($todayEmployeeAttendance / $totalEmployees) * 100, 1) : 0 }}%
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- Student Attendance Today -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stat-card stat-card--success">
+            <div class="stat-icon">
+                <i class="fas fa-user-graduate"></i>
             </div>
+            <div class="stat-number">{{ $todayStudentAttendance }}/{{ $totalStudents }}</div>
+            <div class="stat-label">Kehadiran Siswa Hari Ini</div>
+            <small>Persentase: {{ $totalStudents > 0 ? number_format(($todayStudentAttendance / $totalStudents) * 100, 1) : 0 }}%</small>
         </div>
+    </div>
 
-        <!-- Student Attendance Today -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Kehadiran Siswa Hari Ini
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $todayStudentAttendance }}/{{ $totalStudents }}
-                            </div>
-                            <div class="text-xs text-muted">
-                                Persentase: {{ $totalStudents > 0 ? number_format(($todayStudentAttendance / $totalStudents) * 100, 1) : 0 }}%
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- Pending Leave Requests -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stat-card stat-card--warning">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-times"></i>
             </div>
+            <div class="stat-number">{{ $pendingLeaves }}</div>
+            <div class="stat-label">Izin Menunggu Persetujuan</div>
+            <small>perlu ditinjau</small>
         </div>
+    </div>
 
-        <!-- Pending Leave Requests -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Izin Menunggu Persetujuan
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $pendingLeaves }}
-                            </div>
-                            <div class="text-xs text-muted">
-                                Perlu ditinjau
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- Total Staff -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stat-card stat-card--info">
+            <div class="stat-icon">
+                <i class="fas fa-chalkboard-teacher"></i>
             </div>
+            <div class="stat-number">{{ $totalEmployees }}</div>
+            <div class="stat-label">Total Staff</div>
+            <small>Guru, Pegawai, Waka, Kepsek</small>
         </div>
-
-        <!-- Total Staff -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total Staff
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $totalEmployees }}
-                            </div>
-                            <div class="text-xs text-muted">
-                                Guru, Pegawai, Waka, Kepsek
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    </div>
     </div>
 
     <div class="row">
@@ -290,7 +243,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@vite(["resources/js/app.js"])
 <script>
 // Weekly Overview Chart
 const ctx = document.getElementById('weeklyOverviewChart').getContext('2d');

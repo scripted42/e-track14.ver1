@@ -2,125 +2,213 @@
 
 @section('title', 'Dashboard Pegawai')
 
+@push('styles')
+<style>
+.action-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 4px;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+    padding: 1rem 0.75rem;
+}
+
+.table td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-hadir {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-terlambat {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-izin {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-sakit {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-alpha {
+    background: #f5c6cb;
+    color: #721c24;
+}
+
+.type-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.type-checkin {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.type-checkout {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.weekly-attendance {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.weekly-day {
+    text-align: center;
+    min-width: 80px;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.weekly-day.present {
+    background: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.weekly-day.late {
+    background: #fff3cd;
+    border-color: #ffeaa7;
+}
+
+.weekly-day.absent {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+}
+</style>
+@endpush
+
 @section('content')
 <div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">Dashboard Pegawai</h1>
-            <p class="text-muted">Selamat datang, {{ auth()->user()->name }}</p>
-        </div>
-        <div class="text-right">
-            <div class="text-sm text-muted">Hari ini</div>
-            <div class="h5 mb-0 text-primary">{{ now()->format('d F Y') }}</div>
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard Pegawai</h1>
+        <div class="text-muted">
+            <i class="fas fa-calendar-alt"></i> {{ now()->format('d F Y') }}
         </div>
     </div>
 
-    <!-- Statistics Cards -->
+    <!-- Ringkasan Periode -->
     <div class="row mb-4">
-        <!-- My Attendance Today -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <!-- Hari Ini -->
+        <div class="col-xl-4 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Kehadiran Hari Ini
+                                Hari Ini
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $myAttendanceToday->count() }}/2
+                                {{ $todayStats['attendance_rate'] }}%
                             </div>
                             <div class="text-xs text-muted">
-                                @if($myAttendanceToday->where('type', 'checkin')->count() > 0)
-                                    <span class="text-success">✓ Check-in</span>
+                                @if($todayStats['present_days'] > 0)
+                                    Hadir: {{ $todayStats['present_days'] }} hari
+                                    @if($todayStats['late_days'] > 0)
+                                        ({{ $todayStats['late_days'] }} terlambat)
+                                    @endif
+                                @elseif($todayStats['leave_days'] > 0)
+                                    Izin: {{ $todayStats['leave_days'] }} hari
                                 @else
-                                    <span class="text-danger">✗ Check-in</span>
-                                @endif
-                                @if($myAttendanceToday->where('type', 'checkout')->count() > 0)
-                                    <span class="text-success ml-2">✓ Check-out</span>
-                                @else
-                                    <span class="text-warning ml-2">⏳ Check-out</span>
+                                    Belum ada data
                                 @endif
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                            <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- This Month Attendance -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <!-- Minggu Ini -->
+        <div class="col-xl-4 col-md-6 mb-4">
             <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Kehadiran Bulan Ini
+                                Minggu Ini
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $thisMonthAttendance }}
+                                {{ $weekStats['attendance_rate'] }}%
                             </div>
                             <div class="text-xs text-muted">
-                                Hari kerja: {{ now()->startOfMonth()->diffInDays(now()) + 1 }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- My Leave Requests -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Izin Saya
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $myLeaves->count() }}
-                            </div>
-                            <div class="text-xs text-muted">
-                                @if($myLeaves->where('status', 'menunggu')->count() > 0)
-                                    <span class="text-warning">{{ $myLeaves->where('status', 'menunggu')->count() }} menunggu</span>
-                                @else
-                                    <span class="text-success">Semua disetujui</span>
+                                Hadir: {{ $weekStats['present_days'] }}/{{ $weekStats['total_days'] }} hari
+                                @if($weekStats['leave_days'] > 0)
+                                    | Izin: {{ $weekStats['leave_days'] }} hari
                                 @endif
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                            <i class="fas fa-calendar-week fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Attendance Summary -->
-        <div class="col-xl-3 col-md-6 mb-4">
+        <!-- Bulan Ini -->
+        <div class="col-xl-4 col-md-6 mb-4">
             <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Persentase Kehadiran
+                                Bulan Ini
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ number_format($attendanceSummary['percentage'], 1) }}%
+                                {{ $monthStats['attendance_rate'] }}%
                             </div>
                             <div class="text-xs text-muted">
-                                Tepat waktu: {{ $attendanceSummary['on_time'] }}/{{ $attendanceSummary['total'] }}
+                                Hadir: {{ $monthStats['present_days'] }}/{{ $monthStats['total_days'] }} hari
+                                @if($monthStats['leave_days'] > 0)
+                                    | Izin: {{ $monthStats['leave_days'] }} hari
+                                @endif
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -128,126 +216,321 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- My Attendance Chart -->
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Kehadiran Saya (Minggu Ini)</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="myAttendanceChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- My Recent Attendance -->
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Kehadiran Terbaru Saya</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>Waktu</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($myRecentAttendance->take(5) as $attendance)
-                                <tr>
-                                    <td>{{ $attendance->timestamp->format('d/m') }}</td>
-                                    <td>{{ $attendance->timestamp->format('H:i') }}</td>
-                                    <td>
-                                        <span class="badge badge-{{ $attendance->status == 'hadir' ? 'success' : 'warning' }}">
-                                            {{ ucfirst($attendance->status) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted">Belum ada data kehadiran</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- My Leave Requests -->
+    <!-- Detail Kehadiran -->
+    <div class="row mb-4">
+        <!-- Persentase Ketepatan Waktu -->
         <div class="col-xl-6 col-lg-6">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Izin Terbaru Saya</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Tanggal Mulai</th>
-                                    <th>Tanggal Selesai</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($myLeaves as $leave)
-                                <tr>
-                                    <td>{{ $leave->start_date->format('d/m/Y') }}</td>
-                                    <td>{{ $leave->end_date->format('d/m/Y') }}</td>
-                                    <td>
-                                        <span class="badge badge-{{ $leave->status == 'disetujui' ? 'success' : ($leave->status == 'ditolak' ? 'danger' : 'warning') }}">
-                                            {{ ucfirst($leave->status) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted">Belum ada data izin</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Attendance Summary Details -->
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Ringkasan Kehadiran Bulan Ini</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Ketepatan Waktu</h6>
+                    <small class="text-muted">(Tepat waktu / Total hadir) × 100%</small>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-6">
                             <div class="text-center">
-                                <div class="h4 text-success">{{ $attendanceSummary['on_time'] }}</div>
-                                <div class="text-sm text-muted">Tepat Waktu</div>
+                                <div class="h4 text-success">{{ $weekStats['punctuality_rate'] }}%</div>
+                                <div class="text-sm text-muted">Minggu Ini</div>
+                                <div class="text-xs text-muted">
+                                    {{ $weekStats['on_time_days'] }}/{{ $weekStats['present_days'] }} hari tepat waktu
+                                </div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="text-center">
-                                <div class="h4 text-warning">{{ $attendanceSummary['late'] }}</div>
-                                <div class="text-sm text-muted">Terlambat</div>
+                                <div class="h4 text-info">{{ $monthStats['punctuality_rate'] }}%</div>
+                                <div class="text-sm text-muted">Bulan Ini</div>
+                                <div class="text-xs text-muted">
+                                    {{ $monthStats['on_time_days'] }}/{{ $monthStats['present_days'] }} hari tepat waktu
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <hr>
-                    <div class="text-center">
-                        <div class="h5 text-primary">{{ $attendanceSummary['total'] }}</div>
-                        <div class="text-sm text-muted">Total Kehadiran</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ringkasan Izin -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Ringkasan Izin</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="text-center">
+                                <div class="h4 text-warning">{{ $todayStats['leave_days'] }}</div>
+                                <div class="text-sm text-muted">Hari Ini</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center">
+                                <div class="h4 text-info">{{ $weekStats['leave_days'] }}</div>
+                                <div class="text-sm text-muted">Minggu Ini</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center">
+                                <div class="h4 text-primary">{{ $monthStats['leave_days'] }}</div>
+                                <div class="text-sm text-muted">Bulan Ini</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Kehadiran Minggu Ini -->
+    <div class="row mb-4">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Kehadiran Minggu Ini</h6>
+                </div>
+                <div class="card-body">
+                    <div class="weekly-attendance">
+                        @foreach($weeklyChartData as $day)
+                        <div class="weekly-day {{ $day['status'] === 'hadir' ? 'present' : ($day['status'] === 'terlambat' ? 'late' : 'absent') }}">
+                            <div class="fw-bold text-muted">{{ $day['day'] }}</div>
+                            <div class="small text-muted">{{ $day['date'] }}</div>
+                            <div class="mt-2">
+                                @if($day['status'] === 'hadir')
+                                    <i class="fas fa-check-circle text-success fa-2x"></i>
+                                    <div class="small text-success mt-1">{{ $day['time'] }}</div>
+                                @elseif($day['status'] === 'terlambat')
+                                    <i class="fas fa-clock text-warning fa-2x"></i>
+                                    <div class="small text-warning mt-1">{{ $day['time'] }}</div>
+                                @else
+                                    <i class="fas fa-times-circle text-danger fa-2x"></i>
+                                    <div class="small text-muted mt-1">-</div>
+                                @endif
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Kehadiran Hari Ini -->
+    <div class="row mb-4">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Detail Kehadiran Hari Ini</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="50" class="text-center">No</th>
+                                    <th>Nama</th>
+                                    <th>Role</th>
+                                    <th>Tanggal</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Status</th>
+                                    <th>Evidence</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-center">1</td>
+                                    <td>
+                                        <div class="fw-semibold">{{ $todayAttendanceFormatted['user']->name ?? 'N/A' }}</div>
+                                        <small class="text-muted">{{ $todayAttendanceFormatted['user']->email ?? 'N/A' }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ $todayAttendanceFormatted['user']->roles->first() ? $todayAttendanceFormatted['user']->roles->first()->name : 'No Role' }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-medium">{{ \Carbon\Carbon::parse($todayAttendanceFormatted['date'])->format('d M Y') }}</span>
+                                    </td>
+                                    <td>
+                                        @if($todayAttendanceFormatted['checkin'])
+                                            <div>
+                                                <span class="fw-medium text-success">{{ $todayAttendanceFormatted['checkin']['time'] }}</span>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt"></i> Lokasi tercatat
+                                                </small>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($todayAttendanceFormatted['checkout'])
+                                            <div>
+                                                <span class="fw-medium text-danger">{{ $todayAttendanceFormatted['checkout']['time'] }}</span>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt"></i> Lokasi tercatat
+                                                </small>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column gap-1">
+                                            @if(isset($todayAttendanceFormatted['leave']))
+                                                <span class="status-badge status-{{ $todayAttendanceFormatted['leave']['type'] }}">
+                                                    {{ ucfirst($todayAttendanceFormatted['leave']['type']) }}
+                                                </span>
+                                                @if($todayAttendanceFormatted['leave']['status'] === 'disetujui')
+                                                    <small class="text-success">✓ Disetujui</small>
+                                                @elseif($todayAttendanceFormatted['leave']['status'] === 'ditolak')
+                                                    <small class="text-danger">✗ Ditolak</small>
+                                                @else
+                                                    <small class="text-warning">⏳ Menunggu</small>
+                                                @endif
+                                            @elseif($todayAttendanceFormatted['checkin'])
+                                                <span class="status-badge status-{{ strtolower(str_replace(' ', '-', $todayAttendanceFormatted['checkin']['status'])) }}">
+                                                    Check-in: {{ $todayAttendanceFormatted['checkin']['status'] }}
+                                                </span>
+                                            @endif
+                                            @if($todayAttendanceFormatted['checkout'])
+                                                <span class="status-badge status-{{ strtolower(str_replace(' ', '-', $todayAttendanceFormatted['checkout']['status'])) }}">
+                                                    Check-out: {{ $todayAttendanceFormatted['checkout']['status'] }}
+                                                </span>
+                                            @endif
+                                            @if(!$todayAttendanceFormatted['checkin'] && !$todayAttendanceFormatted['checkout'] && !isset($todayAttendanceFormatted['leave']))
+                                                <span class="status-badge status-alpha">
+                                                    Alpha
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if(isset($todayAttendanceFormatted['leave']) && $todayAttendanceFormatted['leave']['evidence_path'])
+                                            <span class="text-success">
+                                                <i class="fas fa-file-alt me-1"></i>Evidence
+                                            </span>
+                                        @elseif($todayAttendanceFormatted['checkin'] && $todayAttendanceFormatted['checkin']['photo_path'])
+                                            <span class="text-success">
+                                                <i class="fas fa-camera me-1"></i>Foto
+                                            </span>
+                                        @elseif($todayAttendanceFormatted['checkout'] && $todayAttendanceFormatted['checkout']['photo_path'])
+                                            <span class="text-success">
+                                                <i class="fas fa-camera me-1"></i>Foto
+                                            </span>
+                                        @else
+                                            <span class="text-muted">
+                                                <i class="fas fa-minus me-1"></i>Tidak ada
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button type="button" 
+                                                    class="action-btn btn btn-info" 
+                                                    title="Lihat Detail"
+                                                    onclick="showDetail('{{ $todayAttendanceFormatted['user']->id }}', '{{ $todayAttendanceFormatted['date'] }}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Izin Terbaru -->
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Izin Terbaru</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="50" class="text-center">No</th>
+                                    <th>Tanggal Pengajuan</th>
+                                    <th>Tipe</th>
+                                    <th>Periode</th>
+                                    <th>Durasi</th>
+                                    <th>Alasan</th>
+                                    <th>Status</th>
+                                    <th>Evidence</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentLeaves as $index => $leave)
+                                <tr>
+                                    <td class="text-center">{{ $index + 1 }}</td>
+                                    <td>
+                                        <div class="fw-semibold">{{ $leave->created_at->format('d M Y') }}</div>
+                                        <small class="text-muted">{{ $leave->created_at->format('H:i') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ $leave->getLeaveTypeLabel() }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">
+                                            {{ $leave->start_date->format('d M') }} - 
+                                            {{ $leave->end_date->format('d M Y') }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ $leave->start_date->format('l') }} - 
+                                            {{ $leave->end_date->format('l') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ $leave->getDurationDays() }} hari</span>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 200px;" title="{{ $leave->reason }}">
+                                            {{ $leave->reason }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $leave->status === 'disetujui' ? 'bg-success' : ($leave->status === 'ditolak' ? 'bg-danger' : 'bg-warning') }}">
+                                            {{ $leave->getStatusLabel() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($leave->evidence_path)
+                                            <span class="text-success">
+                                                <i class="fas fa-file-alt me-1"></i>Evidence
+                                            </span>
+                                        @else
+                                            <span class="text-muted">
+                                                <i class="fas fa-minus me-1"></i>Tidak ada
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button type="button" 
+                                                    class="action-btn btn btn-info" 
+                                                    title="Lihat Detail"
+                                                    onclick="showLeaveDetail({{ $leave->id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted">Belum ada data izin</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -255,32 +538,19 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@vite(["resources/js/app.js"])
+
 <script>
-// My Attendance Chart
-const ctx = document.getElementById('myAttendanceChart').getContext('2d');
-const myAttendanceChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-        datasets: [{
-            label: 'Kehadiran',
-            data: [1, 1, 1, 1, 1, 0, 0], // This would be dynamic data
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 2
-            }
-        }
-    }
-});
+function showDetail(userId, date) {
+    // Implementasi untuk menampilkan detail kehadiran
+    // Bisa diarahkan ke halaman detail atau modal
+    alert('Detail kehadiran untuk user ID: ' + userId + ' pada tanggal: ' + date);
+}
+
+function showLeaveDetail(leaveId) {
+    // Implementasi untuk menampilkan detail izin
+    // Bisa diarahkan ke halaman detail atau modal
+    alert('Detail izin untuk ID: ' + leaveId);
+}
 </script>
 @endsection

@@ -19,121 +19,124 @@
 </div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="h3 mb-0">
-            @if(auth()->user()->hasRole('Admin'))
-                Dashboard Admin
-            @elseif(auth()->user()->hasRole('Guru'))
-                Dashboard Guru
-            @elseif(auth()->user()->hasRole('Kepala Sekolah'))
-                Dashboard Kepala Sekolah
-            @elseif(auth()->user()->hasRole('Waka Kurikulum'))
-                Dashboard Waka Kurikulum
-            @elseif(auth()->user()->hasRole('Pegawai'))
-                Dashboard Pegawai
-            @else
-                Dashboard
-            @endif
-        </h1>
-        <p class="text-muted">
-            Selamat datang, {{ auth()->user()->name }} - {{ auth()->user()->role->role_name }}
-        </p>
-    </div>
-    <div class="text-muted">
-        <i class="fas fa-calendar me-1"></i>
-        {{ \Carbon\Carbon::now()->format('d F Y') }}
+<!-- Modern Dashboard Header -->
+<div class="dashboard-header mb-5">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="dashboard-title mb-2">
+                @if(auth()->user()->hasRole('Admin'))
+                    Dashboard Admin
+                @elseif(auth()->user()->hasRole('Guru'))
+                    Dashboard Guru
+                @elseif(auth()->user()->hasRole('Kepala Sekolah'))
+                    Dashboard Kepala Sekolah
+                @elseif(auth()->user()->hasRole('Waka Kurikulum'))
+                    Dashboard Waka Kurikulum
+                @elseif(auth()->user()->hasRole('Pegawai'))
+                    Dashboard Pegawai
+                @else
+                    Dashboard
+                @endif
+            </h1>
+            <p class="dashboard-subtitle">
+                Selamat datang, {{ auth()->user()->name }} - {{ auth()->user()->roles->first() ? auth()->user()->roles->first()->name : 'No Role' }}
+            </p>
+        </div>
+        <div class="dashboard-date">
+            <i class="fas fa-calendar me-2"></i>
+            {{ \Carbon\Carbon::now()->format('d F Y') }}
+        </div>
     </div>
 </div>
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
+<!-- Statistics Cards - Modern Design -->
+<div class="row mb-5">
     @if(auth()->user()->hasRole('Admin'))
-        <!-- Admin Dashboard -->
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e;">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stat-number text-success">{{ $todayEmployeeAttendance ?? 0 }}</div>
-                <div class="stat-label">Pegawai Hadir Hari Ini</div>
-                <small class="text-muted">dari {{ $totalEmployees ?? 0 }} total pegawai</small>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stat-card">
-                <div class="stat-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6;">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-                <div class="stat-number text-primary">{{ $todayStudentAttendance ?? 0 }}</div>
-                <div class="stat-label">Siswa Hadir Hari Ini</div>
-                <small class="text-muted">dari {{ $totalStudents ?? 0 }} total siswa</small>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stat-card">
-                <div class="stat-icon" style="background-color: rgba(251, 146, 60, 0.1); color: #fb923c;">
-                    <i class="fas fa-calendar-times"></i>
-                </div>
-                <div class="stat-number text-warning">{{ $pendingLeaves ?? 0 }}</div>
-                <div class="stat-label">Izin Menunggu</div>
-                <small class="text-muted">perlu persetujuan</small>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stat-card">
-                <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7;">
+        <!-- Admin Dashboard Cards -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--success">
+                <div class="stat-icon">
                     <i class="fas fa-users"></i>
                 </div>
-                <div class="stat-number text-info">{{ $totalEmployees ?? 0 }}</div>
-                <div class="stat-label">Total Staff</div>
-                <small class="text-muted">{{ $totalStudents ?? 0 }} Siswa</small>
+                <div class="stat-number">{{ $totalEmployees ?? 0 }}</div>
+                <div class="stat-label">Total Pegawai</div>
+                <small>{{ $todayEmployeeAttendance ?? 0 }} hadir hari ini</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--primary">
+                <div class="stat-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="stat-number">{{ $totalStudents ?? 0 }}</div>
+                <div class="stat-label">Total Siswa</div>
+                <small>{{ $todayStudentAttendance ?? 0 }} hadir hari ini</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--warning">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-times"></i>
+                </div>
+                <div class="stat-number">{{ $pendingLeaves ?? 0 }}</div>
+                <div class="stat-label">Izin Menunggu</div>
+                <small>perlu persetujuan</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--info">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-number">{{ ($totalEmployees ?? 0) - ($todayEmployeeAttendance ?? 0) }}</div>
+                <div class="stat-label">Belum Absen</div>
+                <small>pegawai hari ini</small>
             </div>
         </div>
     @elseif(auth()->user()->hasRole('Guru'))
-        <!-- Guru Dashboard -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stat-card">
-                <div class="stat-icon" style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e;">
+        <!-- Guru Dashboard Cards -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--success">
+                <div class="stat-icon">
                     <i class="fas fa-calendar-check"></i>
                 </div>
-                <div class="stat-number text-success">{{ $thisMonthAttendance ?? 0 }}</div>
+                <div class="stat-number">{{ $thisMonthAttendance ?? 0 }}</div>
                 <div class="stat-label">Kehadiran Bulanan</div>
-                <small class="text-muted">{{ $thisMonthLate ?? 0 }} terlambat</small>
-        </div>
-    </div>
-    
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6;">
-                <i class="fas fa-user-graduate"></i>
-            </div>
-                <div class="stat-number text-primary">{{ $myStudentsPresentToday ?? 0 }}</div>
-            <div class="stat-label">Siswa Hadir Hari Ini</div>
-                <small class="text-muted">{{ $myStudentsLateToday ?? 0 }} terlambat</small>
+                <small>{{ $thisMonthLate ?? 0 }} terlambat</small>
             </div>
         </div>
         
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stat-card">
-                <div class="stat-icon" style="background-color: rgba(251, 146, 60, 0.1); color: #fb923c;">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--primary">
+                <div class="stat-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="stat-number">{{ $myStudentsPresentToday ?? 0 }}</div>
+                <div class="stat-label">Siswa Hadir Hari Ini</div>
+                <small>{{ $myStudentsLateToday ?? 0 }} terlambat</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--warning">
+                <div class="stat-icon">
                     <i class="fas fa-calendar-times"></i>
                 </div>
-                <div class="stat-number text-warning">{{ $myPendingLeaves ?? 0 }}</div>
+                <div class="stat-number">{{ $myPendingLeaves ?? 0 }}</div>
                 <div class="stat-label">Izin Bulanan</div>
-                <small class="text-muted">menunggu approval</small>
+                <small>menunggu approval</small>
             </div>
         </div>
         
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stat-card">
-                <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7;">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--info">
+                <div class="stat-icon">
                     <i class="fas fa-chart-pie"></i>
                 </div>
-                <div class="stat-number text-info">
+                <div class="stat-number">
                     @if(isset($myStudents) && $myStudents->count() > 0)
                         {{ round((($myStudentsPresentToday ?? 0) / $myStudents->count()) * 100) }}%
                     @else
@@ -141,68 +144,171 @@
                     @endif
                 </div>
                 <div class="stat-label">Persentase Kehadiran</div>
-                <small class="text-muted">Siswa hari ini</small>
+                <small>Siswa hari ini</small>
             </div>
         </div>
     @else
-        <!-- Default Dashboard for other roles -->
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stat-card">
-                <div class="stat-icon" style="background-color: rgba(34, 197, 94, 0.1); color: #22c55e;">
+        <!-- Default Dashboard Cards for other roles -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--success">
+                <div class="stat-icon">
                     <i class="fas fa-user-check"></i>
                 </div>
-                <div class="stat-number text-success">{{ $todayAttendance ?? 0 }}</div>
+                <div class="stat-number">{{ $todayAttendance ?? 0 }}</div>
                 <div class="stat-label">Absensi Hari Ini</div>
-                <small class="text-muted">dari {{ $totalEmployees ?? 0 }} pegawai</small>
+                <small>dari {{ $totalEmployees ?? 0 }} pegawai</small>
             </div>
         </div>
         
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card stat-card">
-                <div class="stat-icon" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--primary">
+                <div class="stat-icon">
                     <i class="fas fa-user-graduate"></i>
                 </div>
-                <div class="stat-number text-primary">{{ $todayStudentAttendance ?? 0 }}</div>
+                <div class="stat-number">{{ $todayStudentAttendance ?? 0 }}</div>
                 <div class="stat-label">Siswa Hadir Hari Ini</div>
-                <small class="text-muted">dari {{ $totalStudents ?? 0 }} siswa</small>
-        </div>
-    </div>
-    
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(251, 146, 60, 0.1); color: #fb923c;">
-                <i class="fas fa-calendar-times"></i>
+                <small>dari {{ $totalStudents ?? 0 }} siswa</small>
             </div>
-                <div class="stat-number text-warning">{{ $pendingLeaves ?? 0 }}</div>
-            <div class="stat-label">Izin Menunggu</div>
-            <small class="text-muted">perlu persetujuan</small>
         </div>
-    </div>
-    
-    <div class="col-lg-3 col-md-6 mb-3">
-        <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7;">
-                <i class="fas fa-qrcode"></i>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--warning">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-times"></i>
+                </div>
+                <div class="stat-number">{{ $pendingLeaves ?? 0 }}</div>
+                <div class="stat-label">Izin Menunggu</div>
+                <small>perlu persetujuan</small>
             </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stat-card stat-card--info">
+                <div class="stat-icon">
+                    <i class="fas fa-qrcode"></i>
+                </div>
                 <div class="stat-number {{ isset($todayQr) && $todayQr ? 'text-success' : 'text-danger' }}">
                     {{ isset($todayQr) && $todayQr ? 'AKTIF' : 'NONAKTIF' }}
-            </div>
-            <div class="stat-label">QR Code Hari Ini</div>
-                @if(isset($todayQr) && $todayQr)
-                <small class="text-muted">Berlaku sampai {{ $todayQr->valid_until->format('H:i') }}</small>
-            @else
-                <small class="text-muted">Belum dibuat</small>
-            @endif
+                </div>
+                <div class="stat-label">QR Code Hari Ini</div>
+                <small>
+                    @if(isset($todayQr) && $todayQr)
+                        Berlaku sampai {{ $todayQr->valid_until->format('H:i') }}
+                    @else
+                        Belum dibuat
+                    @endif
+                </small>
             </div>
         </div>
     @endif
 </div>
 
 @if(auth()->user()->hasRole('Admin'))
+<!-- Charts Section - Modern Design -->
+<div class="row mb-5">
+    <!-- Monthly Attendance Comparison Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="chart-card">
+            <div class="chart-card__header">
+                <h5 class="chart-card__title">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Perbandingan Kehadiran Bulanan
+                </h5>
+                <div class="chart-card__subtitle">Hadir, Izin, Alfa</div>
+            </div>
+            <div class="chart-card__body">
+                <canvas id="monthlyComparisonChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Attendance per Class Chart -->
+    <div class="col-lg-4 mb-4">
+        <div class="chart-card">
+            <div class="chart-card__header">
+                <h5 class="chart-card__title">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Kehadiran per Kelas
+                </h5>
+                <div class="chart-card__subtitle">Hari ini</div>
+            </div>
+            <div class="chart-card__body">
+                <canvas id="classAttendanceChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Trends Chart -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Tren Kehadiran Pegawai 7 Hari Terakhir (On-Time vs Terlambat)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="attendanceTrendsChart" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Aksi Cepat
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ route('admin.attendance.qr') }}" class="btn btn-primary">
+                        <i class="fas fa-qrcode me-2"></i>
+                        Generate QR Code
+                    </a>
+                    <a href="{{ route('admin.leaves.index') }}" class="btn btn-warning">
+                        <i class="fas fa-calendar-times me-2"></i>
+                        Kelola Izin ({{ $pendingLeaves ?? 0 }})
+                    </a>
+                    <a href="{{ route('admin.reports.index') }}" class="btn btn-info">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Lihat Laporan
+                    </a>
+                    <a href="{{ route('admin.settings.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-cog me-2"></i>
+                        Pengaturan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Attendance Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Absensi 7 Hari Terakhir
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="weeklyChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- HRD Analytics Section -->
 <div class="row mb-4">
     <!-- Employee Leaderboard -->
-    <div class="col-md-6 mb-4">
+    <div class="col-12 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -241,7 +347,7 @@
                                             <div class="fw-semibold">{{ $employee['user']->name }}</div>
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary">{{ $employee['user']->role->role_name }}</span>
+                                            <span class="badge bg-secondary">{{ $employee['user']->roles->first() ? $employee['user']->roles->first()->name : 'No Role' }}</span>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
@@ -268,7 +374,7 @@
     </div>
     
     <!-- Student Late Leaderboard -->
-    <div class="col-md-6 mb-4">
+    <div class="col-12 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -334,43 +440,9 @@
     </div>
 </div>
 
-<!-- Department Performance & Frequent Leavers -->
+<!-- Pegawai dengan Izin Terbanyak -->
 <div class="row mb-4">
-    <!-- Department Performance -->
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-building me-2"></i>
-                    Performa Departemen Hari Ini
-                </h5>
-            </div>
-            <div class="card-body">
-                @if(isset($departmentStats) && count($departmentStats) > 0)
-                    @foreach($departmentStats as $dept)
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-semibold">{{ $dept['department'] }}</span>
-                                <span class="badge bg-primary">{{ $dept['present'] }}/{{ $dept['total'] }}</span>
-                            </div>
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar bg-success" style="width: {{ $dept['percentage'] }}%"></div>
-                            </div>
-                            <small class="text-muted">{{ number_format($dept['percentage'], 1) }}% kehadiran</small>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-chart-pie fa-3x mb-3"></i>
-                        <p>Belum ada data departemen</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-    
-    <!-- Pegawai dengan Izin Terbanyak -->
-    <div class="col-md-6 mb-4">
+    <div class="col-12 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -426,24 +498,52 @@
     </div>
 </div>
 
-
-
-<!-- Attendance Trends Chart -->
+<!-- Monthly Statistics -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i class="fas fa-chart-line me-2"></i>
-                    Tren Kehadiran Pegawai 30 Hari Terakhir
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Statistik Bulanan
                 </h5>
             </div>
             <div class="card-body">
-                <canvas id="attendanceTrendsChart" height="400"></canvas>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h3 class="text-primary">{{ $monthlyStats['attendance']['current'] }}</h3>
+                            <p class="text-muted mb-1">Total Absensi Bulan Ini</p>
+                            <small class="text-{{ $monthlyStats['attendance']['change'] >= 0 ? 'success' : 'danger' }}">
+                                {{ $monthlyStats['attendance']['change'] >= 0 ? '+' : '' }}{{ number_format($monthlyStats['attendance']['change'], 1) }}% dari bulan lalu
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h3 class="text-success">{{ $monthlyStats['students']['current'] }}</h3>
+                            <p class="text-muted mb-1">Absensi Siswa Bulan Ini</p>
+                            <small class="text-{{ $monthlyStats['students']['change'] >= 0 ? 'success' : 'danger' }}">
+                                {{ $monthlyStats['students']['change'] >= 0 ? '+' : '' }}{{ number_format($monthlyStats['students']['change'], 1) }}% dari bulan lalu
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h3 class="text-warning">{{ $monthlyStats['leaves']['current'] }}</h3>
+                            <p class="text-muted mb-1">Pengajuan Izin Bulan Ini</p>
+                            <small class="text-{{ $monthlyStats['leaves']['change'] >= 0 ? 'warning' : 'success' }}">
+                                {{ $monthlyStats['leaves']['change'] >= 0 ? '+' : '' }}{{ number_format($monthlyStats['leaves']['change'], 1) }}% dari bulan lalu
+                            </small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+
 @endif
 
 @if(auth()->user()->hasRole('Guru'))
@@ -625,101 +725,106 @@
 </div>
 @endif
 
+
 @if(auth()->user()->hasRole('Admin'))
-<!-- Charts and Recent Activity -->
+<!-- Detailed Data Table Section -->
 <div class="row">
-    <!-- Weekly Attendance Chart -->
-    <div class="col-lg-8 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-chart-line me-2"></i>
-                    Absensi 7 Hari Terakhir
+    <div class="col-12">
+        <div class="data-table-card">
+            <div class="data-table-card__header">
+                <h5 class="data-table-card__title">
+                    <i class="fas fa-table me-2"></i>
+                    Data Kehadiran Hari Ini
                 </h5>
-            </div>
-            <div class="card-body">
-                <canvas id="weeklyChart" height="300"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Quick Actions -->
-    <div class="col-lg-4 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-bolt me-2"></i>
-                    Aksi Cepat
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="{{ route('admin.attendance.qr') }}" class="btn btn-primary">
-                        <i class="fas fa-qrcode me-2"></i>
-                        Generate QR Code
-                    </a>
-                    <a href="{{ route('admin.leaves.index') }}" class="btn btn-warning">
-                        <i class="fas fa-calendar-times me-2"></i>
-                        Kelola Izin ({{ $pendingLeaves ?? 0 }})
-                    </a>
-                    <a href="{{ route('admin.reports.index') }}" class="btn btn-info">
-                        <i class="fas fa-chart-bar me-2"></i>
-                        Lihat Laporan
-                    </a>
-                    <a href="{{ route('admin.settings.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-cog me-2"></i>
-                        Pengaturan
+                <div class="data-table-card__actions">
+                    <a href="{{ route('admin.attendance.index') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-external-link-alt me-1"></i>
+                        Lihat Semua
                     </a>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-@endif
-
-@if(auth()->user()->hasRole('Admin'))
-<!-- Recent Activity -->
-<div class="row">
-    <!-- Recent Attendance -->
-    <div class="col-lg-8 mb-4">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-clock me-2"></i>
-                    Absensi Terbaru
-                </h5>
-                <a href="{{ route('admin.attendance.index') }}" class="btn btn-sm btn-outline-primary">
-                    Lihat Semua
-                </a>
-            </div>
-            <div class="card-body">
-                @if($recentAttendance->count() > 0)
+            <div class="data-table-card__body">
+                @if(isset($recentAttendance) && $recentAttendance->count() > 0)
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover mb-0">
                             <thead>
                                 <tr>
+                                    <th width="50" class="text-center">No</th>
                                     <th>Nama</th>
-                                    <th>Jenis</th>
+                                    <th>Role</th>
+                                    <th>Tanggal</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
                                     <th>Status</th>
-                                    <th>Waktu</th>
+                                    <th>Evidence</th>
+                                    <th class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($recentAttendance as $attendance)
+                                @foreach($recentAttendance as $index => $attendance)
                                 <tr>
+                                    <td class="text-center">{{ $index + 1 }}</td>
                                     <td>
-                                        <div class="fw-medium">{{ $attendance->user->name }}</div>
+                                        <div class="fw-semibold">{{ $attendance->user->name ?? 'N/A' }}</div>
+                                        <small class="text-muted">{{ $attendance->user->email ?? 'N/A' }}</small>
                                     </td>
                                     <td>
-                                        <span class="badge {{ $attendance->type === 'checkin' ? 'bg-success' : 'bg-warning' }}">
-                                            {{ $attendance->type === 'checkin' ? 'Check In' : 'Check Out' }}
+                                        <span class="badge bg-secondary">{{ $attendance->user->roles->first() ? $attendance->user->roles->first()->name : 'No Role' }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-medium">{{ $attendance->timestamp->format('d M Y') }}</span>
+                                    </td>
+                                    <td>
+                                        @if($attendance->type === 'checkin')
+                                            <div>
+                                                <span class="fw-medium text-success">{{ $attendance->timestamp->format('H:i') }}</span>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt"></i> Lokasi tercatat
+                                                </small>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($attendance->type === 'checkout')
+                                            <div>
+                                                <span class="fw-medium text-danger">{{ $attendance->timestamp->format('H:i') }}</span>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt"></i> Lokasi tercatat
+                                                </small>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $attendance->status === 'hadir' ? 'bg-success' : 'bg-warning' }}">
+                                            {{ ucfirst($attendance->status) }}
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-primary">{{ ucfirst($attendance->status) }}</span>
+                                        @if($attendance->photo_path)
+                                            <span class="text-success">
+                                                <i class="fas fa-camera me-1"></i>Foto
+                                            </span>
+                                        @else
+                                            <span class="text-muted">
+                                                <i class="fas fa-minus me-1"></i>Tidak ada
+                                            </span>
+                                        @endif
                                     </td>
-                                    <td class="text-muted">
-                                        {{ $attendance->timestamp->format('H:i') }}
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-info" 
+                                                    title="Lihat Detail"
+                                                    onclick="showDetail('{{ $attendance->user->id }}', '{{ $attendance->timestamp->format('Y-m-d') }}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -727,17 +832,20 @@
                         </table>
                     </div>
                 @else
-                    <div class="text-center py-4">
-                        <i class="fas fa-clock fa-2x text-muted mb-3"></i>
-                        <p class="text-muted">Belum ada absensi hari ini</p>
+                    <div class="data-table__empty">
+                        <i class="fas fa-clock fa-3x mb-3"></i>
+                        <h5>Belum ada data kehadiran</h5>
+                        <p>Data kehadiran akan muncul setelah pegawai melakukan absensi</p>
                     </div>
                 @endif
             </div>
         </div>
     </div>
-    
-    <!-- Pending Leaves -->
-    <div class="col-lg-4 mb-4">
+</div>
+
+<!-- Pending Leaves -->
+<div class="row">
+    <div class="col-12 mb-4">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
@@ -750,18 +858,82 @@
             </div>
             <div class="card-body">
                 @if($recentLeaves->count() > 0)
-                    @foreach($recentLeaves as $leave)
-                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-                        <div class="flex-grow-1">
-                            <div class="fw-medium">{{ $leave->user->name }}</div>
-                            <small class="text-muted">
-                                {{ ucfirst($leave->leave_type) }} - 
-                                {{ $leave->start_date->format('d/m') }} s/d {{ $leave->end_date->format('d/m') }}
-                            </small>
-                        </div>
-                        <span class="badge bg-warning">{{ $leave->durationDays }} hari</span>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="50" class="text-center">No</th>
+                                    <th>Tanggal Pengajuan</th>
+                                    <th>Pegawai</th>
+                                    <th>Tipe</th>
+                                    <th>Periode</th>
+                                    <th>Durasi</th>
+                                    <th>Status</th>
+                                    <th>Evidence</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($recentLeaves as $index => $leave)
+                                <tr>
+                                    <td class="text-center">{{ $index + 1 }}</td>
+                                    <td>
+                                        <div class="fw-semibold">{{ $leave->created_at->format('d M Y') }}</div>
+                                        <small class="text-muted">{{ $leave->created_at->format('H:i') }}</small>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <div class="fw-semibold">{{ $leave->user->name }}</div>
+                                            <small class="text-muted">{{ $leave->user->roles->first() ? $leave->user->roles->first()->name : 'N/A' }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ $leave->getLeaveTypeLabel() }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">
+                                            {{ $leave->start_date->format('d M') }} - 
+                                            {{ $leave->end_date->format('d M Y') }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ $leave->start_date->format('l') }} - 
+                                            {{ $leave->end_date->format('l') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ $leave->getDurationDays() }} hari</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $leave->status === 'disetujui' ? 'bg-success' : ($leave->status === 'ditolak' ? 'bg-danger' : 'bg-warning') }}">
+                                            {{ $leave->getStatusLabel() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($leave->evidence_path)
+                                            <span class="text-success">
+                                                <i class="fas fa-file-alt me-1"></i>Evidence
+                                            </span>
+                                        @else
+                                            <span class="text-muted">
+                                                <i class="fas fa-minus me-1"></i>Tidak ada
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-info" 
+                                                    title="Lihat Detail"
+                                                    onclick="showLeaveDetail({{ $leave->id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    @endforeach
                 @else
                     <div class="text-center py-3">
                         <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
@@ -773,56 +945,179 @@
     </div>
 </div>
 
-<!-- Monthly Statistics -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-chart-pie me-2"></i>
-                    Statistik Bulanan
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <h3 class="text-primary">{{ $monthlyStats['attendance']['current'] }}</h3>
-                            <p class="text-muted mb-1">Total Absensi Bulan Ini</p>
-                            <small class="text-{{ $monthlyStats['attendance']['change'] >= 0 ? 'success' : 'danger' }}">
-                                {{ $monthlyStats['attendance']['change'] >= 0 ? '+' : '' }}{{ number_format($monthlyStats['attendance']['change'], 1) }}% dari bulan lalu
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <h3 class="text-success">{{ $monthlyStats['students']['current'] }}</h3>
-                            <p class="text-muted mb-1">Absensi Siswa Bulan Ini</p>
-                            <small class="text-{{ $monthlyStats['students']['change'] >= 0 ? 'success' : 'danger' }}">
-                                {{ $monthlyStats['students']['change'] >= 0 ? '+' : '' }}{{ number_format($monthlyStats['students']['change'], 1) }}% dari bulan lalu
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <h3 class="text-warning">{{ $monthlyStats['leaves']['current'] }}</h3>
-                            <p class="text-muted mb-1">Pengajuan Izin Bulan Ini</p>
-                            <small class="text-{{ $monthlyStats['leaves']['change'] >= 0 ? 'warning' : 'success' }}">
-                                {{ $monthlyStats['leaves']['change'] >= 0 ? '+' : '' }}{{ number_format($monthlyStats['leaves']['change'], 1) }}% dari bulan lalu
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 @endif
 @endsection
 
 @push('scripts')
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@vite(["resources/js/app.js"])
+
+<script>
+function showDetail(userId, date) {
+    // Implementasi untuk menampilkan detail kehadiran
+    // Bisa diarahkan ke halaman detail atau modal
+    alert('Detail kehadiran untuk user ID: ' + userId + ' pada tanggal: ' + date);
+}
+
+function showLeaveDetail(leaveId) {
+    // Implementasi untuk menampilkan detail izin
+    // Bisa diarahkan ke halaman detail atau modal
+    alert('Detail izin untuk ID: ' + leaveId);
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Monthly Comparison Chart
+    const monthlyCtx = document.getElementById('monthlyComparisonChart');
+    if (monthlyCtx) {
+        new Chart(monthlyCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                datasets: [{
+                    label: 'Hadir',
+                    data: [85, 88, 92, 89, 87, 90, 88, 91, 89, 87, 90, 88],
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }, {
+                    label: 'Izin',
+                    data: [8, 7, 5, 6, 8, 6, 7, 5, 6, 8, 6, 7],
+                    borderColor: '#F59E0B',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }, {
+                    label: 'Alfa',
+                    data: [7, 5, 3, 5, 5, 4, 5, 4, 5, 5, 4, 5],
+                    borderColor: '#EF4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Class Attendance Chart
+    const classCtx = document.getElementById('classAttendanceChart');
+    if (classCtx) {
+        new Chart(classCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['7A', '7B', '8A', '8B', '9A', '9B'],
+                datasets: [{
+                    label: 'Hadir',
+                    data: [28, 30, 32, 29, 31, 27],
+                    backgroundColor: '#10B981',
+                    borderRadius: 4
+                }, {
+                    label: 'Izin',
+                    data: [2, 1, 1, 2, 1, 3],
+                    backgroundColor: '#F59E0B',
+                    borderRadius: 4
+                }, {
+                    label: 'Alfa',
+                    data: [1, 0, 0, 0, 1, 1],
+                    backgroundColor: '#EF4444',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 
 <!-- Weekly Chart Data -->
 <script id="weekly-chart-data" type="application/json">
@@ -840,8 +1135,7 @@ echo json_encode($chartData);
 <script id="attendance-trends-data" type="application/json">
 <?php
 $trendsData = [
-    'labels' => isset($attendanceTrends) ? array_column($attendanceTrends, 'date') : [],
-    'employees' => isset($attendanceTrends) ? array_column($attendanceTrends, 'employees') : [],
+    'labels' => isset($attendanceTrends) ? array_map(function($item) { return \Carbon\Carbon::parse($item['date'])->format('d M'); }, $attendanceTrends) : [],
     'onTime' => isset($attendanceTrends) ? array_column($attendanceTrends, 'on_time') : [],
     'late' => isset($attendanceTrends) ? array_column($attendanceTrends, 'late') : []
 ];
@@ -919,7 +1213,6 @@ echo json_encode($trendsData);
             const trendsDataScript = document.getElementById('attendance-trends-data');
             const trendsData = trendsDataScript ? JSON.parse(trendsDataScript.textContent) : {
                 labels: [],
-                employees: [],
                 onTime: [],
                 late: []
             };
@@ -929,16 +1222,6 @@ echo json_encode($trendsData);
                 data: {
                     labels: trendsData.labels,
                     datasets: [{
-                        label: 'Pegawai Total',
-                        data: trendsData.employees,
-                        borderColor: '#3B82F6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 4,
-                        fill: false,
-                        tension: 0.4,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }, {
                         label: 'Pegawai On-Time',
                         data: trendsData.onTime,
                         borderColor: '#10B981',

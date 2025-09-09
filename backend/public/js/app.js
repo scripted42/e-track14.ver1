@@ -21,7 +21,5 @@ function initializeApp() {
     console.log('E-Track14 app initialized');
 }
 
-// Export for module usage
-export default {
-    initializeApp
-};
+// Make functions globally available
+window.initializeApp = initializeApp;

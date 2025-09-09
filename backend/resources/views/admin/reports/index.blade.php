@@ -4,7 +4,7 @@
 
 @push('styles')
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@vite(["resources/js/app.js"])
 <style>
 .detail-card {
     background: white;

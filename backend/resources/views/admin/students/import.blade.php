@@ -458,7 +458,6 @@ function updateUploadArea(fileName) {
     if (uploadArea) {
         // Get the file input element before replacing innerHTML
         const fileInput = document.getElementById('fileInput');
-        console.log('File input before update:', fileInput);
         
     uploadArea.innerHTML = `
         <div class="upload-icon">
@@ -479,7 +478,6 @@ function updateUploadArea(fileName) {
         // Re-add the file input to the upload area
         if (fileInput) {
             uploadArea.appendChild(fileInput);
-            console.log('File input re-added to upload area');
         } else {
             console.error('File input not found to re-add');
         }
@@ -503,7 +501,6 @@ function updateUploadArea(fileName) {
 }
 
 function changeFile() {
-    console.log('Change file clicked');
     const fileInput = document.getElementById('fileInput');
     if (fileInput) {
         fileInput.click();
@@ -513,7 +510,6 @@ function changeFile() {
 }
 
 function removeFile() {
-    console.log('Remove file clicked');
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
     const previewBtn = document.getElementById('previewBtn');
@@ -533,7 +529,6 @@ function removeFile() {
         // Re-add the file input to the upload area
         if (fileInput) {
             uploadArea.appendChild(fileInput);
-            console.log('File input re-added to upload area');
         } else {
             console.error('File input not found to re-add');
         }
@@ -596,17 +591,10 @@ function previewData() {
         return response.json();
     })
     .then(data => {
-        console.log('Preview response:', data);
-        console.log('Data success:', data.success);
-        console.log('Data count:', data.count);
-        console.log('Data array:', data.data);
-        console.log('Validation results:', data.validation);
         
         if (data.success) {
             previewData = data.data;
             validationResults = data.validation || null;
-            console.log('Preview data array set:', previewData);
-            console.log('Validation results set:', validationResults);
             showPreviewStep();
             populatePreviewTable();
         } else {
@@ -634,10 +622,6 @@ function showPreviewStep() {
 }
 
 function populatePreviewTable() {
-    console.log('Populating preview table...');
-    console.log('Preview data array length:', previewData.length);
-    console.log('Preview data array:', previewData);
-    console.log('Validation results:', validationResults);
     
     const tbody = document.getElementById('previewTableBody');
     const summary = document.getElementById('importSummary');
@@ -654,10 +638,8 @@ function populatePreviewTable() {
     let invalidRows = 0;
     let duplicateRows = 0;
     
-    console.log('Total rows to process:', totalRows);
     
     previewData.forEach((row, index) => {
-        console.log('Processing row', index, ':', row);
         const tr = document.createElement('tr');
         
         // Get validation results for this row
@@ -771,8 +753,6 @@ function populatePreviewTable() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    console.log('Preview table populated successfully');
-    console.log('Total rows:', totalRows, 'Valid:', validRows, 'Invalid:', invalidRows, 'Duplicates:', duplicateRows);
 }
 
 function backToUpload() {

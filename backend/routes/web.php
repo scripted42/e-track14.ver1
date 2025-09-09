@@ -12,6 +12,7 @@ use App\Http\Controllers\Web\ClassRoomController;
 use App\Http\Controllers\Web\SettingController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\RolePermissionController;
+use App\Http\Controllers\Web\ChatAIController;
 
 Route::get('/', function () {
     return redirect('/admin');
@@ -45,6 +46,27 @@ Route::prefix('admin')->group(function () {
         // Dashboard - accessible by all authenticated users
         Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/dashboard', [DashboardController::class, 'index']);
+        
+        // User Profile - accessible by all authenticated users (each manages own profile)
+        Route::get('/profile', [UserController::class, 'profile'])->name('admin.profile');
+        Route::put('/profile', [UserController::class, 'profileUpdate'])->name('admin.profile.update');
+        Route::post('/profile/photo', [UserController::class, 'profilePhoto'])->name('admin.profile.photo');
+        
+        // Chat AI - Admin and Kepala Sekolah only
+        Route::prefix('chat-ai')->name('admin.chat-ai.')->group(function () {
+            Route::get('/', [ChatAIController::class, 'index'])->name('index');
+            Route::post('/ask', [ChatAIController::class, 'ask'])->name('ask');
+        });
+        
+        // Test route for debugging
+        Route::get('/test-auth', function() {
+            $user = auth()->user();
+            if (!$user) {
+                return 'Not authenticated - Please login first';
+            }
+            $roles = $user->roles->pluck('name')->toArray();
+            return 'User: ' . $user->name . ' | Roles: ' . implode(', ', $roles);
+        })->name('admin.test-auth');
         
         // User Management - Admin only (temporarily using native role while stabilizing permissions)
         Route::middleware(['role:Admin'])->group(function () {
@@ -136,7 +158,6 @@ Route::prefix('admin')->group(function () {
             ->name('admin.students.promotion.index');
         
         Route::prefix('students/promotion')->name('admin.students.promotion.')->middleware('role_or_permission:Admin|student.manage')->group(function () {
-            Route::get('/test', function() { return 'Test route works!'; })->name('test');
             Route::post('/promote-class', [\App\Http\Controllers\Web\StudentPromotionController::class, 'promoteClass'])->name('promote-class');
             Route::post('/graduate-class', [\App\Http\Controllers\Web\StudentPromotionController::class, 'graduateClass'])->name('graduate-class');
             Route::post('/batch-promotion', [\App\Http\Controllers\Web\StudentPromotionController::class, 'batchPromotion'])->name('batch-promotion');

@@ -293,12 +293,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Prevent multiple initializations
             if (isInitialized) {
-                console.log('QR Display already initialized, skipping...');
                 return;
             }
             
             isInitialized = true;
-            console.log('QR Display initialized at:', new Date().toISOString());
             
             // Clear any existing intervals first
             clearAllIntervals();
@@ -323,13 +321,11 @@
                 clearInterval(timeInterval);
                 timeInterval = null;
             }
-            console.log('All intervals cleared');
         }
         
         // Load QR Code from API
         function loadQRCode() {
             if (isLoading) {
-                console.log('QR load already in progress, skipping...');
                 return;
             }
             
@@ -338,7 +334,6 @@
             const content = document.getElementById('qr-content');
             const container = document.getElementById('qr-code-container');
             
-            console.log('Loading QR code at:', new Date().toISOString());
             
             spinner.style.display = 'block';
             content.style.display = 'none';
@@ -352,11 +347,9 @@
                 cache: 'no-cache' // Ensure fresh data
             })
             .then(response => {
-                console.log('API response status:', response.status);
                 return response.json();
             })
             .then(data => {
-                console.log('QR data received:', data);
                 if (data.success && data.data) {
                     updateQRDisplay(data.data);
                     updateConnectionStatus(true);
@@ -383,13 +376,11 @@
             const container = document.getElementById('qr-code-container');
             const content = document.getElementById('qr-content');
             
-            console.log('Updating QR display with:', qrData.qr_code, 'at', new Date().toISOString());
             
             // Check if this is actually a new QR code
             const lastQRCode = content.getAttribute('data-last-qr-code');
             
             if (lastQRCode === qrData.qr_code) {
-                console.log('Same QR code received, skipping update');
                 return;
             }
             
@@ -425,11 +416,9 @@
                         // Fallback to server-generated SVG
                         qrContainer.innerHTML = `<img src="/admin/attendance/qr/image/${qrData.qr_code}" alt="QR Code" style="width: 300px; height: 300px;" onerror="this.parentElement.innerHTML='<div>QR Code tidak dapat dimuat</div>';">`;
                     } else {
-                        console.log('QR Code generated successfully for:', qrData.qr_code);
                     }
                 });
             } else {
-                console.log('QRCode.js not available, using server fallback');
                 // Fallback to server-generated SVG if QRCode.js is not available
                 qrContainer.innerHTML = `<img src="/admin/attendance/qr/image/${qrData.qr_code}" alt="QR Code" style="width: 300px; height: 300px;" onerror="this.parentElement.innerHTML='<div>QR Code tidak dapat dimuat</div>';">`;
             }
@@ -442,10 +431,8 @@
             
             // Show generated time if available
             if (qrData.generated_at) {
-                console.log('QR generated at server:', qrData.generated_at);
             }
             
-            console.log('QR display updated successfully with new code:', qrData.qr_code);
         }
         
         // Show error message
@@ -475,11 +462,9 @@
                 countdownInterval = null;
             }
             
-            console.log('Starting countdown timer');
             
             countdownInterval = setInterval(() => {
                 countdownElement.textContent = countdownTimer;
-                console.log('Countdown:', countdownTimer);
                 // Update circular progress
                 const ratio = countdownTimer / 10; // 10s cycle
                 const offset = circumference * (1 - ratio);
@@ -489,7 +474,6 @@
                 }
                 
                 if (countdownTimer <= 0) {
-                    console.log('Countdown reached 0, loading new QR code...');
                     countdownTimer = 10; // Reset to 10 seconds
                     loadQRCode(); // Reload QR code
                 } else {
@@ -553,17 +537,14 @@
         
         // Cleanup intervals when page unloads
         window.addEventListener('beforeunload', function() {
-            console.log('Page unloading, cleaning up intervals');
             clearAllIntervals();
         });
         
         // Handle visibility change (pause when tab is not active)
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
-                console.log('Tab hidden, pausing intervals');
                 clearAllIntervals();
             } else {
-                console.log('Tab visible, resuming intervals');
                 if (isInitialized) {
                     countdownTimer = 10; // Reset countdown
                     startCountdown();
@@ -575,7 +556,6 @@
         
         // Add a global cleanup function accessible from console for debugging
         window.clearQRIntervals = function() {
-            console.log('Manual interval cleanup called');
             clearAllIntervals();
             isInitialized = false;
         };

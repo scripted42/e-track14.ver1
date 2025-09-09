@@ -240,9 +240,10 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2" 
-                                             style="width: 40px; height: 40px; font-size: 0.875rem; font-weight: 600;">
-                                            @if($user->photo && file_exists(public_path('storage/user-photos/' . $user->photo)))
-                                                <img src="{{ asset('storage/user-photos/' . $user->photo) }}" alt="Foto" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                             style="width: 40px; height: 40px; font-size: 0.875rem; font-weight: 600; overflow:hidden;">
+                                            @php $p = $user->photo ? 'storage/user-photos/' . $user->photo : null; @endphp
+                                            @if($p && file_exists(public_path($p)))
+                                                <img src="/{{ $p }}?v={{ $user->updated_at->timestamp }}" alt="Foto" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                                             @else
                                                 {{ substr($user->name, 0, 1) }}
                                             @endif

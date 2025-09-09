@@ -460,7 +460,6 @@ function updateUploadArea(fileName) {
     if (uploadArea) {
         // Get the file input element before replacing innerHTML
         const fileInput = document.getElementById('fileInput');
-        console.log('File input before update:', fileInput);
         
         uploadArea.innerHTML = `
             <div class="upload-icon">
@@ -481,7 +480,6 @@ function updateUploadArea(fileName) {
         // Re-add the file input to the upload area
         if (fileInput) {
             uploadArea.appendChild(fileInput);
-            console.log('File input re-added to upload area');
         } else {
             console.error('File input not found to re-add');
         }
@@ -507,24 +505,17 @@ function updateUploadArea(fileName) {
 }
 
 function changeFile() {
-    console.log('Change file clicked');
-    console.log('Looking for file input...');
     
     const fileInput = document.getElementById('fileInput');
-    console.log('File input element:', fileInput);
     
     if (fileInput) {
-        console.log('File input found, clicking...');
         fileInput.click();
     } else {
         console.error('File input not found');
-        console.log('Available elements with id fileInput:', document.querySelectorAll('[id="fileInput"]'));
-        console.log('All input elements:', document.querySelectorAll('input[type="file"]'));
     }
 }
 
 function removeFile() {
-    console.log('Remove file clicked');
     fileData = null;
     
     const fileInput = document.getElementById('fileInput');
@@ -547,7 +538,6 @@ function removeFile() {
     if (uploadArea) {
         // Get the file input element before replacing innerHTML
         const fileInput = document.getElementById('fileInput');
-        console.log('File input before reset:', fileInput);
         
         uploadArea.innerHTML = `
             <div class="upload-icon">
@@ -563,7 +553,6 @@ function removeFile() {
         // Re-add the file input to the upload area
         if (fileInput) {
             uploadArea.appendChild(fileInput);
-            console.log('File input re-added to upload area after reset');
         } else {
             console.error('File input not found to re-add after reset');
         }
@@ -633,17 +622,10 @@ function previewData() {
         return response.json();
     })
     .then(data => {
-        console.log('Preview response:', data);
-        console.log('Data success:', data.success);
-        console.log('Data count:', data.count);
-        console.log('Data array:', data.data);
-        console.log('Validation results:', data.validation);
         
         if (data.success) {
             previewDataArray = data.data;
             validationResults = data.validation || null;
-            console.log('Preview data array set:', previewDataArray);
-            console.log('Validation results set:', validationResults);
             showPreviewStep();
             populatePreviewTable();
         } else {
@@ -671,10 +653,6 @@ function showPreviewStep() {
 }
 
 function populatePreviewTable() {
-    console.log('Populating preview table...');
-    console.log('Preview data array length:', previewDataArray.length);
-    console.log('Preview data array:', previewDataArray);
-    console.log('Validation results:', validationResults);
     
     const tbody = document.getElementById('previewTableBody');
     const summary = document.getElementById('importSummary');
@@ -691,10 +669,8 @@ function populatePreviewTable() {
     let invalidRows = 0;
     let duplicateRows = 0;
     
-    console.log('Total rows to process:', totalRows);
     
     previewDataArray.forEach((row, index) => {
-        console.log('Processing row', index, ':', row);
         const tr = document.createElement('tr');
         
         // Get validation results for this row
@@ -809,8 +785,6 @@ function populatePreviewTable() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    console.log('Preview table populated successfully');
-    console.log('Total rows:', totalRows, 'Valid:', validRows, 'Invalid:', invalidRows, 'Duplicates:', duplicateRows);
 }
 
 function backToUpload() {

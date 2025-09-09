@@ -1,8 +1,9 @@
-// E-Track14 Application JavaScript
+// Simple E-Track14 Application JavaScript
+console.log('Simple E-Track14 Application loaded');
 
-// Basic app initialization
+// Basic initialization
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('E-Track14 Application loaded');
+    console.log('DOM Content Loaded - Simple App');
     
     // Initialize tooltips if Bootstrap is available
     if (typeof bootstrap !== 'undefined') {
@@ -12,16 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize any custom functionality here
-    initializeApp();
+    console.log('Simple app initialized successfully');
 });
 
-function initializeApp() {
-    // Add any custom initialization code here
-    console.log('E-Track14 app initialized');
-}
-
-// Export for module usage
-export default {
-    initializeApp
+// Make functions globally available
+window.simpleApp = {
+    init: function() {
+        console.log('Simple app init called');
+    }
 };

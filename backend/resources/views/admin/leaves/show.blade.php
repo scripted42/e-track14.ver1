@@ -620,7 +620,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
     
-    console.log('Leave detail page loaded for leave ID: {{ $leave->id }}');
 });
 </script>
 @endpush

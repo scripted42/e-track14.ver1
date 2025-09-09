@@ -11,6 +11,6 @@ use App\Models\User;
 
 $u = User::where('email','admin@smpn14.sch.id')->first();
 if (!$u) { echo "NO_ADMIN\n"; exit; }
-echo $u->can('staff.manage') ? "YES\n" : "NO\n";
+// echo $u->can('staff.manage') ? "YES\n" : "NO\n";
 
 

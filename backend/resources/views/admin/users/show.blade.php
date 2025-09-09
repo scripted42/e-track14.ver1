@@ -283,12 +283,20 @@
             <p class="text-muted mb-0">Informasi lengkap {{ $user->name }}</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning">
-                <i class="fas fa-edit me-2"></i>Edit Staff
-            </a>
-            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Kembali
-            </a>
+            @if(auth()->user()->hasRole('Admin'))
+                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Edit Staff
+                </a>
+                <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Kembali
+                </a>
+            @else
+                @if(auth()->id() === $user->id)
+                    <a href="#edit-profile" class="btn btn-primary" onclick="document.getElementById('editProfileCard')?.scrollIntoView({behavior:'smooth'});return false;">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profil Saya
+                    </a>
+                @endif
+            @endif
         </div>
     </div>
 
@@ -300,8 +308,11 @@
                 <div class="detail-header">
                     <div class="text-center">
                         <div class="user-avatar">
-                            @if($user->photo && file_exists(public_path('storage/user-photos/' . $user->photo)))
-                                <img src="{{ asset('storage/user-photos/' . $user->photo) }}" alt="Foto {{ $user->name }}">
+                            @php
+                                $photoPath = 'storage/user-photos/' . ($user->photo ?? '');
+                            @endphp
+                            @if($user->photo && file_exists(public_path($photoPath)))
+                                <img src="/{{ $photoPath }}?v={{ $user->updated_at->timestamp }}" alt="Foto {{ $user->name }}">
                             @else
                                 {{ substr($user->name, 0, 1) }}
                             @endif
@@ -387,6 +398,54 @@
 
         <!-- Sidebar -->
         <div class="col-lg-4">
+            @if(auth()->id() === $user->id && !auth()->user()->hasRole('Admin'))
+            <!-- Self Profile Edit (for non-Admin) -->
+            <div class="detail-card mb-4" id="editProfileCard">
+                <div class="detail-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profil Saya
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <form action="{{ route('admin.profile.update') }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div class="mb-3">
+                            <label class="form-label">Nama</label>
+                            <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Alamat</label>
+                            <textarea name="address" class="form-control" rows="2">{{ old('address', $user->address) }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password Baru (opsional)</label>
+                            <input type="password" name="password" class="form-control" autocomplete="new-password">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Konfirmasi Password</label>
+                            <input type="password" name="password_confirmation" class="form-control" autocomplete="new-password">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                    <hr>
+                    <form action="{{ route('admin.profile.photo') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="mb-2">
+                            <label class="form-label">Ubah Foto Profil</label>
+                            <input type="file" name="photo" class="form-control" accept="image/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-image me-2"></i>Unggah Foto
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
             <!-- Contact Information -->
             <div class="detail-card">
                 <div class="detail-header">
@@ -468,9 +527,15 @@
                 </div>
                 <div class="detail-body">
                     <div class="d-grid gap-2">
+                        @if(auth()->user()->hasRole('Admin'))
                         <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning">
                             <i class="fas fa-edit me-2"></i>Edit Staff
                         </a>
+                        @elseif(auth()->id() === $user->id)
+                        <a href="#edit-profile" class="btn btn-primary" onclick="document.getElementById('editProfileCard')?.scrollIntoView({behavior:'smooth'});return false;">
+                            <i class="fas fa-user-edit me-2"></i>Edit Profil Saya
+                        </a>
+                        @endif
                         @if($user->is_walikelas && $user->classRoom)
                         <a href="{{ route('admin.classrooms.show', $user->classRoom) }}" class="btn btn-secondary">
                             <i class="fas fa-chalkboard me-2"></i>Lihat Kelas

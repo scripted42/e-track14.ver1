@@ -31,6 +31,9 @@ class DashboardController extends Controller
         if ($user->hasRole('Waka Kurikulum')) {
             return $this->wakaKurikulumDashboard();
         }
+        if ($user->hasRole('Pegawai')) {
+            return $this->pegawaiDashboard();
+        }
         // Default: gunakan admin style dashboard ringkas
         return $this->adminDashboard();
     }
@@ -61,7 +64,7 @@ class DashboardController extends Controller
         $pendingLeaves = Leave::where('status', 'menunggu')->count();
         
         // Recent activities
-        $recentAttendance = Attendance::with('user:id,name')
+        $recentAttendance = Attendance::with(['user:id,name', 'user.roles'])
             ->whereDate('timestamp', $today)
             ->whereHas('user.roles', function($q) use ($employeeRoles) {
                 $q->whereIn('name', $employeeRoles);
@@ -70,7 +73,7 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
         
-        $recentLeaves = Leave::with('user:id,name')
+        $recentLeaves = Leave::with(['user:id,name', 'user.roles'])
             ->where('status', 'menunggu')
             ->orderBy('created_at', 'desc')
             ->take(5)
@@ -210,48 +213,190 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         $today = Carbon::today();
-        
-        // My attendance today
-        $myAttendanceToday = Attendance::where('user_id', $user->id)
+        $currentMonth = Carbon::now();
+        $currentWeek = Carbon::now()->startOfWeek();
+        $weekEnd = Carbon::now()->endOfWeek();
+
+        // Data untuk hari ini
+        $todayAttendance = Attendance::where('user_id', $user->id)
             ->whereDate('timestamp', $today)
             ->get();
-        
-        // My leave requests
-        $myLeaves = Leave::where('user_id', $user->id)
+
+        // Data untuk minggu ini
+        $weekAttendance = Attendance::where('user_id', $user->id)
+            ->whereBetween('timestamp', [$currentWeek, $weekEnd])
+            ->get();
+
+        // Data untuk bulan ini
+        $monthAttendance = Attendance::where('user_id', $user->id)
+            ->whereYear('timestamp', $currentMonth->year)
+            ->whereMonth('timestamp', $currentMonth->month)
+            ->get();
+
+        // Data izin untuk periode yang sama
+        $todayLeaves = Leave::where('user_id', $user->id)
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->where('status', 'disetujui')
+            ->get();
+
+        $weekLeaves = Leave::where('user_id', $user->id)
+            ->where(function($query) use ($currentWeek, $weekEnd) {
+                $query->whereBetween('start_date', [$currentWeek, $weekEnd])
+                      ->orWhereBetween('end_date', [$currentWeek, $weekEnd])
+                      ->orWhere(function($q) use ($currentWeek, $weekEnd) {
+                          $q->where('start_date', '<=', $currentWeek)
+                            ->where('end_date', '>=', $weekEnd);
+                      });
+            })
+            ->where('status', 'disetujui')
+            ->get();
+
+        $monthLeaves = Leave::where('user_id', $user->id)
+            ->whereYear('start_date', $currentMonth->year)
+            ->whereMonth('start_date', $currentMonth->month)
+            ->where('status', 'disetujui')
+            ->get();
+
+        // Hitung persentase kehadiran
+        $todayStats = $this->calculateAttendanceStats($todayAttendance, $todayLeaves, 1);
+        $weekStats = $this->calculateAttendanceStats($weekAttendance, $weekLeaves, 5);
+        $monthStats = $this->calculateAttendanceStats($monthAttendance, $monthLeaves, 22);
+
+        // Data untuk chart minggu ini
+        $weeklyChartData = $this->getWeeklyChartData($user->id);
+
+        // Data izin terbaru
+        $recentLeaves = Leave::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
-        
-        // My recent attendance
-        $myRecentAttendance = Attendance::where('user_id', $user->id)
-            ->orderBy('timestamp', 'desc')
-            ->take(10)
-            ->get();
-        
-        // My attendance this month
-        $thisMonthAttendance = Attendance::where('user_id', $user->id)
-            ->whereYear('timestamp', $today->year)
-            ->whereMonth('timestamp', $today->month)
-            ->count();
-        
-        // My attendance summary
-        $attendanceSummary = $this->getMyAttendanceSummary($user->id);
-        
-        // ISO 21001:2018 Compliance for Employee
-        $isoCompliance = $this->getEmployeeISOCompliance($user->id);
-        
-        // Performance metrics
-        $performanceMetrics = $this->getEmployeePerformanceMetrics($user->id);
-        
+
+        // Format data kehadiran hari ini seperti menu attendance
+        $todayAttendanceFormatted = $this->formatTodayAttendanceData($user->id, $today);
+
         return view('pegawai.dashboard', compact(
-            'myAttendanceToday',
-            'myLeaves',
-            'myRecentAttendance',
-            'thisMonthAttendance',
-            'attendanceSummary',
-            'isoCompliance',
-            'performanceMetrics'
+            'todayStats',
+            'weekStats', 
+            'monthStats',
+            'weeklyChartData',
+            'recentLeaves',
+            'todayAttendance',
+            'weekAttendance',
+            'monthAttendance',
+            'todayAttendanceFormatted'
         ));
+    }
+
+    private function calculateAttendanceStats($attendance, $leaves, $workingDays)
+    {
+        $totalDays = $workingDays;
+        $presentDays = $attendance->where('type', 'checkin')->count();
+        $lateDays = $attendance->where('status', 'terlambat')->where('type', 'checkin')->count();
+        $onTimeDays = $attendance->where('status', 'hadir')->where('type', 'checkin')->count();
+        $leaveDays = $leaves->sum(function($leave) {
+            return $leave->start_date->diffInDays($leave->end_date) + 1;
+        });
+        
+        // Ketepatan waktu = (hari tepat waktu / total hari hadir) * 100
+        // Jika tidak ada kehadiran, ketepatan waktu = 0
+        $punctualityRate = $presentDays > 0 ? ($onTimeDays / $presentDays) * 100 : 0;
+        
+        // Tingkat kehadiran = (hari hadir + hari izin) / total hari kerja * 100
+        $attendanceRate = $totalDays > 0 ? (($presentDays + $leaveDays) / $totalDays) * 100 : 0;
+
+        return [
+            'total_days' => $totalDays,
+            'present_days' => $presentDays,
+            'late_days' => $lateDays,
+            'on_time_days' => $onTimeDays,
+            'leave_days' => $leaveDays,
+            'attendance_rate' => round($attendanceRate, 1),
+            'punctuality_rate' => round($punctualityRate, 1)
+        ];
+    }
+
+    private function getWeeklyChartData($userId)
+    {
+        $weekStart = Carbon::now()->startOfWeek();
+        $data = [];
+        
+        for ($i = 0; $i < 7; $i++) {
+            $date = $weekStart->copy()->addDays($i);
+            $attendance = Attendance::where('user_id', $userId)
+                ->whereDate('timestamp', $date)
+                ->where('type', 'checkin')
+                ->first();
+            
+            $data[] = [
+                'day' => $date->format('D'),
+                'date' => $date->format('d/m'),
+                'status' => $attendance ? $attendance->status : 'tidak_hadir',
+                'time' => $attendance ? $attendance->timestamp->format('H:i') : null
+            ];
+        }
+        
+        return $data;
+    }
+
+    private function formatTodayAttendanceData($userId, $date)
+    {
+        $user = User::with('roles')->find($userId);
+        
+        // Ambil data kehadiran hari ini
+        $todayAttendance = Attendance::where('user_id', $userId)
+            ->whereDate('timestamp', $date)
+            ->orderBy('timestamp', 'asc')
+            ->get();
+
+        // Cek apakah ada izin hari ini
+        $todayLeave = Leave::where('user_id', $userId)
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->where('status', 'disetujui')
+            ->first();
+
+        // Load settings untuk menentukan status terlambat
+        $settings = Setting::getSettings();
+        $checkinEndBase = ($settings->checkin_end ?? '07:05:00');
+        $checkinOnTimeLimit = Carbon::createFromFormat('H:i:s', strlen($checkinEndBase) === 5 ? ($checkinEndBase . ':00') : $checkinEndBase);
+
+        // Format data seperti menu attendance
+        $checkin = null;
+        $checkout = null;
+
+        foreach ($todayAttendance as $attendance) {
+            if ($attendance->type === 'checkin') {
+                // Tentukan status berdasarkan waktu checkin vs settings
+                $checkinTime = $attendance->timestamp->format('H:i:s');
+                $isLate = $attendance->timestamp->format('H:i:s') > $checkinOnTimeLimit->format('H:i:s');
+                
+                $checkin = [
+                    'time' => $attendance->timestamp->format('H:i'),
+                    'status' => $isLate ? 'terlambat' : 'hadir',
+                    'photo_path' => $attendance->photo_path
+                ];
+            } elseif ($attendance->type === 'checkout') {
+                $checkout = [
+                    'time' => $attendance->timestamp->format('H:i'),
+                    'status' => $attendance->status,
+                    'photo_path' => $attendance->photo_path
+                ];
+            }
+        }
+
+        return [
+            'user' => $user,
+            'date' => $date->format('Y-m-d'),
+            'checkin' => $checkin,
+            'checkout' => $checkout,
+            'leave' => $todayLeave ? [
+                'id' => $todayLeave->id,
+                'type' => $todayLeave->leave_type,
+                'status' => $todayLeave->status,
+                'evidence_path' => $todayLeave->evidence_path
+            ] : null
+        ];
     }
     
     private function wakaKurikulumDashboard()
@@ -273,7 +418,7 @@ class DashboardController extends Controller
         $classAttendanceSummary = $this->getClassAttendanceSummary();
         
         // Recent teacher activities
-        $recentTeacherAttendance = Attendance::with('user:id,name')
+        $recentTeacherAttendance = Attendance::with(['user:id,name', 'user.roles'])
             ->whereHas('user', function($query) {
                 $query->where('role_id', 4); // Guru
             })
@@ -325,7 +470,7 @@ class DashboardController extends Controller
         $departmentStats = $this->getDepartmentStats();
         
         // Recent activities
-        $recentAttendance = Attendance::with('user:id,name')
+        $recentAttendance = Attendance::with(['user:id,name', 'user.roles'])
             ->whereDate('timestamp', $today)
             ->whereHas('user.roles', function($q) use ($employeeRoles) {
                 $q->whereIn('name', $employeeRoles);
@@ -334,7 +479,7 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
         
-        $recentLeaves = Leave::with('user:id,name')
+        $recentLeaves = Leave::with(['user:id,name', 'user.roles'])
             ->where('status', 'menunggu')
             ->orderBy('created_at', 'desc')
             ->take(5)
@@ -692,17 +837,12 @@ class DashboardController extends Controller
     private function getAttendanceTrends()
     {
         $data = [];
-        $startDate = Carbon::now()->subDays(30);
+        $startDate = Carbon::now()->subDays(7);
         
         $settings = Setting::getSettings();
         $checkinEnd = Carbon::createFromFormat('H:i:s', strlen($settings->checkin_end ?? '07:05:00') === 5 ? (($settings->checkin_end ?? '07:05') . ':00') : ($settings->checkin_end ?? '07:05:00'));
-        for ($i = 0; $i < 30; $i++) {
+        for ($i = 0; $i < 7; $i++) {
             $date = $startDate->copy()->addDays($i);
-            
-            $employeeAttendance = Attendance::whereDate('timestamp', $date)
-                ->where('type', 'checkin')
-                ->distinct('user_id')
-                ->count('user_id');
             
             $onTimeCount = Attendance::whereDate('timestamp', $date)
                 ->where('type', 'checkin')
@@ -710,11 +850,16 @@ class DashboardController extends Controller
                 ->distinct('user_id')
                 ->count('user_id');
             
+            $lateCount = Attendance::whereDate('timestamp', $date)
+                ->where('type', 'checkin')
+                ->whereTime('timestamp', '>', $checkinEnd->format('H:i:s'))
+                ->distinct('user_id')
+                ->count('user_id');
+            
             $data[] = [
                 'date' => $date->format('Y-m-d'),
-                'employees' => $employeeAttendance,
                 'on_time' => $onTimeCount,
-                'late' => $employeeAttendance - $onTimeCount
+                'late' => $lateCount
             ];
         }
         
@@ -742,7 +887,7 @@ class DashboardController extends Controller
         // Most frequent leave takers
         $frequentLeavers = Leave::whereYear('start_date', $currentMonth->year)
             ->whereMonth('start_date', $currentMonth->month)
-            ->with('user:id,name')
+            ->with(['user:id,name', 'user.roles'])
             ->selectRaw('user_id, COUNT(*) as leave_count')
             ->groupBy('user_id')
             ->orderBy('leave_count', 'desc')
